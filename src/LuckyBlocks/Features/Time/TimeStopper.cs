@@ -15,6 +15,7 @@ using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
 using LuckyBlocks.Utils;
 using LuckyBlocks.Utils.Slowers;
 using LuckyBlocks.Utils.Timers;
+using Serilog;
 using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Features.Time;
@@ -38,13 +39,14 @@ internal class TimeStopper : ITimeStopper
     private readonly IEffectsPlayer _effectsPlayer;
     private readonly IPlayerModifiersService _playerModifiersService;
     private readonly IGame _game;
+    private readonly ILogger _logger;
     private readonly Dictionary<string, ITimeStoppedEntity> _timeStoppedEntities = new();
 
     private TimeSpan SmoothObjectResumingDuration => TimeSpan.FromMilliseconds(1500);
     private TimeSpan ProjectileSloMoDuration => TimeSpan.FromMilliseconds(150);
     private TimeSpan MissileSloMoDuration => TimeSpan.FromMilliseconds(400);
     private TimeSpan FireNodesWatcherUpdatePeriod => TimeSpan.FromMilliseconds(200);
-    
+
     private TimeSpan _timeStopDuration;
     private IObject? _relativeObject;
     private CancellationTokenSource? _cts;
@@ -56,10 +58,10 @@ internal class TimeStopper : ITimeStopper
 
     public TimeStopper(ILifetimeScope lifetimeScope, IIdentityService identityService, IObjectsWatcher objectsWatcher,
         INotificationService notificationService, IEffectsPlayer effectsPlayer,
-        IPlayerModifiersService playerModifiersService, IGame game) =>
+        IPlayerModifiersService playerModifiersService, ILogger logger, IGame game) =>
         (_extendedEvents, _identityService, _objectsWatcher, _notificationService, _effectsPlayer,
-            _playerModifiersService, _game) = (lifetimeScope.BeginLifetimeScope().Resolve<IExtendedEvents>(),
-            identityService, objectsWatcher, notificationService, effectsPlayer, playerModifiersService, game);
+            _playerModifiersService, _logger, _game) = (lifetimeScope.BeginLifetimeScope().Resolve<IExtendedEvents>(),
+            identityService, objectsWatcher, notificationService, effectsPlayer, playerModifiersService, logger, game);
 
     public CancellationTokenSource StopTime(TimeSpan duration, IObject relativeObject,
         Action? timeStoppedCallback = default, Action? timeResumedCallback = default)
@@ -132,12 +134,15 @@ internal class TimeStopper : ITimeStopper
             new TimeStoppedLiquid(@object, _game),
         ObjectEntity { Object: var @object, Object.Name: var name } when name.Contains("Bg") =>
             new TimeStoppedBackgroundObject(@object),
-        ObjectEntity { Object: IPlayer player } => new TimeStoppedPlayer(player, _game, _effectsPlayer, _extendedEvents, _playerModifiersService, _identityService),
+        ObjectEntity { Object: IPlayer player } => new TimeStoppedPlayer(player, _game, _effectsPlayer, _extendedEvents,
+            _playerModifiersService, _identityService),
         ObjectEntity { Object: IObjectGrenadeThrown grenade } =>
             new TimeStoppedGrenade(grenade, _game, _effectsPlayer, _extendedEvents),
-        ObjectEntity { Object: var @object } => new TimeStoppedDynamicObject(@object, _game, _effectsPlayer, _extendedEvents),
+        ObjectEntity { Object: var @object } => new TimeStoppedDynamicObject(@object, _game, _effectsPlayer,
+            _extendedEvents),
         ProjectileEntity { Projectile: var projectile } => new TimeStoppedProjectile(projectile, _extendedEvents),
-        FireNodeEntity { FireNode: var fireNode } => new TimeStoppedFireNode(fireNode, _game, _effectsPlayer, _extendedEvents),
+        FireNodeEntity { FireNode: var fireNode } => new TimeStoppedFireNode(fireNode, _game, _effectsPlayer,
+            _extendedEvents),
         _ => throw new ArgumentException(nameof(entity))
     };
 
@@ -148,11 +153,11 @@ internal class TimeStopper : ITimeStopper
         _objectsCreatedSubscription = _extendedEvents.HookOnCreated(OnObjectsCreated, EventHookMode.Default);
         _projectilesCreatedSubscription =
             _extendedEvents.HookOnProjectilesCreated(OnProjectilesCreated, EventHookMode.Default);
-        
+
         _fireNodesWatcher = new FireNodesWatcher(FireNodesWatcherUpdatePeriod, _cts!.Token, _game, _extendedEvents,
             OnFireNodesCreated);
         _fireNodesWatcher.Start();
-        
+
         Awaiter.Start(ResumeTime, _timeStopDuration, _cts.Token);
     }
 
@@ -187,27 +192,37 @@ internal class TimeStopper : ITimeStopper
             StopEntity(new FireNodeEntity(fireNode, _game));
         }
     }
-    
+
     private void SlowDownAndStopMissile(IObject missile)
     {
+        _logger.Debug("slowing down missile {missile}", missile.Name);
+        
         var objectSlower = new ObjectSlower(missile, _game, MissileSloMoDuration, _cts!.Token, _extendedEvents);
         objectSlower.Initialize();
 
         Awaiter.Start(delegate
         {
             objectSlower.Stop();
+            
+            _logger.Debug("stopping missile {missile}", missile.Name);
+            
             StopEntity(new ObjectEntity(missile));
         }, MissileSloMoDuration, _cts.Token);
     }
 
     private void SlowDownAndStopProjectile(IProjectile projectile)
     {
+        _logger.Debug("slowing down projectile {projectile}", projectile.ProjectileItem);
+        
         var projectileSlower = new ProjectileSlower(projectile, _cts!.Token, _extendedEvents);
         projectileSlower.Initialize();
 
         Awaiter.Start(delegate
         {
             projectileSlower.Stop();
+            
+            _logger.Debug("stopping projectile {projectile}", projectile.ProjectileItem);
+            
             StopEntity(new ProjectileEntity(projectile));
         }, ProjectileSloMoDuration, _cts.Token);
     }

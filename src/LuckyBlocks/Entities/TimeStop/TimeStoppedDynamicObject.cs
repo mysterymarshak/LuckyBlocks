@@ -9,7 +9,6 @@ using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Entities.TimeStop;
 
-[Inject]
 internal abstract class TimeStoppedDynamicObjectBase : ITimeStoppedEntity
 {
     public Vector2 Position { get; private set; }
@@ -112,6 +111,7 @@ internal class TimeStoppedDynamicObject : TimeStoppedDynamicObjectBase
     private IEventSubscription? _damageEventSubscription;
     private float _delayedDamage;
     private RandomPeriodicTimer? _timer;
+    private bool _isMissile;
 
     public TimeStoppedDynamicObject(IObject @object, IGame game, IEffectsPlayer effectsPlayer,
         IExtendedEvents extendedEvents) : base(@object, game, effectsPlayer, extendedEvents)
@@ -120,6 +120,7 @@ internal class TimeStoppedDynamicObject : TimeStoppedDynamicObjectBase
 
     protected override void InitializeInternal()
     {
+        _isMissile = Object.IsMissile;
         Object.SetBodyType(BodyType.Static);
 
         _damageEventSubscription = ExtendedEvents.HookOnDamage(Object, OnDamage, EventHookMode.Default);
@@ -129,6 +130,7 @@ internal class TimeStoppedDynamicObject : TimeStoppedDynamicObjectBase
     {
         Object.SetBodyType(BodyType.Dynamic);
         Object.DealDamage(_delayedDamage);
+        Object.TrackAsMissile(_isMissile);
     }
 
     protected override void DisposeInternal()
