@@ -29,15 +29,14 @@ internal interface ILootFactory
 internal class LootFactory : ILootFactory
 {
     private readonly IIdentityService _identityService;
-    private readonly PowerupConstructorArgs _powerupConstructorArgs;
     private readonly LootConstructorArgs _lootConstructorArgs;
     private readonly IBuffFactory _buffFactory;
     private readonly IBuffWrapper _buffWrapper;
 
-    public LootFactory(IIdentityService identityService, PowerupConstructorArgs powerupConstructorArgs,
-        LootConstructorArgs lootConstructorArgs, IBuffFactory buffFactory, IBuffWrapper buffWrapper) =>
-        (_identityService, _powerupConstructorArgs, _lootConstructorArgs, _buffFactory, _buffWrapper) = (
-            identityService, powerupConstructorArgs, lootConstructorArgs, buffFactory, buffWrapper);
+    public LootFactory(IIdentityService identityService, LootConstructorArgs lootConstructorArgs,
+        IBuffFactory buffFactory, IBuffWrapper buffWrapper) =>
+        (_identityService, _lootConstructorArgs, _buffFactory, _buffWrapper) =
+        (identityService, lootConstructorArgs, buffFactory, buffWrapper);
 
     public OneOf<ILoot, Error<string>> CreateLoot(LuckyBlockBrokenArgs brokenArgs, Item item)
     {
@@ -114,7 +113,7 @@ internal class LootFactory : ILootFactory
         Item.BowWithInfiniteBouncing => new BowWithInfiniteBouncing(position, _lootConstructorArgs),
         Item.GrenadeLauncherWithInfiniteBouncing => new GrenadeLauncherWithInfiniteBouncing(position,
             _lootConstructorArgs),
-        Item.Wayback => new Loot.Other.Wayback(_lootConstructorArgs),
+        Item.Wayback => new Other.Wayback(_lootConstructorArgs),
         Item.WeaponWithRandomPowerup => new WeaponWithRandomPowerup(position, _lootConstructorArgs),
         _ => new ArgumentOutOfRangeException(nameof(item))
     };

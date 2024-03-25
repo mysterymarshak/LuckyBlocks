@@ -8,10 +8,8 @@ using LuckyBlocks.Loot.Attributes;
 using LuckyBlocks.Loot.WeaponPowerups;
 using LuckyBlocks.Loot.WeaponPowerups.Bullets;
 using LuckyBlocks.Loot.WeaponPowerups.ThrownItems;
-using LuckyBlocks.Reflection;
 using OneOf;
 using OneOf.Types;
-using Serilog;
 using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Loot.Weapons;
