@@ -34,7 +34,7 @@ internal class BloodyBath : ILoot
             extendedEvents);
         bloodCreationTimer.Start();
 
-        _notificationService.CreateChatNotification("GIVE THEM A BLOODBATH!11!1", Color.Red);
+        _notificationService.CreateChatNotification("GIVE THEM A BLOODY BATH!11!1", Color.Red);
     }
 
     private void SpawnBurningBarrels()
