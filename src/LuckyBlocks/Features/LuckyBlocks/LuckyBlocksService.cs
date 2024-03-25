@@ -59,7 +59,15 @@ internal class LuckyBlocksService : ILuckyBlocksService
         loot.Run();
         
         _effectsPlayer.PlayEffect(EffectName.CustomFloatText, args.Position, loot.Name);
-        _logger.Information("Lucky block id '{LuckyBlockId}' loot: {LootName}", args.LuckyBlockId, loot.Name);
+
+        if (args.IsPlayer)
+        {
+            _logger.Information("{LootName} for {PlayerName}", loot.Name, _game.GetPlayer(args.PlayerId).Name);
+        }
+        else
+        {
+            _logger.Information("{LootName}", loot.Name);
+        }
 
         _luckyBlocksRepository.RemoveLuckyBlock(args.LuckyBlockId);
     }
