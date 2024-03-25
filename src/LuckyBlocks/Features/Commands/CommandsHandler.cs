@@ -96,18 +96,6 @@ internal class CommandsHandler : ICommandsHandler
 
                     break;
                 }
-                case "magic":
-                {
-                    var player = _identityService.GetPlayerByInstance(playerInstance);
-
-                    var fireMagic = _magicFactory.CreateAreaMagic<FireMagic>(player, _buffArgs, 1);
-                    var iceMagic = _magicFactory.CreateAreaMagic<ElectricMagic>(player, _buffArgs, -1);
-
-                    _magicService.Cast(fireMagic, position - new Vector2(fireMagic.AreaSize.X * 1f, 0));
-                    _magicService.Cast(iceMagic, position);
-
-                    break;
-                }
                 case "immunities":
                 {
                     var player = _identityService.GetPlayerByInstance(playerInstance);
@@ -184,64 +172,6 @@ internal class CommandsHandler : ICommandsHandler
                         CultureInfo.CurrentCulture);
 
                     _weaponsPowerupsService.AddWeaponPowerup(powerup, firearm, playerInstance);
-                    
-                    break;
-                }
-                case "knife":
-                {
-                    playerInstance.GiveWeaponItem(WeaponItem.KNIFE);
-                    var weaponsWatcher = WeaponEventsWatcher.CreateForWeapon(WeaponItem.KNIFE,
-                        WeaponItem.KNIFE.GetWeaponItemType(), playerInstance);
-
-                    weaponsWatcher.Drop += (player, objectWeaponItem) =>
-                    {
-                        const float g = 9.8f / 9;
-                        var a = new Vector2(0, -g);
-                        
-                        var initialVelocity = objectWeaponItem.GetLinearVelocity();
-                        var startPosition = objectWeaponItem.GetWorldPosition();
-                        
-                        objectWeaponItem.SetAngularVelocity(0);
-                        objectWeaponItem.SetAngle(0);
-
-                        var previousPosition = startPosition;
-                        var previousExpectedPosition = startPosition;
-                        var startTime = _game.TotalElapsedGameTime;
-                        
-                        var pairs = new List<(Vector2, Vector2)>();
-                        var pairsExpected = new List<(Vector2, Vector2)>();
-                        
-                        Events.UpdateCallback.Start(delegate
-                        {
-                            var deltaTime = (_game.TotalElapsedGameTime - startTime) / 1000;
-                            deltaTime *= 20;
-                            
-                            var expectedPosition = startPosition + Displacement(initialVelocity, deltaTime, a);
-                            
-                            // expected
-                            pairsExpected.ForEach(x => _game.DrawLine(x.Item1, x.Item2, Color.Red));
-                            _game.DrawLine(previousExpectedPosition, expectedPosition, Color.Red);
-                            
-                            pairsExpected.Add(new (previousExpectedPosition, expectedPosition));
-                            previousExpectedPosition = expectedPosition;
-                            
-                            // actual
-                            pairs.ForEach(x => _game.DrawLine(x.Item1, x.Item2, Color.Yellow));
-                            _game.DrawLine(previousPosition, objectWeaponItem.GetWorldPosition(), Color.Yellow);
-                            
-                            pairs.Add(new (previousPosition, objectWeaponItem.GetWorldPosition()));
-                            previousPosition = objectWeaponItem.GetWorldPosition();
-                        });
-
-                        Vector2 Displacement(Vector2 v, float t, Vector2 a)
-                        {
-                            return v * t + a * t * t / 2;
-                        }
-                        
-                        weaponsWatcher.Dispose();
-                    };
-
-                    weaponsWatcher.Start();
                     
                     break;
                 }
