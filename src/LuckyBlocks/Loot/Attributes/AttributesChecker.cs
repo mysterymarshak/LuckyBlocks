@@ -18,7 +18,7 @@ namespace LuckyBlocks.Loot.Attributes;
 
 internal interface IAttributesChecker
 {
-    bool Check(Item item, OneOf<Player, Unknown> player);
+    bool Check(Item item, OneOf<Player, Unknown> player, bool ignorePlayerAttributes = false);
 }
 
 internal class AttributesChecker : IAttributesChecker
@@ -129,13 +129,13 @@ internal class AttributesChecker : IAttributesChecker
         {
             return waybackMachine.CanBeUsed;
         }
-        
+
         bool NoOneHaveBuffAttributeCheck(ItemAttribute attribute, OneOf<Player, Unknown> player)
         {
             var type = (attribute as NoOneHaveBuffAttribute)!.BuffType;
             return identityService.GetAlivePlayers().All(x => !x.HasBuff(type) || x == player.AsT0);
         }
-        
+
         _checks = new Dictionary<Type, Func<ItemAttribute, OneOf<Player, Unknown>, bool>>
         {
             [typeof(UnusedAttribute)] = (_, _) => false,
@@ -160,10 +160,13 @@ internal class AttributesChecker : IAttributesChecker
         };
     }
 
-    public bool Check(Item item, OneOf<Player, Unknown> player)
+    public bool Check(Item item, OneOf<Player, Unknown> player, bool ignorePlayerAttributes = false)
     {
         return EnumUtils.GetAttributesOfType<ItemAttribute, Item>(item)
             .OrderByDescending(x => x, _attributesComparer)
+            .Where(x => !ignorePlayerAttributes || (ignorePlayerAttributes && x.GetType() is { Name: var name } &&
+                                                    name.Contains("Player") == name.Contains("Players") &&
+                                                    !name.Contains("Incompatible")))
             .All(attribute => _checks[attribute.GetType()].Invoke(attribute, player));
     }
 }
