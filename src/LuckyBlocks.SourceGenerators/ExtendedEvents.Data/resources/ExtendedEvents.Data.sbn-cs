@@ -1,0 +1,51 @@
+﻿using System;
+
+namespace {{ Namespace }};
+
+public interface IEventSubscription
+{
+    void Dispose();
+}
+
+public enum EventHookMode
+{
+    None = 0,
+
+    GlobalSharedPost,
+    
+    GlobalThisPost,
+    
+    InstanceSharedPost,
+    
+    InstanceThisPost,
+    
+    Default,
+    
+    InstanceThisPre,
+    
+    InstanceSharedPre,
+    
+    GlobalThisPre,
+    
+    GlobalSharedPre,
+}
+
+public readonly record struct Event(bool Handled);
+public readonly record struct Event<T>(T Args, bool Handled);
+public readonly record struct Event<T1, T2>(T1 Arg1, T2 Arg2, bool Handled);
+
+[AttributeUsage(AttributeTargets.Method)]
+public class GameCallbackTypeAttribute : Attribute
+{
+    public GameCallbackTypeAttribute(Type type) { }
+}
+
+public interface IFilter<in T>
+{
+    Func<T, bool> Func { get; }
+}
+
+public interface IFilter<in T1, in T2>
+{
+    Func<T1, T2, bool> Func { get; }
+}

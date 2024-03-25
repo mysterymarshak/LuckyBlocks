@@ -1,0 +1,105 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Nullable>enable</Nullable>
+        <LangVersion>preview</LangVersion>
+        <ProjectGuid>{C89E4820-63EB-4850-B65F-7143A4DE3BC9}</ProjectGuid>
+        <TargetFramework>net481</TargetFramework>
+        <AssemblyTitle>LuckyBlocks</AssemblyTitle>
+        <Product>LuckyBlocks</Product>
+        <Copyright>Copyright © 2023</Copyright>
+        <OutputPath>bin\$(Configuration)\</OutputPath>
+        <Features>peverify-compat</Features>
+        <AssemblyVersion>69.420.0.0</AssemblyVersion>
+        <FileVersion>69.420.0.0</FileVersion>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+        <DebugType>none</DebugType>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <Optimize>true</Optimize>
+        <DebugSymbols>false</DebugSymbols>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+        <DebugType>pdbonly</DebugType>
+        <DebugSymbols>false</DebugSymbols>
+        <Optimize>true</Optimize>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+    <PropertyGroup/>
+
+    <ItemGroup>
+        <PackageReference Include="Autofac" Version="6.5.0"/>
+        <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="8.0.0"/>
+        <PackageReference Include="Mediator.Abstractions" Version="0.2.4-preview"/>
+        <PackageReference Include="Mediator.SourceGenerator" Version="0.2.4-preview">
+          <PrivateAssets>all</PrivateAssets>
+          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="6.0.0"/>
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0.0"/>
+        <PackageReference Include="OneOf" Version="3.0.255"/>
+        <PackageReference Include="PolySharp" Version="1.13.2">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Serilog" Version="3.0.1"/>
+        <PackageReference Include="System.Buffers" Version="4.5.1"/>
+        <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="4.7.1"/>
+        <PackageReference Include="System.Memory" Version="4.5.5"/>
+        <PackageReference Include="System.Numerics.Vectors" Version="4.5.0"/>
+        <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0"/>
+        <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4"/>
+        <ProjectReference Include="..\LuckyBlocks.SourceGenerators\LuckyBlocks.SourceGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
+        <Reference Include="SFD.GameScriptInterface">
+            <HintPath>..\SFD.GameScriptInterface.dll</HintPath>
+        </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Content Remove="Generated\**"/>
+    </ItemGroup>
+
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+        <Exec Command="cd /d &quot;$(ProjectDir)\$(OutDir)&quot; &amp;&amp; call &quot;build.bat&quot;"/>
+    </Target>
+
+    <Target Name="Kill dotnet" BeforeTargets="BeforeRebuild">
+        <Exec Command="taskkill /f /t /im dotnet.exe"/>
+    </Target>
+
+    <PropertyGroup>
+        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+        <CompilerGeneratedFilesOutputPath>Generated</CompilerGeneratedFilesOutputPath>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+        <CompilerGeneratedFilesOutputPath>Generated</CompilerGeneratedFilesOutputPath>
+    </PropertyGroup>
+
+    <Target Name="CleanSourceGeneratedFiles" BeforeTargets="BeforeBuild" DependsOnTargets="$(BeforeBuildDependsOn)">
+        <RemoveDir Directories="Generated"/>
+    </Target>
+
+    <ItemGroup>
+        <Compile Remove="Generated\**"/>
+        <Content Include="Generated\**"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Remove="Generated\**"/>
+        <Content Include="Generated\**"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <EmbeddedResource Remove="Generated\**"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Remove="Generated\**"/>
+        <None Remove="Backups.rar"/>
+        <None Remove="app.config"/>
+    </ItemGroup>
+</Project>

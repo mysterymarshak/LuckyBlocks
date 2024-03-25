@@ -1,0 +1,433 @@
+﻿using System;
+using System.Linq;
+using System.Collections.Generic;
+using System.CodeDom.Compiler;
+using SFDGameScriptInterface;
+using Serilog;
+using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
+
+namespace {{ Namespace }};
+
+internal static class EventHookModeExtensions
+{
+    public static bool IsHandleable(this EventHookMode hookMode) => hookMode switch
+    {
+        EventHookMode.InstanceThisPre or EventHookMode.InstanceSharedPre or EventHookMode.GlobalThisPre
+            or EventHookMode.GlobalSharedPre => true,
+        _ => false
+    };
+}
+
+[GeneratedCode("LuckyBlocks.SourceGenerators.ExtendedEvents.ExtendedEventsGenerator", "6.9.4.2.0")]
+partial class {{ ClassName }}
+{
+    {{~ for callbacksStorage in CallbacksStorageModels ~}}
+    private static readonly {{ callbacksStorage.Type }} {{ callbacksStorage.Name }} = new();
+    {{~ end ~}}    
+
+    {{~ for gameCallback in GameCallbackModels ~}}
+    private static readonly {{ gameCallback.Type }} {{ gameCallback.Name }} = {{ gameCallback.Type }}.Start({{ gameCallback.CallbackMethodName }}); 
+    {{~ end ~}}
+    
+    private static ILogger InternalLogger => GetLogger();
+    
+    private static int _lastInstanceId;
+    
+    private readonly List<IEventSubscription> _eventSubscriptions = new();
+    private readonly int _instanceId;
+    
+    public {{ ClassName }}()
+    {
+        _instanceId = _lastInstanceId + 1;
+        _lastInstanceId++;
+    }
+    
+    {{~ for hookMethod in HookMethodModels ~}}
+    {{~ signature = hookMethod.Signature ~}}
+    {{~ body = hookMethod.Body ~}}
+    {{~ callbacksStorage = body.CallbacksStorage ~}}
+    public IEventSubscription {{ signature.Name }}({{ signature.ParametersAsString }})
+    {
+        var callback = new {{ body.CallbackType }}({{ body.CallbackCtorParameters }});
+        
+        {{~ if body.FilterObjectExists ~}}
+        if (!{{ callbacksStorage.Name }}.TryGetValue(filterObject, out var callbacks))
+        {
+            callbacks = new List<{{ body.CallbackType }}>();
+            {{ callbacksStorage.Name }}.Add(filterObject, callbacks);
+        }
+        
+        callbacks.Add(callback);
+        
+        var eventSubscription = new EventSubscription(() => callbacks.Remove(callback));
+        {{~ else ~}}
+        {{ callbacksStorage.Name }}.Add(callback); 
+        var eventSubscription = new EventSubscription(() => {{ callbacksStorage.Name }}.Remove(callback));
+        {{~ end ~}}
+        _eventSubscriptions.Add(eventSubscription);
+        
+        return eventSubscription;
+    }
+    {{~ end ~}}
+
+    public void Clear()
+    {
+        _eventSubscriptions.ForEach(x => x.Dispose());
+    }
+    
+    private static partial ILogger GetLogger();
+
+    {{~ for gameCallbackMethod in GameCallbackMethodModels ~}}
+    {{~ signature = gameCallbackMethod.Signature ~}}
+    {{~ body = gameCallbackMethod.Body ~}}
+    private static void {{ signature.Name }}({{ signature.ParametersAsString }})
+    {
+        {{~  if body.LinkedCallbacks.size == 1 ~}}
+        {{~ eventsQueue = "EventsQueue" + body.LinkedCallbacks[0].CallbackTypeArguments ~}}
+        {{~ else ~}}
+        {{~ eventsQueue = "EventsQueueGeneric" ~}}
+        {{~ end ~}}
+        
+        {{~ for callbacksStorage in body.LinkedCallbacks ~}}
+        try
+        {
+            {{~ if !callbacksStorage.FilterObjectExists ~}}
+            var callbacks = {{ callbacksStorage.Name }};
+            {{~ else ~}}
+            {{~ if body.FirstArgumentIsArray ~}}
+             foreach (var @object in arg1)
+             {
+                 if (!{{~ callbacksStorage.Name ~}}.TryGetValue(@object, out var callbacks))
+                     continue;
+             {{~ else ~}}
+             if ({{ callbacksStorage.Name }}.TryGetValue(arg1, out var callbacks))
+             {
+             {{~ end ~}}
+             {{~ end ~}}
+                foreach (var callback in callbacks)
+                {
+                    {{~ if body.LinkedCallbacks.size == 1 ~}}
+                    if (callback.HookMode.IsHandleable())
+                    {
+                        {{ eventsQueue }}.Add(callback.CallbackFunc!, callback.HookMode, callback.IgnoreHandled {{ callbacksStorage.QueueItemArgsAsString }});
+                    }
+                    else
+                    {
+                        {{ eventsQueue }}.Add(callback.CallbackAction!, callback.HookMode, callback.IgnoreHandled {{ callbacksStorage.QueueItemArgsAsString }});
+                    }
+                    {{~ else ~}}
+                    if (callback.HookMode.IsHandleable())
+                    {
+                        {{ eventsQueue }}.Add((Func<bool, bool>)(handled => callback.CallbackFunc!.Invoke(new Event{{ callbacksStorage.CallbackTypeArguments }}({{ callbacksStorage.EventCtorParametersAsString }}))),
+                            callback.HookMode, callback.IgnoreHandled);
+                    }
+                    else
+                    {
+                        {{ eventsQueue }}.Add((Action<bool>)(handled => callback.CallbackAction!.Invoke(new Event{{ callbacksStorage.CallbackTypeArguments }}({{ callbacksStorage.EventCtorParametersAsString }}))),
+                            callback.HookMode, callback.IgnoreHandled);
+                    }
+                    {{~ end ~}}
+                }
+            {{~ if callbacksStorage.FilterObjectExists ~}}
+            }
+            {{~ end ~}}
+        }
+        catch (Exception exception)
+        {
+            InternalLogger.Error(exception, "unexpected exception in {{ ClassName }}.{{ signature.Name }}");
+        }
+        {{~ end ~}}
+        
+        try
+        {
+            {{ eventsQueue }}.FireEvents();
+        }
+        catch (Exception exception)
+        {
+            InternalLogger.Error(exception, "unexpected exception in fire events {{ ClassName }}.{{ signature.Name }}");
+        }
+    }
+    
+    {{~ end ~}}
+    
+    private readonly record struct Callback(int OwnerInstanceId, Action<Event>? CallbackAction, Func<Event, bool>? CallbackFunc, EventHookMode HookMode, bool IgnoreHandled);
+    private readonly record struct Callback<TArgs>(int OwnerInstanceId, Action<Event<TArgs>>? CallbackAction, Func<Event<TArgs>, bool>? CallbackFunc, EventHookMode HookMode, bool IgnoreHandled);
+    private readonly record struct Callback<TArgs1, TArgs2>(int OwnerInstanceId, Action<Event<TArgs1, TArgs2>>? CallbackAction, Func<Event<TArgs1, TArgs2>, bool>? CallbackFunc, EventHookMode HookMode, bool IgnoreHandled);
+    
+    private record EventSubscription(Action DisposeDelegate) : IEventSubscription
+    {
+        private bool _disposed;
+    
+        public void Dispose()
+        {
+            if (_disposed)
+                return;
+    
+            DisposeDelegate();
+    
+            _disposed = true;
+       }
+    }
+    
+    private static class EventsQueueGeneric
+    {
+        private static readonly List<QueueItem> Items = new();
+        private static readonly QueueItemPriorityComparer Comparer = new();
+        
+        public static void Add(Action<bool> fireAction, EventHookMode hookMode, bool ignoreHandled)
+        {
+            Items.Add(new QueueItem(fireAction, default, hookMode, ignoreHandled));
+        }
+    
+        public static void Add(Func<bool, bool> fireFunc, EventHookMode hookMode, bool ignoreHandled)
+        {
+            Items.Add(new QueueItem(default, fireFunc, hookMode, ignoreHandled));
+        }
+    
+        public static void FireEvents()
+        {
+            if (Items.Count == 0)
+                return;
+                
+            var handled = false;
+            
+            Items.Sort(Comparer);
+            
+            try
+            {
+                foreach (var item in Items)
+                {
+                    if (handled && !item.IgnoreHandled)
+                        continue;
+    
+                    var isFunc = item.HookMode.IsHandleable();
+                    if (isFunc)
+                    {
+                        var result = item.Func!.Invoke(handled);
+                        if (!handled)
+                        {
+                            handled = result;
+                        }
+                    }
+                    else
+                    {
+                        item.Action!.Invoke(handled);
+                    }
+                }
+            }
+            finally
+            {
+                Items.Clear();
+            }
+        }
+    
+        private readonly record struct QueueItem(Action<bool>? Action, Func<bool, bool>? Func, EventHookMode HookMode, bool IgnoreHandled);
+            
+        private class QueueItemPriorityComparer : IComparer<QueueItem>
+        {
+            public int Compare(QueueItem x, QueueItem y)
+            {
+                var priority1 = (int)x.HookMode;
+                var priority2 = (int)y.HookMode;
+                return priority1 > priority2 ? -1 : priority1 == priority2 ? 0 : 1;
+            }
+        }
+    }
+        
+    private static class EventsQueue
+    {
+        private static readonly List<QueueItem> Items = new();
+        private static readonly QueueItemPriorityComparer Comparer = new();
+        
+        public static void Add(Action<Event> fireAction, EventHookMode hookMode, bool ignoreHandled)
+        {
+            Items.Add(new QueueItem(fireAction, default, hookMode, ignoreHandled));
+        }
+    
+        public static void Add(Func<Event, bool> fireFunc, EventHookMode hookMode, bool ignoreHandled)
+        {
+            Items.Add(new QueueItem(default, fireFunc, hookMode, ignoreHandled));
+        }
+    
+        public static void FireEvents()
+        {
+            if (Items.Count == 0)
+                return;
+                
+            var handled = false;
+            
+            Items.Sort(Comparer);
+            
+            try
+            {
+                foreach (var item in Items)
+                {
+                    if (handled && !item.IgnoreHandled)
+                        continue;
+    
+                    var isFunc = item.HookMode.IsHandleable();
+                    if (isFunc)
+                    {
+                        var result = item.Func!.Invoke(new Event(handled));
+                        if (!handled)
+                        {
+                            handled = result;
+                        }
+                    }
+                    else
+                    {
+                        item.Action!.Invoke(new Event(handled));
+                    }
+                }
+            }
+            finally
+            {
+                Items.Clear();
+            }
+        }
+    
+        private readonly record struct QueueItem(Action<Event>? Action, Func<Event, bool>? Func, EventHookMode HookMode, bool IgnoreHandled);
+            
+        private class QueueItemPriorityComparer : IComparer<QueueItem>
+        {
+            public int Compare(QueueItem x, QueueItem y)
+            {
+                var priority1 = (int)x.HookMode;
+                var priority2 = (int)y.HookMode;
+                return priority1 > priority2 ? -1 : priority1 == priority2 ? 0 : 1;
+            }
+        }
+    }
+        
+    private static class EventsQueue<T>
+    {
+        private static readonly List<QueueItem<T>> Items = new();
+        private static readonly QueueItemPriorityComparer Comparer = new();
+    
+        public static void Add(Action<Event<T>> fireAction, EventHookMode hookMode, bool ignoreHandled, T arg)
+        {
+            Items.Add(new QueueItem<T>(fireAction, default, hookMode, ignoreHandled, arg));
+        }
+    
+        public static void Add(Func<Event<T>, bool> fireFunc, EventHookMode hookMode, bool ignoreHandled, T arg)
+        {
+            Items.Add(new QueueItem<T>(default, fireFunc, hookMode, ignoreHandled, arg));
+        }
+    
+        public static void FireEvents()
+        {
+            if (Items.Count == 0)
+                return;
+    
+            var handled = false;
+    
+            Items.Sort(Comparer);
+            
+            try
+            {
+                foreach (var item in Items)
+                {
+                    if (handled && !item.IgnoreHandled)
+                        continue;
+                        
+                    var isFunc = item.HookMode.IsHandleable();
+                    if (isFunc)
+                    {
+                        var result = item.Func!.Invoke(new Event<T>(item.Arg, handled));
+                        if (!handled)
+                        {
+                            handled = result;
+                        }
+                    }
+                    else
+                    {
+                        item.Action!.Invoke(new Event<T>(item.Arg, handled));
+                    }
+                }
+            }
+            finally
+            {
+                Items.Clear();
+            }
+        }
+    
+        private readonly record struct QueueItem<T>(Action<Event<T>>? Action, Func<Event<T>, bool>? Func, EventHookMode HookMode,
+            bool IgnoreHandled, T Arg);
+    
+        private class QueueItemPriorityComparer : IComparer<QueueItem<T>>
+        {
+            public int Compare(QueueItem<T> x, QueueItem<T> y)
+            {
+                var priority1 = (int)x.HookMode;
+                var priority2 = (int)y.HookMode;
+                return priority1 > priority2 ? -1 : priority1 == priority2 ? 0 : 1;
+            }
+        }
+    }
+        
+    private static class EventsQueue<T1, T2>
+    {
+        private static readonly List<QueueItem<T1, T2>> Items = new();
+        private static readonly QueueItemPriorityComparer Comparer = new();
+    
+        public static void Add(Action<Event<T1, T2>> fireAction, EventHookMode hookMode, bool ignoreHandled, T1 arg1, T2 arg2)
+        {
+            Items.Add(new QueueItem<T1, T2>(fireAction, default, hookMode, ignoreHandled, arg1, arg2));
+        }
+    
+        public static void Add(Func<Event<T1, T2>, bool> fireFunc, EventHookMode hookMode, bool ignoreHandled, T1 arg1, T2 arg2)
+        {
+            Items.Add(new QueueItem<T1, T2>(default, fireFunc, hookMode, ignoreHandled, arg1, arg2));
+        }
+    
+        public static void FireEvents()
+        {
+            if (Items.Count == 0)
+                return;
+    
+            var handled = false;
+    
+            Items.Sort(Comparer);
+            
+            try
+            {
+                foreach (var item in Items)
+                {
+                    if (handled && !item.IgnoreHandled)
+                        continue;
+    
+                    var isFunc = item.HookMode.IsHandleable();
+                    if (isFunc)
+                    {
+                        var result = item.Func!.Invoke(new Event<T1, T2>(item.Arg1, item.Arg2, handled));
+                        if (!handled)
+                        {
+                            handled = result;
+                        }
+                    }
+                    else
+                    {
+                        item.Action!.Invoke(new Event<T1, T2>(item.Arg1, item.Arg2, handled));
+                    }
+                }
+            }
+            finally
+            {
+                Items.Clear();
+            }
+        }
+    
+        private readonly record struct QueueItem<T1, T2>(Action<Event<T1, T2>>? Action, Func<Event<T1, T2>, bool>? Func, EventHookMode HookMode,
+            bool IgnoreHandled, T1 Arg1, T2 Arg2);
+    
+        private class QueueItemPriorityComparer : IComparer<QueueItem<T1, T2>>
+        {
+            public int Compare(QueueItem<T1, T2> x, QueueItem<T1, T2> y)
+            {
+                var priority1 = (int)x.HookMode;
+                var priority2 = (int)y.HookMode;
+                return priority1 > priority2 ? -1 : priority1 == priority2 ? 0 : 1;
+            }
+        }
+    }
+}

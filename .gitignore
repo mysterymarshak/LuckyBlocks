@@ -1,0 +1,11 @@
+bin/
+obj/
+/packages/
+riderModule.iml
+/_ReSharper.Caches/
+/src/LuckyBlocks/Generated/
+/src/LuckyBlocks.Compiler/
+/src/SFDScriptCompileHelper/
+/tests/
+\.idea/
+/src/LuckyBlocks/Backups.rar
