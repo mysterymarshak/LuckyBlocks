@@ -199,7 +199,7 @@ Same as [Bow with infinite bouncing bullets](#bow-with-infinite-bouncing-bullets
 
 ### Random weapon with random powerup
 
-Drops a random weapon with random available powerup
+Drops a random weapon with random available [powerup](https://github.com/mysterymarshak/LuckyBlocks?tab=readme-ov-file#weapon-powerups)
 
 <img width="370" src="https://github.com/mysterymarshak/LuckyBlocks/assets/37479500/1efdc942-a6ba-46cf-9d1c-1b7c7b83f81f" alt="Demo of weapon" />
 
