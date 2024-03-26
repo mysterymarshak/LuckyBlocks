@@ -16,6 +16,8 @@ internal class TimeStoppedPlayer : TimeStoppedDynamicObjectBase
     private readonly List<IObject> _prohibitMoveObjects = [];
 
     private float _activeThrowableTimer;
+    private float _strengthBoostTime;
+    private float _speedBoostTime;
     private IEventSubscription? _damageEventSubscription;
     private IEventSubscription? _meleeActionEventSubscription;
     private float _delayedDamage;
@@ -31,6 +33,8 @@ internal class TimeStoppedPlayer : TimeStoppedDynamicObjectBase
     protected override void InitializeInternal()
     {
         _activeThrowableTimer = _playerInstance.GetActiveThrowableTimer();
+        _strengthBoostTime = _playerInstance.GetStrengthBoostTime();
+        _speedBoostTime = _playerInstance.GetSpeedBoostTime();
         _playerInstance.SetInputMode(PlayerInputMode.Disabled);
 
         ProhibitFromGrabbingAndMove();
@@ -61,6 +65,9 @@ internal class TimeStoppedPlayer : TimeStoppedDynamicObjectBase
         {
             _playerInstance.SetActiveThrowableTimer(_activeThrowableTimer);
         }
+        
+        _playerInstance.SetStrengthBoostTime(_strengthBoostTime);
+        _playerInstance.SetSpeedBoostTime(_speedBoostTime);
     }
 
     protected override void DisposeInternal()
