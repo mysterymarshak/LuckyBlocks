@@ -72,6 +72,9 @@ Instantly revives the player upon death
 
 <p>
 
+> [!WARNING]
+> After revival you will lost all your applied buffs!
+
 > [!NOTE]
 > The totem will not revive you if the player's body was destroyed
 > 
