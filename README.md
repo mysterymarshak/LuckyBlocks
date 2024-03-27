@@ -317,6 +317,13 @@ Spawns three illusions of the player, making it possible to confuse the enemy
 
 <img width="370" src="https://github.com/mysterymarshak/LuckyBlocks/assets/37479500/d64d834c-5608-4d66-b91b-28adb41692aa" alt="Demo of magic" />
 
+<p>
+
+> [!NOTE]
+> The illusions don't damage
+
+</p>
+
 ### Time stop wizard
 
 Stops the time  
