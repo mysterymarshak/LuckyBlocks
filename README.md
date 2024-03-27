@@ -1,5 +1,7 @@
 # Lucky Blocks
 
+<img width="720" src="https://github.com/mysterymarshak/LuckyBlocks/assets/37479500/47c57c25-c8c3-44e4-9482-13684ab3f23e" alt="Lucky blocks" />
+
 *They may be unlucky for some players*  
 © *Old superfigher saying*
 
