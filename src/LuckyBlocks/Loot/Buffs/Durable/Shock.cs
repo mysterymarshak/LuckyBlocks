@@ -133,8 +133,15 @@ internal class Shock : DurableBuffBase, IRepressibleByImmunityFlagsBuff
         var playerInstance = Player.Instance;
         if (!Player.IsValid())
             return;
+
+        var currentHealth = playerInstance!.GetHealth();
+        if (args.Damage >= currentHealth)
+        {
+            Awaiter.Start(playerInstance.Kill, TimeSpan.Zero);
+            return;
+        }
         
-        playerInstance!.SetHealth(playerInstance.GetHealth() - args.Damage);
+        playerInstance.SetHealth(playerInstance.GetHealth() - args.Damage);
     }
     
     private void CreateAndStartShockDamageTimer()
