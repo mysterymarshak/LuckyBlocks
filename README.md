@@ -373,7 +373,7 @@ Spawns pills (25 hp) or medkit (50 hp)
 <p>
 
 > [!WARNING]
-> Can be poisoned!
+> Can be poisoned with 50% chance!
 >
 > <img width="370" src="https://github.com/mysterymarshak/LuckyBlocks/assets/37479500/c3a3900a-c305-4032-b541-e73eb7a254b3" alt="Demo of medkit" />
 
