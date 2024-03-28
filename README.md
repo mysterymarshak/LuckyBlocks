@@ -169,7 +169,7 @@ Drops a random legendary weapon `(e.g are Bazooka, Grenade launcher, Sniper, M60
 <p>
   
 > [!WARNING]
-> Weapon can be booby-trapped! `(it explodes after shoot, or in case of chainsaw after picking up)`
+> Weapon can be booby-trapped with 10% chance! `(it explodes after shoot, or in case of chainsaw after picking up)`
 >
 > <img width="370" src="https://github.com/mysterymarshak/LuckyBlocks/assets/37479500/95e2f2a0-8f40-4e3d-9371-60e9756f8185" alt="Demo of booby-trap" />
 
