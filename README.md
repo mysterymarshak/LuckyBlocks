@@ -209,7 +209,6 @@ Drops a random weapon with random available [powerup](https://github.com/mystery
 
 Can be obtained if player have a firearm  
 Poweruped bullets count depends on weapon, unless otherwise stated  
-Can be stacked with max total ammo of weapon limitation, unless otherwise stated 
 
 > [!NOTE]
 > One firearm can has got many type of powerups, if its compatible with each other
@@ -220,7 +219,6 @@ Can be stacked with max total ammo of weapon limitation, unless otherwise stated
 
 Bullets trigger an explosion on colliding with any object
 
-**Applies**: once, can't be stacked  
 **Incompatibility**: with [TripleRicochetBullets](#triple-ricochet-bullets) and [InfiniteRicochetBullets](#infinite-ricochet-bullets)
 
 <img width="370" src="https://github.com/mysterymarshak/LuckyBlocks/assets/37479500/23ac71a7-01a7-4e74-ac30-f0e1929a9f24" alt="Demo of powerup" />
@@ -237,7 +235,6 @@ When bullets collide with a surface, its ricochet, scattering into three
 
 When collides with player, he become [frozen](#freeze)
 
-**Applies**: once, can't be stacked  
 **Can be obtained**: if alive players more than 1  
 **Incompatibility**: with [TripleRicochetBullets](#triple-ricochet-bullets) and [PushBullets](#push-bullets)
 
@@ -247,7 +244,6 @@ When collides with player, he become [frozen](#freeze)
 
 Pushing objects on its path
 
-**Applies**: once, can't be stacked  
 **Incompatibility**: with [TripleRicochetBullets](#triple-ricochet-bullets) and [FreezeBullets](#freeze-bullets)
 
 <img width="370" src="https://github.com/mysterymarshak/LuckyBlocks/assets/37479500/bc976848-08fe-45b5-b188-90dc54f24bad" alt="Demo of powerup" />
@@ -256,7 +252,7 @@ Pushing objects on its path
 
 Follow the nearest player in some radius
 
-**Applies**: once, can't be stacked  
+**Can be obtained**: if alive players more than 1  
 **Incompatibility**: with [TripleRicochetBullets](#triple-ricochet-bullets)
 
 <img width="370" src="https://github.com/mysterymarshak/LuckyBlocks/assets/37479500/016c0874-96bb-4c2c-8f19-e42e50656656" alt="Demo of powerup" />
@@ -265,7 +261,6 @@ Follow the nearest player in some radius
 
 Bullets which can infinite ricochet
 
-**Applies**: once, can't be stacked  
 **Quantity**: all weapon ammo  
 **Incompatibility**: with [ExplosiveBullets](#explosive-bullets) and [TripleRicochetBullets](#triple-ricochet-bullets)
 
