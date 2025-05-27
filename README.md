@@ -1,5 +1,7 @@
 # Lucky Blocks
 
+<img width="720" src="https://github.com/mysterymarshak/LuckyBlocks/assets/37479500/47c57c25-c8c3-44e4-9482-13684ab3f23e" alt="Lucky blocks" />
+
 *They may be unlucky for some players*  
 © *Old superfigher saying*
 
@@ -167,7 +169,7 @@ Drops a random legendary weapon `(e.g are Bazooka, Grenade launcher, Sniper, M60
 <p>
   
 > [!WARNING]
-> Weapon can be booby-trapped! `(it explodes after shoot, or in case of chainsaw after picking up)`
+> Weapon can be booby-trapped with 10% chance! `(it explodes after shoot, or in case of chainsaw after picking up)`
 >
 > <img width="370" src="https://github.com/mysterymarshak/LuckyBlocks/assets/37479500/95e2f2a0-8f40-4e3d-9371-60e9756f8185" alt="Demo of booby-trap" />
 
@@ -207,7 +209,6 @@ Drops a random weapon with random available [powerup](https://github.com/mystery
 
 Can be obtained if player have a firearm  
 Poweruped bullets count depends on weapon, unless otherwise stated  
-Can be stacked with max total ammo of weapon limitation, unless otherwise stated 
 
 > [!NOTE]
 > One firearm can has got many type of powerups, if its compatible with each other
@@ -218,7 +219,6 @@ Can be stacked with max total ammo of weapon limitation, unless otherwise stated
 
 Bullets trigger an explosion on colliding with any object
 
-**Applies**: once, can't be stacked  
 **Incompatibility**: with [TripleRicochetBullets](#triple-ricochet-bullets) and [InfiniteRicochetBullets](#infinite-ricochet-bullets)
 
 <img width="370" src="https://github.com/mysterymarshak/LuckyBlocks/assets/37479500/23ac71a7-01a7-4e74-ac30-f0e1929a9f24" alt="Demo of powerup" />
@@ -235,7 +235,6 @@ When bullets collide with a surface, its ricochet, scattering into three
 
 When collides with player, he become [frozen](#freeze)
 
-**Applies**: once, can't be stacked  
 **Can be obtained**: if alive players more than 1  
 **Incompatibility**: with [TripleRicochetBullets](#triple-ricochet-bullets) and [PushBullets](#push-bullets)
 
@@ -245,7 +244,6 @@ When collides with player, he become [frozen](#freeze)
 
 Pushing objects on its path
 
-**Applies**: once, can't be stacked  
 **Incompatibility**: with [TripleRicochetBullets](#triple-ricochet-bullets) and [FreezeBullets](#freeze-bullets)
 
 <img width="370" src="https://github.com/mysterymarshak/LuckyBlocks/assets/37479500/bc976848-08fe-45b5-b188-90dc54f24bad" alt="Demo of powerup" />
@@ -254,7 +252,7 @@ Pushing objects on its path
 
 Follow the nearest player in some radius
 
-**Applies**: once, can't be stacked  
+**Can be obtained**: if alive players more than 1  
 **Incompatibility**: with [TripleRicochetBullets](#triple-ricochet-bullets)
 
 <img width="370" src="https://github.com/mysterymarshak/LuckyBlocks/assets/37479500/016c0874-96bb-4c2c-8f19-e42e50656656" alt="Demo of powerup" />
@@ -263,7 +261,6 @@ Follow the nearest player in some radius
 
 Bullets which can infinite ricochet
 
-**Applies**: once, can't be stacked  
 **Quantity**: all weapon ammo  
 **Incompatibility**: with [ExplosiveBullets](#explosive-bullets) and [TripleRicochetBullets](#triple-ricochet-bullets)
 
@@ -317,6 +314,13 @@ Spawns three illusions of the player, making it possible to confuse the enemy
 
 <img width="370" src="https://github.com/mysterymarshak/LuckyBlocks/assets/37479500/d64d834c-5608-4d66-b91b-28adb41692aa" alt="Demo of magic" />
 
+<p>
+
+> [!NOTE]
+> The illusions don't damage
+
+</p>
+
 ### Time stop wizard
 
 Stops the time  
@@ -364,7 +368,7 @@ Spawns pills (25 hp) or medkit (50 hp)
 <p>
 
 > [!WARNING]
-> Can be poisoned!
+> Can be poisoned with 50% chance!
 >
 > <img width="370" src="https://github.com/mysterymarshak/LuckyBlocks/assets/37479500/c3a3900a-c305-4032-b541-e73eb7a254b3" alt="Demo of medkit" />
 
