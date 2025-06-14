@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using LuckyBlocks.Data;
 using LuckyBlocks.Loot.WeaponPowerups;
 using LuckyBlocks.Loot.WeaponPowerups.Bullets;
@@ -22,8 +23,8 @@ internal abstract class WeaponWithInfiniteBouncingBase : PowerUppedWeaponBase
         base.Run();
     }
 
-    protected override IWeaponPowerup<Weapon> GetPowerup(Weapon weapon)
+    protected override IEnumerable<IWeaponPowerup<Weapon>> GetPowerups(Weapon weapon)
     {
-        return _powerupFactory.CreatePowerup(weapon, typeof(InfiniteRicochetBullets));
+        yield return _powerupFactory.CreatePowerup(weapon, typeof(InfiniteRicochetBullets));
     }
 }

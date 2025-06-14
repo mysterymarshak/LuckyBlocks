@@ -1,4 +1,5 @@
-﻿using LuckyBlocks.Data;
+﻿using System.Collections.Generic;
+using LuckyBlocks.Data;
 using LuckyBlocks.Loot.WeaponPowerups;
 using LuckyBlocks.Loot.WeaponPowerups.Mined;
 using SFDGameScriptInterface;
@@ -20,9 +21,9 @@ internal class LegendaryWeaponMined : PowerUppedWeaponBase
         LootConstructorArgs args) : base(spawnPosition, args)
         => (_legendaryWeapon, _powerupFactory) = (weaponWithType, args.PowerupFactory);
 
-    protected override IWeaponPowerup<Weapon> GetPowerup(Weapon weapon)
+    protected override IEnumerable<IWeaponPowerup<Weapon>> GetPowerups(Weapon weapon)
     {
-        return _powerupFactory.CreatePowerup(weapon,
+        yield return _powerupFactory.CreatePowerup(weapon,
             _legendaryWeapon.WeaponItemType == WeaponItemType.Melee
                 ? typeof(MinedMeleePowerup)
                 : typeof(MinedFirearmPowerup));

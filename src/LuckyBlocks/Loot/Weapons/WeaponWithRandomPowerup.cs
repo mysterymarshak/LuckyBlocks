@@ -52,9 +52,9 @@ internal class WeaponWithRandomPowerup : PowerUppedWeaponBase
         _powerupType = GetRandomPowerup();
     }
 
-    protected override IWeaponPowerup<Weapon> GetPowerup(Weapon weapon)
+    protected override IEnumerable<IWeaponPowerup<Weapon>> GetPowerups(Weapon weapon)
     {
-        return _powerupFactory.CreatePowerup(weapon, _powerupType);
+        yield return _powerupFactory.CreatePowerup(weapon, _powerupType);
     }
 
     private Type GetRandomPowerup()

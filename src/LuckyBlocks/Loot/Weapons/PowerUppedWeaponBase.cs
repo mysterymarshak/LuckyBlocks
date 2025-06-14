@@ -1,4 +1,5 @@
-﻿using Autofac;
+﻿using System.Collections.Generic;
+using Autofac;
 using LuckyBlocks.Data;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Watchers;
@@ -39,7 +40,7 @@ internal abstract class PowerUppedWeaponBase : ILoot
         _weaponEventsWatcher.Start();
     }
 
-    protected abstract IWeaponPowerup<Weapon> GetPowerup(Weapon weapon);
+    protected abstract IEnumerable<IWeaponPowerup<Weapon>> GetPowerups(Weapon weapon);
 
     protected virtual void OnWeaponCreated(IObjectWeaponItem weaponItem)
     {
@@ -50,8 +51,11 @@ internal abstract class PowerUppedWeaponBase : ILoot
         var weaponsData = player.GetWeaponsData();
         var weapon = weaponsData.GetWeaponByType(WeaponItemType);
 
-        var powerup = GetPowerup(weapon);
-        _weaponsPowerupsService.AddWeaponPowerup(powerup, weapon, player);
+        var powerups = GetPowerups(weapon);
+        foreach (var powerup in powerups)
+        {
+            _weaponsPowerupsService.AddWeaponPowerup(powerup, weapon, player);
+        }
 
         _weaponEventsWatcher!.Dispose();
     }

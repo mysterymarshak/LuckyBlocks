@@ -79,8 +79,8 @@ internal enum Item
 
     [Weight(0.5f)]
     BloodyBath,
-
-    BowWithInfiniteBouncing,
+    
+    BowWithPushingAndInfiniteBouncing,
 
     GrenadeLauncherWithInfiniteBouncing,
 
