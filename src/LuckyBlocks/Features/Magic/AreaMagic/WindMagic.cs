@@ -35,45 +35,45 @@ internal class WindMagic : AreaMagicBase
     {
         PlayEffects(EffectName.Steam, area, Direction);
     }
-    
+
     protected override void CastInternal(Area area)
     {
         var objects = GetObjectsByArea(area)
             .Where(x => _pushedObjects?.Contains(x) == false)
             .ToList();
-        
+
         ClearFire(objects, area);
 
         var wizardInstance = Wizard.Instance;
-        
+
         var objectsToPush = objects
             .Where(x => x.GetBodyType() != BodyType.Static)
             .Where(x => x.UniqueId != wizardInstance?.UniqueId)
             .ToList();
-        
+
         _pushedObjects ??= new();
         _pushedObjects.AddRange(objectsToPush);
 
         foreach (var objectToPush in objectsToPush)
         {
-            if (objectToPush is not IPlayer { IsDead: false } playerInstance)
+            if (objectToPush is not IPlayer playerInstance || !playerInstance.IsValidUser())
                 continue;
+
+            // decoys cant be disarmed
 
             var hasImmunity = HasPlayerImmunity(playerInstance);
             if (hasImmunity)
                 continue;
-            
+
             var player = _identityService.GetPlayerByInstance(playerInstance);
             var disarm = new Disarm(player);
             _buffsService.TryAddBuff(disarm, player);
-            
+
             objectToPush.SetLinearVelocity(new Vector2(0, 3));
         }
 
         ScheduleWind(objects, Direction);
-
         ReflectProjectiles(area);
-        
         PlayEffects(area);
     }
 
@@ -84,7 +84,7 @@ internal class WindMagic : AreaMagicBase
         {
             _game.EndFireNode(fireNode.InstanceID);
         }
-        
+
         foreach (var @object in objects.Where(x => x.IsBurning))
         {
             @object.ClearFire();
@@ -97,9 +97,9 @@ internal class WindMagic : AreaMagicBase
         {
             foreach (var obj in objects)
             {
-                if (obj is IPlayer playerInstance && HasPlayerImmunity(playerInstance))
+                if (obj is IPlayer playerInstance && playerInstance.IsValidUser() && HasPlayerImmunity(playerInstance))
                     continue;
-                
+
                 obj.SetLinearVelocity(new Vector2(0, obj.GetLinearVelocity().Y) + PushSpeed * direction);
             }
         }, TimeSpan.Zero);
@@ -118,10 +118,10 @@ internal class WindMagic : AreaMagicBase
         {
             if (_reflectedProjectiles?.Contains(projectile) == true)
                 continue;
-            
+
             _reflectedProjectiles ??= new();
             _reflectedProjectiles.Add(projectile);
-            
+
             projectile.Velocity = -projectile.Velocity;
         }
     }

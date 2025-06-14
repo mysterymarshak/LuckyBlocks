@@ -10,14 +10,19 @@ internal static class IObjectExtensions
     {
         return @object is { DestructionInitiated: false, IsRemoved: false, RemovalInitiated: false };
     }
-    
+
+    public static bool IsValidUser(this IPlayer playerInstance)
+    {
+        return playerInstance.IsValid() && playerInstance is { IsUser: true, UserIdentifier: > 0 };
+    }
+
     public static void RemoveDelayed(this IObject @object)
     {
         if (!@object.IsValid())
             return;
-        
+
         Awaiter.Start(@object.Remove, TimeSpan.Zero);
-        
+
         // object removal on next update it's cost of free-allocations EventsQueue
         // if it wasn't it, every update call (and other callbacks) allocates list for queue for supporting HookModes
         // OnObjectDestroyed -> Buff or anything calling object removing -> game calls OnObjectDestroyed

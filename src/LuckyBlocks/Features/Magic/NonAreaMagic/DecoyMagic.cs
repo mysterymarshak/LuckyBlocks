@@ -75,7 +75,7 @@ internal class DecoyMagic : NonAreaMagicBase
         for (var i = 0; i < DECOYS_COUNT; i++)
         {
             var bot = _game.CreatePlayer(position);
-
+            
             bot.SetBotBehavior(_cachedBotBehavior);
             bot.SetBotName(name);
             bot.SetProfile(profile);
@@ -86,6 +86,7 @@ internal class DecoyMagic : NonAreaMagicBase
             bot.SetSpeedBoostTime(speedBoostTime);
             bot.SetHealth(health);
             _dialoguesService.RestoreDialogues(bot, dialogues);
+            // decoys dont have user id
 
             _extendedEvents.HookOnDead(bot, _cachedDecoyDeadEvent, EventHookMode.Default);
             _decoys.Add(bot);
