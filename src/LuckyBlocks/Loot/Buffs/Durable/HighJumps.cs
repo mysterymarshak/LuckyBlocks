@@ -4,6 +4,7 @@ using LuckyBlocks.Entities;
 using LuckyBlocks.Exceptions;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Immunity;
+using LuckyBlocks.Features.PlayerModifiers;
 using LuckyBlocks.Features.Watchers;
 using LuckyBlocks.Utils;
 using SFDGameScriptInterface;
@@ -12,23 +13,26 @@ namespace LuckyBlocks.Loot.Buffs.Durable;
 
 internal class HighJumps : DurableBuffBase, IImmunityFlagsIndicatorBuff
 {
+    public static readonly PlayerModifiers ModifiedModifiers = new()
+    {
+        JumpHeight = 2f
+    };
+
     public override string Name => "High jumps";
     public override TimeSpan Duration => TimeSpan.FromSeconds(10);
     public ImmunityFlag ImmunityFlags => ImmunityFlag.ImmunityToFall;
 
     protected override Color BuffColor => Color.White;
 
-    private const int JUMP_VELOCITY = 14;
-
     private readonly INotificationService _notificationService;
+    private readonly IPlayerModifiersService _playerModifiersService;
     private readonly BuffConstructorArgs _args;
-    private readonly Action _cachedBoostAction;
 
-    private JumpsWatcher? _jumpsWatcher;
+    private PlayerModifiers? _playerModifiers;
 
-    public HighJumps(Player player, BuffConstructorArgs args, TimeSpan timeLeft = default) : base(player, args,
-        timeLeft)
-        => (_notificationService, _args, _cachedBoostAction) = (args.NotificationService, args, Boost);
+    public HighJumps(Player player, BuffConstructorArgs args, TimeSpan timeLeft = default) :
+        base(player, args, timeLeft) => (_notificationService, _playerModifiersService, _args) =
+        (args.NotificationService, args.PlayerModifiersService, args);
 
     public override IDurableBuff Clone()
     {
@@ -37,14 +41,16 @@ internal class HighJumps : DurableBuffBase, IImmunityFlagsIndicatorBuff
 
     protected override void OnRan()
     {
-        var playerInstance = Player.Instance;
-        ArgumentWasNullException.ThrowIfNull(playerInstance);
+        var playerInstance = Player.Instance!;
+        _playerModifiers = playerInstance.GetModifiers();
 
-        _jumpsWatcher = new(playerInstance, ExtendedEvents);
-        _jumpsWatcher.Jump += OnJump;
-        _jumpsWatcher.Start();
-
+        EnableBuff();
         UpdateDialogue();
+    }
+
+    protected override void OnFinished()
+    {
+        DisableBuff();
     }
 
     protected override void OnAppliedAgain()
@@ -54,24 +60,14 @@ internal class HighJumps : DurableBuffBase, IImmunityFlagsIndicatorBuff
             BuffColor, Player.UserIdentifier);
     }
 
-    protected override void OnFinished()
+    private void EnableBuff()
     {
-        _jumpsWatcher?.Dispose();
+        _playerModifiersService.AddModifiers(Player, ModifiedModifiers);
     }
 
-    private void OnJump()
+    private void DisableBuff()
     {
-        Awaiter.Start(_cachedBoostAction, TimeSpan.Zero);
-    }
-
-    private void Boost()
-    {
-        var playerInstance = Player.Instance;
-        if (!Player.IsValid() || playerInstance!.IsDead)
-            return;
-
-        var velocity = playerInstance.GetLinearVelocity();
-        playerInstance.SetLinearVelocity(new Vector2(velocity.X, JUMP_VELOCITY));
+        _playerModifiersService.RevertModifiers(Player, ModifiedModifiers, _playerModifiers!);
     }
 
     private void UpdateDialogue()

@@ -43,6 +43,7 @@ internal enum Item
     IncreaseSpawnChance,
 
     [OnlyPlayer]
+    [ModifiedModifiers(typeof(HighJumps), nameof(Buffs.Durable.HighJumps.ModifiedModifiers))]
     HighJumps,
 
     [AlivePlayersMoreThanOne]
