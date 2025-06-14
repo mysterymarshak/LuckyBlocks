@@ -22,7 +22,8 @@ internal class Hulk : DurableBuffBase
         ImpactDamageTakenModifier = 0.8f,
         MeleeDamageTakenModifier = 0.8f,
         ProjectileCritChanceTakenModifier = 0.8f,
-        ProjectileDamageTakenModifier = 0.8f
+        ProjectileDamageTakenModifier = 0.8f,
+        ClimbingSpeed = 0.75f
     };
 
     public override string Name => "Hulk";

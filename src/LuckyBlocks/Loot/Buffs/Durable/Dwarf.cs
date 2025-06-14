@@ -15,7 +15,8 @@ internal class Dwarf : DurableBuffBase
         SizeModifier = 0.5f,
         RunSpeedModifier = 2f,
         SprintSpeedModifier = 2f,
-        EnergyRechargeModifier = 2f
+        EnergyRechargeModifier = 2f,
+        ClimbingSpeed = 2f
     };
 
     public override string Name => "Dwarf";
