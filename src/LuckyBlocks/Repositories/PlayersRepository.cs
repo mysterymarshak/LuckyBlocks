@@ -33,8 +33,6 @@ internal class PlayersRepository : IPlayersRepository
 
             if (createPlayerResult.TryPickT1(out var unknown, out player))
                 return unknown;
-
-            _players.Add(userId, player);
         }
 
         return player;
@@ -67,7 +65,6 @@ internal class PlayersRepository : IPlayersRepository
         if (!_players.TryGetValue(userId, out var player))
         {
             player = CreatePlayer(instance.GetUser());
-            _players.Add(userId, player);
         }
 
         return player;
@@ -95,6 +92,10 @@ internal class PlayersRepository : IPlayersRepository
     private Player CreatePlayer(IUser? user)
     {
         ArgumentWasNullException.ThrowIfNull(user);
-        return new Player(user);
+        
+        var player = new Player(user);
+        _players.Add(user.UserIdentifier, player);
+
+        return player;
     }
 }
