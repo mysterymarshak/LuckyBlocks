@@ -175,6 +175,12 @@ internal class CommandsHandler : ICommandsHandler
                     
                     break;
                 }
+                case "1hp":
+                {
+                    playerInstance?.SetHealth(1f);
+                    
+                    break;
+                }
             }
         }
         catch (Exception exception)
