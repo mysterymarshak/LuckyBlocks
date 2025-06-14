@@ -12,7 +12,10 @@ internal interface INotificationService
 {
     void CreateChatNotification(string message, Color color);
     void CreateChatNotification(string message, Color color, int userIdentifier);
-    int CreateDialogueNotification(string message, Color color, TimeSpan displayTime, IPlayer playerInstance, bool ignoreDeath = false, bool realTime = false);
+
+    int CreateDialogueNotification(string message, Color color, TimeSpan displayTime, IPlayer playerInstance,
+        bool ignoreDeath = false, bool realTime = false);
+
     void RemoveDialogue(IPlayer playerInstance, int id);
     void CreateTextNotification(string message, Color color, TimeSpan displayTime, IPlayer player);
     void CreatePopupNotification(string message, Color color, TimeSpan duration);
@@ -24,11 +27,12 @@ internal class NotificationService : INotificationService
     private readonly IGame _game;
     private readonly IChat _chat;
     private readonly IDialoguesService _dialoguesService;
+    private readonly IEffectsPlayer _effectsPlayer;
 
     private CancellationTokenSource? _popupMessageCancellationTokenSource;
 
-    public NotificationService(IGame game, IChat chat, IDialoguesService dialoguesService)
-        => (_game, _chat, _dialoguesService) = (game, chat, dialoguesService);
+    public NotificationService(IGame game, IChat chat, IDialoguesService dialoguesService, IEffectsPlayer effectsPlayer)
+        => (_game, _chat, _dialoguesService, _effectsPlayer) = (game, chat, dialoguesService, effectsPlayer);
 
     public void CreateChatNotification(string message, Color color)
     {
@@ -39,8 +43,9 @@ internal class NotificationService : INotificationService
     {
         _chat.ShowMessage(message, color, userIdentifier);
     }
-    
-    public int CreateDialogueNotification(string message, Color color, TimeSpan displayTime, IPlayer playerInstance, bool ignoreDeath = false, bool realTime = false)
+
+    public int CreateDialogueNotification(string message, Color color, TimeSpan displayTime, IPlayer playerInstance,
+        bool ignoreDeath = false, bool realTime = false)
     {
         return _dialoguesService.AddDialogue(message, color, displayTime, playerInstance, ignoreDeath, realTime);
     }
@@ -52,7 +57,9 @@ internal class NotificationService : INotificationService
 
     public void CreateTextNotification(string message, Color color, TimeSpan displayTime, IPlayer player)
     {
-        Text.CreateAnimatedText(message, color, displayTime, player, _game);
+        _effectsPlayer.PlayEffect(EffectName.CustomFloatText, player.GetWorldPosition(), message, color,
+            (float)displayTime.TotalMilliseconds, 1f, true);
+        // Text.CreateAnimatedText(message, color, displayTime, player, _game);
     }
 
     public void CreatePopupNotification(string message, Color color, TimeSpan duration)
@@ -71,7 +78,7 @@ internal class NotificationService : INotificationService
         _popupMessageCancellationTokenSource?.Cancel();
         _popupMessageCancellationTokenSource?.Dispose();
         _popupMessageCancellationTokenSource = null;
-        
+
         _game.HidePopupMessage();
     }
 }
