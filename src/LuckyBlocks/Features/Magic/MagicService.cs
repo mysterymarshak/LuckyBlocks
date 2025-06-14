@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using Autofac;
 using LuckyBlocks.Extensions;
+using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.Magic.AreaMagic;
 using LuckyBlocks.Features.Time;
+using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
 using LuckyBlocks.Utils;
 using LuckyBlocks.Utils.Timers;
 using Serilog;
@@ -14,8 +16,7 @@ namespace LuckyBlocks.Features.Magic;
 
 internal interface IMagicService
 {
-    void Cast(IAreaMagic magic, IPlayer wizard);
-    void Cast(IAreaMagic magic, Vector2 startPosition);
+    void Cast(IAreaMagic magic, IPlayer wizardInstance);
 }
 
 internal class MagicService : IMagicService
@@ -38,41 +39,44 @@ internal class MagicService : IMagicService
         _castingMagics = new();
     }
 
-    public void Cast(IAreaMagic magic, IPlayer wizard)
+    public void Cast(IAreaMagic magic, IPlayer wizardInstance)
     {
-        Cast(magic, wizard.GetWorldPosition());
-        
-        _logger.Debug("{MagicName} casted by {WizardName}", magic.Name, wizard.Name);
+        var castingMagic = Cast(magic, wizardInstance.GetWorldPosition());
+
+        _extendedEvents.HookOnDead(wizardInstance, (Event _) => StopMagic(castingMagic), EventHookMode.Default);
+
+        _logger.Debug("{MagicName} casted by {WizardName}", magic.Name, wizardInstance.Name);
     }
 
-    public void Cast(IAreaMagic magic, Vector2 startPosition)
+    private CastingMagic Cast(IAreaMagic magic, Vector2 startPosition)
     {
         _lastMagicId++;
         var magicId = _lastMagicId;
-        
+
         var timer = new PeriodicTimer(
             TimeSpan.FromMilliseconds(magic.PropagationTime.TotalMilliseconds / magic.IterationsCount),
-            TimeBehavior.TimeModifier | TimeBehavior.IgnoreTimeStop | TimeBehavior.TicksInTimeStopDoesntAffectToIterationsCount,
-            () => OnMagicIterated(magicId), () => OnMagicFinished(magicId),
-            magic.IterationsCount, _extendedEvents);
+            TimeBehavior.TimeModifier | TimeBehavior.IgnoreTimeStop |
+            TimeBehavior.TicksInTimeStopDoesntAffectToIterationsCount, () => OnMagicIterated(magicId),
+            () => OnMagicFinished(magicId), magic.IterationsCount, _extendedEvents);
 
         var castingMagic = new CastingMagic(magicId, magic, startPosition, timer);
         _castingMagics.Add(magicId, castingMagic);
-
         timer.Start();
+
+        return castingMagic;
     }
 
     private void OnMagicIterated(int magicId)
     {
         var castingMagic = _castingMagics[magicId];
         var magic = castingMagic.Magic;
-        
+
         if (_timeProvider.IsTimeStopped)
         {
             magic.PlayEffects(castingMagic.GetCurrentIteration());
             return;
         }
-        
+
         var area = castingMagic.Iterate();
         magic.Cast(area);
 
@@ -82,9 +86,13 @@ internal class MagicService : IMagicService
     private void OnMagicFinished(int magicId)
     {
         var castingMagic = _castingMagics[magicId];
-        castingMagic.Dispose();
+        OnMagicFinished(castingMagic);
+    }
 
-        _castingMagics.Remove(magicId);
+    private void OnMagicFinished(CastingMagic castingMagic)
+    {
+        castingMagic.Dispose();
+        _castingMagics.Remove(castingMagic.Id);
 
         _logger.Debug("{CastingMagicName} removed", castingMagic.Name);
     }
@@ -131,12 +139,12 @@ internal class MagicService : IMagicService
     {
         if (collisionResult.HasFlag<MagicCollisionResult>(MagicCollisionResult.Absorb))
         {
-            StopMagic(magic2.Id);
+            StopMagic(magic2);
         }
 
         if (collisionResult.HasFlag<MagicCollisionResult>(MagicCollisionResult.WasAbsorbed))
         {
-            StopMagic(magic1.Id);
+            StopMagic(magic1);
         }
 
         if (collisionResult.HasFlag<MagicCollisionResult>(MagicCollisionResult.Reflect))
@@ -155,8 +163,8 @@ internal class MagicService : IMagicService
             _game.TriggerExplosion(intersectArea.Center);
             _game.TriggerExplosion((intersectArea.BottomLeft + intersectArea.BottomRight) / 2);
 
-            StopMagic(magic1.Id);
-            StopMagic(magic2.Id);
+            StopMagic(magic1);
+            StopMagic(magic2);
         }
     }
 
@@ -169,12 +177,10 @@ internal class MagicService : IMagicService
         _ => MagicCollisionResult.None
     };
 
-    private void StopMagic(int magicId)
+    private void StopMagic(CastingMagic castingMagic)
     {
-        var castingMagic = _castingMagics[magicId];
         castingMagic.Stop();
-
-        OnMagicFinished(magicId);
+        OnMagicFinished(castingMagic);
     }
 
     private class CastingMagic
