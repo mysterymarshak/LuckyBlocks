@@ -41,7 +41,10 @@ internal class RandomItemProvider : IRandomItemProvider
             return alwaysItem;
 
         return luckyBlockItemValues
-            .Shuffle()
-            .GetRandomElement();
+            .GetWeightedRandomElement(GetItemWeight);
     }
+
+    private static double GetItemWeight(Item item) => EnumUtils.AttributeExist<WeightAttribute, Item>(item, out var attribute)
+        ? attribute.Weight
+        : 1;
 }

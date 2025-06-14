@@ -77,6 +77,7 @@ internal enum Item
     [ModifiedModifiers(typeof(Dwarf), nameof(Buffs.Durable.Dwarf.ModifiedModifiers))]
     Dwarf,
 
+    [Weight(0.5f)]
     BloodyBath,
 
     BowWithInfiniteBouncing,

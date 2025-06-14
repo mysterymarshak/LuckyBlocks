@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using LuckyBlocks.Utils;
 
@@ -34,6 +35,31 @@ internal static class EnumerableExtensions
     public static T GetRandomElement<T>(this IReadOnlyList<T> list)
     {
         return list.ElementAt(SharedRandom.Instance.Next(list.Count));
+    }
+    
+    public static T GetWeightedRandomElement<T>(this IReadOnlyList<T> items, Func<T, double> weightSelector)
+    {
+        var totalWeight = 0d;
+        var weights = new List<double>(items.Count);
+    
+        foreach (var item in items)
+        {
+            var weight = weightSelector(item);
+            weights.Add(weight);
+            totalWeight += weight;
+        }
+        
+        var randomValue = SharedRandom.Instance.NextDouble() * totalWeight;
+        
+        var cumulative = 0d;
+        for (var i = 0; i < items.Count; i++)
+        {
+            cumulative += weights[i];
+            if (cumulative >= randomValue)
+                return items[i];
+        }
+
+        throw new InvalidOperationException();
     }
 
     public static IEnumerable<IEnumerable<T>> Chunk<T>(this IEnumerable<T> values, int chunkSize)

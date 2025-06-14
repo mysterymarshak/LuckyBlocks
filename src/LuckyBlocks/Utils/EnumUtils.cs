@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace LuckyBlocks.Utils;
@@ -7,6 +8,12 @@ namespace LuckyBlocks.Utils;
 internal static class EnumUtils
 {
     public static bool AttributeExist<T1, T2>(T2 item) where T1 : Attribute where T2 : Enum => GetAttributesOfType<T1, T2>(item).Any();
+
+    public static bool AttributeExist<T1, T2>(T2 item, [NotNullWhen(true)] out T1? attribute) where T1 : Attribute where T2 : Enum
+    {
+        attribute = GetAttributesOfType<T1, T2>(item).SingleOrDefault();
+        return attribute is not null;
+    }
 
     public static IEnumerable<T1> GetAttributesOfType<T1, T2>(T2 item) where T1 : Attribute where T2 : Enum
     {

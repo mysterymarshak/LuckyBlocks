@@ -111,3 +111,11 @@ internal class NoOneHaveBuffAttribute : ItemAttribute
     public NoOneHaveBuffAttribute(Type buffType)
         => BuffType = buffType;
 }
+
+internal class WeightAttribute : ItemAttribute
+{
+    public float Weight { get; private set; }
+
+    public WeightAttribute(float weight)
+        => Weight = weight;
+}

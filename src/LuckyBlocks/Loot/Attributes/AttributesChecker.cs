@@ -140,7 +140,6 @@ internal class AttributesChecker : IAttributesChecker
         {
             [typeof(UnusedAttribute)] = (_, _) => false,
             [typeof(DisabledAttribute)] = (_, _) => false,
-            [typeof(AlwaysAttribute)] = (_, _) => true,
             [typeof(OnlyPlayerAttribute)] = OnlyPlayerAttributeCheck,
             [typeof(PlayerIsNotFullHpAttribute)] = PlayerIsNotFullHpAttributeCheck,
             [typeof(BarrelExistsAttribute)] = BarrelExistsAttributeCheck,
@@ -167,7 +166,7 @@ internal class AttributesChecker : IAttributesChecker
             .Where(x => !ignorePlayerAttributes || (ignorePlayerAttributes && x.GetType() is { Name: var name } &&
                                                     name.Contains("Player") == name.Contains("Players") &&
                                                     !name.Contains("Incompatible")))
-            .All(attribute => _checks[attribute.GetType()].Invoke(attribute, player));
+            .All(attribute => !_checks.TryGetValue(attribute.GetType(), out var func) || func(attribute, player));
     }
 }
 
