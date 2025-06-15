@@ -1,4 +1,5 @@
-﻿using LuckyBlocks.Data;
+﻿using System.Collections.Generic;
+using LuckyBlocks.Data;
 using LuckyBlocks.Loot.WeaponPowerups;
 using LuckyBlocks.Loot.WeaponPowerups.ThrownItems;
 using SFDGameScriptInterface;
@@ -23,8 +24,8 @@ internal class StickyGrenadesLoot : PowerUppedWeaponBase
         StickyGrenades.CreateGlue(weaponItem, ExtendedEvents);
     }
 
-    protected override IWeaponPowerup<Weapon> GetPowerup(Weapon weapon)
+    protected override IEnumerable<IWeaponPowerup<Weapon>> GetPowerups(Weapon weapon)
     {
-        return _powerupFactory.CreatePowerup(weapon, typeof(StickyGrenades));
+        yield return _powerupFactory.CreatePowerup(weapon, typeof(StickyGrenades));
     }
 }
