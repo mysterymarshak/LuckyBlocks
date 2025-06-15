@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using Autofac;
 using LuckyBlocks.Data;
 using LuckyBlocks.Loot.WeaponPowerups;
@@ -8,10 +8,10 @@ using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Loot.Weapons;
 
-internal class StickyGrenadesLoot : PowerUppedWeaponBase
+internal class BananaGrenadesLoot : PowerUppedWeaponBase
 {
-    public override Item Item => Item.StickyGrenades;
-    public override string Name => "Sticky grenades";
+    public override Item Item => Item.BananaGrenades;
+    public override string Name => "Banana grenades";
 
     protected override WeaponItem WeaponItem => WeaponItem.GRENADES;
     protected override WeaponItemType WeaponItemType => WeaponItemType.Thrown;
@@ -19,7 +19,7 @@ internal class StickyGrenadesLoot : PowerUppedWeaponBase
     private readonly IPowerupFactory _powerupFactory;
     private readonly IExtendedEvents _extendedEvents;
 
-    public StickyGrenadesLoot(Vector2 spawnPosition, LootConstructorArgs args) : base(spawnPosition, args)
+    public BananaGrenadesLoot(Vector2 spawnPosition, LootConstructorArgs args) : base(spawnPosition, args)
     {
         _powerupFactory = args.PowerupFactory;
         var scope = args.LifetimeScope.BeginLifetimeScope();
@@ -34,6 +34,6 @@ internal class StickyGrenadesLoot : PowerUppedWeaponBase
 
     protected override IEnumerable<IWeaponPowerup<Weapon>> GetPowerups(Weapon weapon)
     {
-        yield return _powerupFactory.CreatePowerup(weapon, typeof(StickyGrenades));
+        yield return _powerupFactory.CreatePowerup(weapon, typeof(BananaGrenades));
     }
 }

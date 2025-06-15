@@ -35,6 +35,11 @@ internal class WeaponWithRandomPowerup : PowerUppedWeaponBase
         (typeof(FreezeBullets), Item.FreezeBullets), (typeof(InfiniteRicochetBullets), Item.InfiniteRicochetBullets),
         (typeof(PushBullets), Item.PushBullets), (typeof(TripleRicochetBullets), Item.TripleRicochetBullets)
     };
+    
+    private static readonly List<(Type, Item)> GrenadePowerups = new()
+    {
+        (typeof(StickyGrenades), Item.StickyGrenades), (typeof(BananaGrenades), Item.BananaGrenades)
+    };
 
     protected override WeaponItem WeaponItem => _weaponItem;
     protected override WeaponItemType WeaponItemType => WeaponItem.GetWeaponItemType();
@@ -67,7 +72,7 @@ internal class WeaponWithRandomPowerup : PowerUppedWeaponBase
         {
             (powerupType, item) = _weaponItem switch
             {
-                WeaponItem.GRENADES => (typeof(StickyGrenades), Item.StickyGrenades),
+                WeaponItem.GRENADES => GrenadePowerups.GetRandomElement(),
                 _ => FirearmPowerups.GetRandomElement()
             };
         }

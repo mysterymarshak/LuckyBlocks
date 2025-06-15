@@ -37,12 +37,13 @@ internal class PowerupFactory : IPowerupFactory
             CultureInfo.CurrentCulture);
     }
 
-    public IThrowableItemPowerup<Throwable> CreatePowerup(Throwable throwable, Type powerupType) =>
-        (powerupType, throwable) switch
-        {
-            ({ Name: nameof(StickyGrenades) }, Grenade grenade) => new StickyGrenades(grenade, _args),
-            _ => throw new ArgumentOutOfRangeException(nameof(throwable) + ", " + nameof(powerupType))
-        };
+    public IThrowableItemPowerup<Throwable> CreatePowerup(Throwable throwable, Type powerupType)
+    {
+        return (IThrowableItemPowerup<Throwable>)Activator.CreateInstance(powerupType,
+            BindingFlags.CreateInstance | BindingFlags.Instance | BindingFlags.Public |
+            BindingFlags.OptionalParamBinding, null, new object[] { throwable, _args },
+            CultureInfo.CurrentCulture);
+    }
 
     public IWeaponPowerup<Melee> CreatePowerup(Melee melee, Type powerupType)
     {

@@ -169,6 +169,7 @@ internal static class IPlayerExtensions
         }
     }
 
+    // triggers WeaponRemoved event on next tick
     public static void SetAmmo(this IPlayer player, Throwable throwable, int ammo)
     {
         player.SetCurrentThrownItemAmmo(ammo);

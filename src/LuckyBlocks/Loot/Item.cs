@@ -54,6 +54,8 @@ internal enum Item
     ShuffleWeapons,
 
     StickyGrenades,
+    
+    BananaGrenades,
 
     [OnlyPlayer]
     [ModifiedModifiers(typeof(Vampirism), nameof(Buffs.Durable.Vampirism.ModifiedModifiers))]

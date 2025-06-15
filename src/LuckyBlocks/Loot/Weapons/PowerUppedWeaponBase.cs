@@ -42,7 +42,7 @@ internal abstract class PowerUppedWeaponBase : ILoot
 
     protected abstract IEnumerable<IWeaponPowerup<Weapon>> GetPowerups(Weapon weapon);
 
-    protected virtual void OnWeaponCreated(IObjectWeaponItem weaponItem)
+    protected virtual void OnWeaponCreated(IObjectWeaponItem objectWeaponItem)
     {
     }
 

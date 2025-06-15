@@ -5,6 +5,7 @@ using LuckyBlocks.Data;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Watchers;
 using LuckyBlocks.Loot.WeaponPowerups;
+using LuckyBlocks.Loot.WeaponPowerups.Bullets;
 using OneOf;
 using OneOf.Types;
 using Serilog;
@@ -34,13 +35,15 @@ internal class WeaponsPowerupsService : IWeaponsPowerupsService
 
     public void AddWeaponPowerup(IWeaponPowerup<Weapon> powerup, Weapon weapon, IPlayer player)
     {
+        InvalidateWeapons(player);
+
         var appliedAgain = ApplyPowerupAgainIfExists(powerup, weapon, player);
         if (appliedAgain)
             return;
-
-        if (powerup is IUsablePowerup<Weapon> usablePowerup)
+        
+        if (powerup is ILimitedAmmoPowerup<Weapon> limitedAmmoPowerup)
         {
-            EnsureThatWeaponHasEnoughAmmoAndGiveIfNot(weapon, player, usablePowerup.UsesLeft);
+            TruncateAmmo(weapon, player, limitedAmmoPowerup.MaxAmmo);
         }
 
         var watcher = CreateWatcherAndHookEventsForPowerup(powerup, weapon, player);
@@ -103,19 +106,30 @@ internal class WeaponsPowerupsService : IWeaponsPowerupsService
         return new NotFound();
     }
 
-    public void SetOwner(Weapon weapon,  IPlayer newOwner, IPlayer previousOwner)
+    public void SetOwner(Weapon weapon, IPlayer newOwner, IPlayer previousOwner)
     {
         if (weapon is not (Firearm or Throwable))
             return;
-        
+
         var powerup =
             _powerups.FirstOrDefault(x => x.Powerup.Weapon == weapon && x.WeaponEventsWatcher.Owner == previousOwner);
 
         if (powerup is null)
             return;
-        
+
         var weaponEventsWatcher = powerup.WeaponEventsWatcher;
         weaponEventsWatcher.SetOwner(newOwner);
+    }
+
+    public void InvalidateWeapons(IPlayer player)
+    {
+        foreach (var powerupItem in _powerups)
+        {
+            if (powerupItem.Powerup is IUsablePowerup<Weapon> usablePowerup)
+            {
+                usablePowerup.InvalidateWeapon(player);
+            }
+        }
     }
 
     private OneOf<Firearm, NotFound> TryGetFirearmForPowerup(IPlayer player, IEnumerable<Type> incompatiblePowerupTypes)
@@ -159,6 +173,8 @@ internal class WeaponsPowerupsService : IWeaponsPowerupsService
         if (powerup is not IUsablePowerup<Weapon> usablePowerup)
             return false;
 
+        _logger.Debug("Powerup is usable, can be applied again: {PowerupName}", powerup.Name);
+
         var usesLeft = usablePowerup.UsesLeft;
 
         var getExistingWeaponPowerupResult = GetAppliedPowerup(powerup, weapon);
@@ -171,6 +187,11 @@ internal class WeaponsPowerupsService : IWeaponsPowerupsService
             usesLeft = existingPowerup.UsesLeft;
 
             _logger.Debug("Powerup {PowerupName} applied again for {PlayerName}", powerup.Name, player.Name);
+
+            if (existingPowerup is ILimitedAmmoPowerup<Weapon> limitedAmmoPowerup)
+            {
+                TruncateAmmo(weapon, player, limitedAmmoPowerup.MaxAmmo);
+            }
         }
 
         EnsureThatWeaponHasEnoughAmmoAndGiveIfNot(weapon, player, usesLeft);
@@ -187,6 +208,20 @@ internal class WeaponsPowerupsService : IWeaponsPowerupsService
                 break;
             case Throwable throwableItem when throwableItem.CurrentAmmo < minAmmo:
                 player.SetAmmo(throwableItem, minAmmo);
+                break;
+        }
+    }
+
+    // triggers WeaponRemoved event on next tick for grenades
+    private void TruncateAmmo(Weapon weapon, IPlayer player, int maxAmmo)
+    {
+        switch (weapon)
+        {
+            case Firearm firearm when firearm.TotalAmmo > maxAmmo:
+                player.SetAmmo(firearm, maxAmmo);
+                break;
+            case Throwable throwableItem when throwableItem.CurrentAmmo > maxAmmo:
+                player.SetAmmo(throwableItem, maxAmmo);
                 break;
         }
     }

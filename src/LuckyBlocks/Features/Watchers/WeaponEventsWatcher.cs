@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Reflection;
@@ -29,6 +30,7 @@ internal class WeaponEventsWatcher
     private readonly WeaponItem _weaponItem;
     private readonly WeaponItemType _weaponItemType;
 
+    [MemberNotNullWhen(true, nameof(Owner))]
     private bool PickedUp => Owner?.IsValid() == true;
 
     private IObjectWeaponItem? _weaponObject;
@@ -86,11 +88,11 @@ internal class WeaponEventsWatcher
     public void SetOwner(IPlayer player)
     {
         Drop?.Invoke(player, null);
-        
+
         Owner = player;
         Pickup?.Invoke(player);
     }
-    
+
     private void OnWeaponPickedUp(IPlayer player, PlayerWeaponAddedArg args)
     {
         try
@@ -121,11 +123,23 @@ internal class WeaponEventsWatcher
             if (!PickedUp)
                 return;
 
+            Logger.Debug("weapon dropped: {WeaponItem}, Owner was: {Owner}, Player: {Player}, Event: {Event}, ObjID: {ObjectID}",
+                args.WeaponItem, Owner.Name, player.Name,
+                args.Dropped ? "Dropped" : args.Thrown ? "Thrown" : "Unknown", args.TargetObjectID);
+            // truncate grenades ammo -> Event = Thrown with TargetObjectID = 0
+
             if (Owner != player)
                 return;
 
             if (args.WeaponItem != _weaponItem)
                 return;
+
+            if (args.Thrown && _weaponItem == WeaponItem.GRENADES && args.TargetObjectID == 0)
+            {
+                Logger.Debug("Grenades ammo was truncated, Owner: {Owner}", Owner.Name);
+                // bug bypass
+                return;
+            }
 
             var @object = Game.GetObject(args.TargetObjectID);
 
@@ -141,7 +155,7 @@ internal class WeaponEventsWatcher
                     _weaponObject = weapon;
                     break;
             }
-            
+
             Owner = null;
             Drop?.Invoke(player, _weaponObject);
         }

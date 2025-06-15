@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Autofac;
 using LuckyBlocks.Data;
+using LuckyBlocks.Entities;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Notifications;
 using LuckyBlocks.Utils;
@@ -48,8 +49,7 @@ internal abstract class BulletsPowerupBase : IFirearmPowerup, IUsablePowerup<Fir
 
     public void OnFire(IPlayer player, IEnumerable<IProjectile> projectiles)
     {
-        var weaponsData = player.GetWeaponsData();
-        Weapon = (weaponsData.GetWeaponByType(Weapon.WeaponItemType) as Firearm)!;
+        InvalidateWeapon(player);
         
         _usesLeft = Math.Min(UsesLeft, Weapon.TotalAmmo + projectiles.Count());
         
@@ -76,6 +76,12 @@ internal abstract class BulletsPowerupBase : IFirearmPowerup, IUsablePowerup<Fir
     {
     }
 
+    public void InvalidateWeapon(IPlayer player)
+    {
+        var weaponsData = player.GetWeaponsData();
+        Weapon = (weaponsData.GetWeaponByType(Weapon.WeaponItemType) as Firearm)!;
+    }
+    
     protected abstract void OnFire(IPlayer player, IProjectile projectile);
 
     protected virtual void OnFinish()
