@@ -29,7 +29,7 @@ internal class StickyGrenadesLoot : PowerUppedWeaponBase
     protected override void OnWeaponCreated(IObjectWeaponItem objectWeaponItem)
     {
         var grenadeIndicator = new GrenadeIndicator(objectWeaponItem, _extendedEvents);
-        grenadeIndicator.Paint(BananaGrenades.PaintColor);
+        grenadeIndicator.Paint(StickyGrenades.PaintColor);
     }
 
     protected override IEnumerable<IWeaponPowerup<Weapon>> GetPowerups(Weapon weapon)
