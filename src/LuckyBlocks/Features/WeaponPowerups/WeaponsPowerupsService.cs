@@ -125,7 +125,10 @@ internal class WeaponsPowerupsService : IWeaponsPowerupsService
     {
         foreach (var powerupItem in _powerups)
         {
-            if (powerupItem.Powerup is IUsablePowerup<Weapon> usablePowerup)
+            var powerup = powerupItem.Powerup;
+            var owner = powerupItem.WeaponEventsWatcher.Owner;
+            
+            if (owner == player && powerup is IUsablePowerup<Weapon> usablePowerup)
             {
                 usablePowerup.InvalidateWeapon(player);
             }
