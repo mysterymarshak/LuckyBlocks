@@ -103,17 +103,17 @@ internal class Vampirism : DurableBuffBase
         var (attackedPlayer, args, _) = @event;
         var playerInstance = Player.Instance;
         
-        if (attackedPlayer == playerInstance)
+        if (attackedPlayer == playerInstance || playerInstance?.IsValidUser() != true || attackedPlayer?.IsValidUser() != true)
             return;
         
         switch (args.DamageType)
         {
-            case PlayerDamageEventType.Melee when args.SourceID != playerInstance?.UniqueId:
+            case PlayerDamageEventType.Melee when args.SourceID != playerInstance.UniqueId:
                 return;
             case PlayerDamageEventType.Projectile:
             {
                 var projectile = _game.GetProjectile(args.SourceID);
-                if (projectile.InitialOwnerPlayerID != playerInstance?.UniqueId)
+                if (projectile.InitialOwnerPlayerID != playerInstance.UniqueId)
                     return;
                 
                 break;
