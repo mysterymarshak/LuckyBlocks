@@ -123,7 +123,8 @@ internal class WeaponEventsWatcher
             if (!PickedUp)
                 return;
 
-            Logger.Debug("weapon dropped: {WeaponItem}, Owner was: {Owner}, Player: {Player}, Event: {Event}, ObjID: {ObjectID}",
+            Logger.Debug(
+                "weapon dropped: {WeaponItem}, Owner was: {Owner}, Player: {Player}, Event: {Event}, ObjID: {ObjectID}",
                 args.WeaponItem, Owner.Name, player.Name,
                 args.Dropped ? "Dropped" : args.Thrown ? "Thrown" : "Unknown", args.TargetObjectID);
             // truncate grenades ammo -> Event = Thrown with TargetObjectID = 0
@@ -134,9 +135,9 @@ internal class WeaponEventsWatcher
             if (args.WeaponItem != _weaponItem)
                 return;
 
-            if (args.Thrown && _weaponItem == WeaponItem.GRENADES && args.TargetObjectID == 0)
+            if (args.Thrown && _weaponItemType == WeaponItemType.Thrown && args.TargetObjectID == 0)
             {
-                Logger.Debug("Grenades ammo was truncated, Owner: {Owner}", Owner.Name);
+                Logger.Debug("Thrown ammo was truncated, Owner: {Owner}", Owner.Name);
                 // bug bypass
                 return;
             }
