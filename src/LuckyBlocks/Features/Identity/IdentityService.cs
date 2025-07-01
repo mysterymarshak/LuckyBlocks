@@ -1,7 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Autofac;
 using LuckyBlocks.Entities;
 using LuckyBlocks.Repositories;
+using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
+using LuckyBlocks.Utils;
 using OneOf;
 using OneOf.Types;
 using Serilog;
@@ -11,6 +14,7 @@ namespace LuckyBlocks.Features.Identity;
 
 internal interface IIdentityService
 {
+    void Initialize();
     OneOf<Player, Unknown> GetPlayerByUserId(int userId);
     OneOf<Player, Unknown> GetPlayerById(int uniqueId);
     Player GetPlayerByInstance(IPlayer player);
@@ -23,14 +27,30 @@ internal class IdentityService : IIdentityService
     private readonly IPlayersRepository _playersRepository;
     private readonly IGame _game;
     private readonly ILogger _logger;
+    private readonly IExtendedEvents _extendedEvents;
 
-    public IdentityService(IPlayersRepository playersRepository, IGame game, ILogger logger)
-        => (_playersRepository, _game, _logger) = (playersRepository, game, logger);
+    public IdentityService(IPlayersRepository playersRepository, IGame game, ILogger logger, ILifetimeScope scope)
+    {
+        _playersRepository = playersRepository;
+        _game = game;
+        _logger = logger;
+        var thisScope = scope.BeginLifetimeScope();
+        _extendedEvents = thisScope.Resolve<IExtendedEvents>();
+    }
+
+    public void Initialize()
+    {
+        foreach (var user in _game.GetActiveUsers())
+        {
+            RegisterUser(user.UserIdentifier);
+        }
+
+        _extendedEvents.HookOnUserJoined(OnUserJoined, EventHookMode.Default);
+    }
 
     public OneOf<Player, Unknown> GetPlayerByUserId(int userId)
     {
         var getPlayerResult = _playersRepository.GetPlayerByUserId(userId);
-
         if (getPlayerResult.IsT1)
         {
             _logger.Warning("attempt to get unknown player with user id  '{UserId}'", userId);
@@ -42,7 +62,6 @@ internal class IdentityService : IIdentityService
     public OneOf<Player, Unknown> GetPlayerById(int uniqueId)
     {
         var getPlayerResult = _playersRepository.GetPlayerById(uniqueId);
-
         if (getPlayerResult.IsT1)
         {
             _logger.Warning("attempt to get unknown player with id  '{UniqueId}'", uniqueId);
@@ -64,5 +83,25 @@ internal class IdentityService : IIdentityService
     public IEnumerable<IUser> GetDeadUsers()
     {
         return _game.GetActiveUsers().Where(x => x.GetPlayer()?.IsDead ?? true);
+    }
+
+    private void OnUserJoined(Event<IUser[]> @event)
+    {
+        foreach (var user in @event.Args)
+        {
+            RegisterUser(user.UserIdentifier);
+        }
+    }
+
+    private void RegisterUser(int userId)
+    {
+        var validationResult = _playersRepository.ValidateUser(userId);
+        if (!validationResult.IsT0)
+        {
+            _logger.Error("Failed to register user with id '{UserId}': {Message}", userId, validationResult.AsT1);
+            return;
+        }
+        
+        _logger.Debug("Registered user with id '{UserId}'", userId);
     }
 }

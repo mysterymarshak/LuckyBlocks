@@ -11,6 +11,7 @@ namespace LuckyBlocks.Repositories;
 
 internal interface IPlayersRepository
 {
+    OneOf<Success, Unknown> ValidateUser(int userId);
     OneOf<Player, Unknown> GetPlayerByUserId(int userId);
     OneOf<Player, Unknown> GetPlayerById(int uniqueId);
     Player GetPlayerByInstance(IPlayer player);
@@ -25,32 +26,21 @@ internal class PlayersRepository : IPlayersRepository
     public PlayersRepository(IGame game)
         => (_game, _players) = (game, new());
 
-    public OneOf<Player, Unknown> GetPlayerByUserId(int userId)
+    public OneOf<Success, Unknown> ValidateUser(int userId)
     {
-        if (!_players.TryGetValue(userId, out Player player))
-        {
-            var createPlayerResult = CreatePlayerByUserId(userId);
-
-            if (createPlayerResult.TryPickT1(out var unknown, out player))
-                return unknown;
-        }
-
-        return player;
+        var getPlayerResult = GetPlayerByUserId(userId);
+        return getPlayerResult.IsT0 ? new Success() : new Unknown();
     }
-
+    
     public OneOf<Player, Unknown> GetPlayerById(int uniqueId)
     {
         var playerInstance = _game.GetPlayer(uniqueId);
-
-        if (playerInstance is null)
-            return new Unknown();
-
-        if (!_players.TryGetValue(playerInstance.UserIdentifier, out var player))
-        {
-            player = CreatePlayer(playerInstance.GetUser());
-        }
-
-        return player;
+        return playerInstance is null ? new Unknown() : GetPlayerByUserId(playerInstance.UserIdentifier);
+    }
+    
+    public OneOf<Player, Unknown> GetPlayerByUserId(int userId)
+    {
+        return _players.TryGetValue(userId, out var player) ? player : CreatePlayerByUserId(userId);
     }
 
     public Player GetPlayerByInstance(IPlayer instance)

@@ -87,13 +87,18 @@ public interface IExtendedEvents
     IEventSubscription HookOnProjectilesCreated(Action<Event<IProjectile[]>> callback, EventHookMode hookMode,
         bool ignoreHandled = false);
 
+    [GameCallbackType(typeof(Events.UserJoinCallback))]
+    IEventSubscription HookOnUserJoined(Action<Event<IUser[]>> callback, EventHookMode hookMode,
+        bool ignoreHandled = false);
+
     void Clear();
 }
 
 [Inject]
 internal partial class ExtendedEvents : IExtendedEvents
 {
-    [InjectLogger] private static ILogger Logger { get; set; }
+    [InjectLogger]
+    private static ILogger Logger { get; set; }
 
     private static partial ILogger GetLogger()
     {

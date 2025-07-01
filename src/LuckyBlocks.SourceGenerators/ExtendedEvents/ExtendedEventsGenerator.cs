@@ -123,7 +123,8 @@ public class ExtendedEventsGenerator : IIncrementalGenerator
     private static CallbacksStorageModel BuildCallbacksStorageModel(ImmutableArray<ITypeSymbol> callbackArgumentTypes,
         ITypeSymbol? filterObjectType, Type gameCallbackType, Type[] gameCallbackArgumentTypes)
     {
-        var callbackTypeGenericArguments = string.Join(", ", callbackArgumentTypes.Select(x => x.GetUnderlyingName() + (x is IArrayTypeSymbol ? "[]" : string.Empty)));
+        var callbackTypeGenericArguments = string.Join(", ",
+            callbackArgumentTypes.Select(x => x.GetUnderlyingName() + (x is IArrayTypeSymbol ? "[]" : string.Empty)));
         var callbackTypeArguments = string.IsNullOrWhiteSpace(callbackTypeGenericArguments)
             ? string.Empty
             : $"<{callbackTypeGenericArguments}>";
@@ -208,8 +209,9 @@ public class ExtendedEventsGenerator : IIncrementalGenerator
                                 or nameof(Events.PlayerMeleeActionCallback)
                                 or nameof(Events.PlayerWeaponAddedActionCallback)
                                 or nameof(Events.PlayerWeaponRemovedActionCallback)
-                                or nameof(Events.UserMessageCallback)
-                                or nameof(Events.UpdateCallback)
+                                or nameof(Events.UserMessageCallback) or nameof(Events.UpdateCallback)
+                                or nameof(Events.PlayerCreatedCallback) or nameof(Events.UserJoinCallback)
+                                or nameof(Events.UserLeaveCallback)
                             }
                         }
                     });
@@ -299,7 +301,11 @@ public class ExtendedEventsGenerator : IIncrementalGenerator
         context.AddSource(templateFileName.Replace("sbn-cs", "g.cs"), SourceText.From(output, Encoding.UTF8));
     }
 
-    private record BuildMethodResult(string HookMethodName, ImmutableArray<IParameterSymbol> CallbackParameters,
-        Type GameCallbackType, ITypeSymbol? FilterObjectType,
-        ImmutableArray<ITypeSymbol> CallbackArgumentTypes, Type[] GameCallbackTypeArguments);
+    private record BuildMethodResult(
+        string HookMethodName,
+        ImmutableArray<IParameterSymbol> CallbackParameters,
+        Type GameCallbackType,
+        ITypeSymbol? FilterObjectType,
+        ImmutableArray<ITypeSymbol> CallbackArgumentTypes,
+        Type[] GameCallbackTypeArguments);
 }

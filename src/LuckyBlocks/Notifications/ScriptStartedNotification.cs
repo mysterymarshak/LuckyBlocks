@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 using Autofac.Util;
 using LuckyBlocks.Data.Mappers;
 using LuckyBlocks.Features.Commands;
+using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.LuckyBlocks;
 using LuckyBlocks.Features.Time;
 using LuckyBlocks.Features.Watchers;
 using LuckyBlocks.Reflection;
-using LuckyBlocks.Wayback;
 using Mediator;
 using Serilog;
 using SFDGameScriptInterface;
@@ -24,7 +24,7 @@ internal class ScriptStartedNotificationHandler : INotificationHandler<ScriptSta
     private readonly ILuckyBlocksService _luckyBlocksService;
     private readonly ICommandsHandler _commandsHandler;
     private readonly IPlayerDeathsWatcher _playerDeathsWatcher;
-    private readonly IWaybackMachine _waybackMachine;
+    private readonly IIdentityService _identityService;
     private readonly IGame _game;
     private readonly IWeaponsMapper _weaponsMapper;
     private readonly ITimeProvider _timeProvider;
@@ -32,11 +32,11 @@ internal class ScriptStartedNotificationHandler : INotificationHandler<ScriptSta
     private readonly ILogger _logger;
 
     public ScriptStartedNotificationHandler(ILuckyBlocksService luckyBlocksService, ICommandsHandler commandsHandler,
-        IPlayerDeathsWatcher playerDeathsWatcher, IWaybackMachine waybackMachine, IGame game,
+        IPlayerDeathsWatcher playerDeathsWatcher, IIdentityService identityService, IGame game,
         IWeaponsMapper weaponsMapper, ITimeProvider timeProvider, IObjectsWatcher objectsWatcher, ILogger logger) =>
-        (_luckyBlocksService, _commandsHandler, _playerDeathsWatcher, _waybackMachine, _game, _weaponsMapper,
+        (_luckyBlocksService, _commandsHandler, _playerDeathsWatcher, _identityService, _game, _weaponsMapper,
             _timeProvider, _objectsWatcher, _logger) = (luckyBlocksService, commandsHandler, playerDeathsWatcher,
-            waybackMachine, game, weaponsMapper, timeProvider, objectsWatcher, logger);
+            identityService, game, weaponsMapper, timeProvider, objectsWatcher, logger);
 
     public ValueTask Handle(ScriptStartedNotification notification, CancellationToken cancellationToken)
     {
@@ -55,16 +55,12 @@ internal class ScriptStartedNotificationHandler : INotificationHandler<ScriptSta
 
     private void InitializeServices()
     {
+        _identityService.Initialize();
         _luckyBlocksService.Initialize();
         _playerDeathsWatcher.Initialize();
         _commandsHandler.Initialize();
         _timeProvider.Initialize();
         _objectsWatcher.Initialize();
-
-        // _waybackMachine.Initialize();
-
-        // legacy aim bullets
-        // _playersTrajectoryWatcher.Start();
     }
 
     private void InitializeStaticProperties()
