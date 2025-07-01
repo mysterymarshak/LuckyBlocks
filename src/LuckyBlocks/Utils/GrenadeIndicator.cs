@@ -3,7 +3,7 @@ using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Utils;
 
-public class GrenadeIndicator
+internal class GrenadeIndicator
 {
     private static readonly IReadOnlyList<Vector2> PaintPattern = new List<Vector2>
     {
