@@ -46,17 +46,13 @@ internal class PlayersRepository : IPlayersRepository
     public Player GetPlayerByInstance(IPlayer instance)
     {
         var userId = instance.UserIdentifier;
-
-        if (userId == 0)
+        
+        var getPlayerResult = GetPlayerByUserId(userId);
+        if (!getPlayerResult.TryPickT0(out var player, out _))
         {
-            throw new InvalidOperationException("user id was 0");
+            throw new Exception($"Player with user id '{userId}' not found.");
         }
-
-        if (!_players.TryGetValue(userId, out var player))
-        {
-            player = CreatePlayer(instance.GetUser());
-        }
-
+        
         return player;
     }
 
@@ -64,9 +60,8 @@ internal class PlayersRepository : IPlayersRepository
     {
         var players = _game.GetPlayers();
         return players
-            .Where(x => x.IsUser)
-            .Select(GetPlayerByInstance)
-            .Where(x => x.Instance?.IsDead == false);
+            .Where(x => x is { IsUser: true, IsDead: false })
+            .Select(GetPlayerByInstance);
     }
 
     private OneOf<Player, Unknown> CreatePlayerByUserId(int userId)
