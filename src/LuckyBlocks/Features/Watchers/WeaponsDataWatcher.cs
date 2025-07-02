@@ -70,19 +70,23 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
         if (args.SourceObjectID != 0 && _droppedWeapons.TryGetValue(args.SourceObjectID, out var droppedWeapon))
         {
             player.WeaponsData.AddWeapon(droppedWeapon);
-            droppedWeapon.SetOwner(playerInstance);
 
-            Logger.Debug("Picked up dropped weapon: {Weapon}, id: {ObjectId}, owner: {Owner}",
-                droppedWeapon.WeaponItem, args.SourceObjectID, playerInstance.Name);
+            droppedWeapon.SetOwner(playerInstance);
+            droppedWeapon.RaiseEvent(WeaponEvent.PickedUp);
+
+            Logger.Debug("Picked up dropped weapon: {WeaponItem}, id: {ObjectId}, owner: {Player}",
+                droppedWeapon.WeaponItem, args.SourceObjectID, player.Name);
         }
         else
         {
             UpdateWeaponData(player, args.WeaponItemType);
             var pickedUpWeapon = player.WeaponsData.GetWeaponByType(args.WeaponItemType);
-            pickedUpWeapon.SetOwner(playerInstance);
 
-            Logger.Debug("Picked up weapon: {Weapon} {WeaponId}, owner: {OwnerId}", args.WeaponItem,
-                args.SourceObjectID, playerInstance.Name);
+            pickedUpWeapon.SetOwner(playerInstance);
+            pickedUpWeapon.RaiseEvent(WeaponEvent.PickedUp);
+
+            Logger.Debug("Picked up weapon: {WeaponItem} {ObjectId}, owner: {Player}", args.WeaponItem,
+                args.SourceObjectID, player.Name);
         }
 
         OnThrowablePickedUp(args, player);
@@ -116,21 +120,21 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
             var @object = _game.GetObject(args.TargetObjectID);
             if (args.Thrown)
             {
-                var isThrown = @object is not IObjectWeaponItem;
+                var isGrenadeThrown = @object is not IObjectWeaponItem;
 
-                if (isThrown && removedWeapon is Grenade grenade && @object is IObjectGrenadeThrown)
+                if (isGrenadeThrown && removedWeapon is Grenade grenade && @object is IObjectGrenadeThrown)
                 {
-                    OnGrenadeThrown(grenade, args, playerInstance);
+                    OnGrenadeThrown(grenade, args, player);
                 }
 
-                if (!isThrown)
+                if (!isGrenadeThrown)
                 {
-                    OnWeaponDropped(removedWeapon, args, @object, playerInstance);
+                    OnWeaponDropped(removedWeapon, args, @object, player, WeaponEvent.Thrown);
                 }
             }
             else if (args.Dropped)
             {
-                OnWeaponDropped(removedWeapon, args, @object, playerInstance);
+                OnWeaponDropped(removedWeapon, args, @object, player, WeaponEvent.Dropped);
             }
         }
 
@@ -143,24 +147,27 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
     }
 
     private void OnWeaponDropped(Weapon removedWeapon, PlayerWeaponRemovedArg args, IObject @object,
-        IPlayer playerInstance)
+        Player player, WeaponEvent weaponEvent)
     {
         removedWeapon.SetObject(args.TargetObjectID);
+        removedWeapon.RaiseEvent(weaponEvent);
+
         _droppedWeapons.Add(args.TargetObjectID, removedWeapon);
 
-        Logger.Debug("Weapon dropped: {Weapon} id {WeaponId} missile {IsMissile}, owner: {Owner}",
-            removedWeapon.WeaponItem, args.TargetObjectID, @object.IsMissile, playerInstance.Name);
+        Logger.Debug("Weapon dropped: {WeaponItem} id {ObjectId} missile {IsMissile}, owner: {Player}",
+            removedWeapon.WeaponItem, args.TargetObjectID, @object.IsMissile, player.Name);
     }
 
-    private void OnGrenadeThrown(Grenade grenade, PlayerWeaponRemovedArg args, IPlayer playerInstance)
+    private void OnGrenadeThrown(Grenade grenade, PlayerWeaponRemovedArg args, Player player)
     {
         var thrownGrenade = new Grenade(grenade.WeaponItem, grenade.WeaponItemType, 1, grenade.MaxAmmo,
             false, grenade.TimeToExplosion);
         thrownGrenade.SetObject(args.TargetObjectID);
+        thrownGrenade.RaiseEvent(WeaponEvent.GrenadeThrown);
         _thrownGrenades.Add(thrownGrenade);
 
-        Logger.Debug("grenade thrown id: {Id}, owner: {Owner}, timer: {TimeLeft}", args.TargetObjectID,
-            playerInstance.Name, grenade.TimeToExplosion);
+        Logger.Debug("grenade thrown id: {ObjectId}, owner: {Player}, timer: {TimeLeft}", args.TargetObjectID,
+            player.Name, grenade.TimeToExplosion);
     }
 
     private void OnProjectilesCreated(Event<IProjectile[]> @event)
@@ -187,11 +194,13 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
 
             var player = _identityService.GetPlayerByInstance(playerInstance);
             var weaponsData = player.WeaponsData;
-            UpdateWeaponData(player, weaponsData.CurrentWeaponDrawn.WeaponItemType);
+            var currentDrawn = weaponsData.CurrentWeaponDrawn;
 
-            Logger.Debug("Shoot with weapon {Weapon}, player: {Player}, ammo left: {AmmoLeft}",
-                projectile.ProjectileItem, playerInstance.Name,
-                (weaponsData.CurrentWeaponDrawn as Firearm)!.CurrentAmmo);
+            UpdateWeaponData(player, currentDrawn.WeaponItemType);
+            currentDrawn.RaiseEvent(WeaponEvent.Fired);
+
+            Logger.Debug("Shoot with weapon {WeaponItem}, player: {Player}, ammo left: {AmmoLeft}",
+                projectile.ProjectileItem, player.Name, (currentDrawn as Firearm)!.CurrentAmmo);
         }
     }
 
@@ -206,11 +215,14 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
             if (playerInstance.CurrentWeaponDrawn == WeaponItemType.Melee)
             {
                 var player = _identityService.GetPlayerByInstance(playerInstance);
-                UpdateWeaponData(player, WeaponItemType.Melee, player.WeaponsData.CurrentWeaponDrawn is MeleeTemp);
+                var weaponsData = player.WeaponsData;
+                var currentDrawn = weaponsData.CurrentWeaponDrawn;
 
-                Logger.Debug("Melee hit with {Weapon}, player: {Player}, durability left: {DurabilityLeft}",
-                    player.WeaponsData.CurrentWeaponDrawn.WeaponItem, playerInstance.Name,
-                    ((Melee)player.WeaponsData.CurrentWeaponDrawn).CurrentDurability);
+                UpdateWeaponData(player, WeaponItemType.Melee, currentDrawn is MeleeTemp);
+                currentDrawn.RaiseEvent(WeaponEvent.MeleeHit);
+
+                Logger.Debug("Melee hit with {WeaponItem}, player: {Player}, durability left: {DurabilityLeft}",
+                    currentDrawn.WeaponItem, player.Name, ((Melee)currentDrawn).CurrentDurability);
             }
         }
     }
@@ -243,7 +255,7 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
 
             grenade.Update(false, grenadeObject.GetExplosionTimer());
 
-            Logger.Debug("Grenade update: {Throwable}, id: {Id}, timer: {TimeLeft}", grenade.WeaponItem,
+            Logger.Debug("Grenade update: {WeaponItem}, id: {ObjectId}, timer: {TimeLeft}", grenade.WeaponItem,
                 grenadeObject.UniqueId, grenade.TimeToExplosion);
         }
     }
@@ -268,8 +280,8 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
                 UpdateWeaponData(player, WeaponItemType.Thrown);
             }
 
-            Logger.Debug("Throwable update: {Throwable}, player: {Player}, isHolding: {IsHolding}",
-                throwable.WeaponItem, playerInstance.Name, playerInstance.IsHoldingActiveThrowable);
+            Logger.Debug("Throwable update: {WeaponItem}, player: {Player}, isHolding: {IsHolding}",
+                throwable.WeaponItem, player.Name, playerInstance.IsHoldingActiveThrowable);
         }
     }
 
@@ -328,7 +340,7 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
             if (keyInput.Key == VirtualKey.ACTIVATE && weaponsData.HasAnyFirearm())
             {
                 // pickup ammo (Helipad for example)
-                ScheduleFirearmsUpdate(player);
+                UpdateFirearms(player);
             }
 
             if (playerInstance.IsReloading || keyInput.Key == VirtualKey.ATTACK &&
@@ -339,18 +351,15 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
         }
     }
 
-    private void ScheduleFirearmsUpdate(Player player)
+    private void UpdateFirearms(Player player)
     {
-        Awaiter.Start(() =>
-        {
-            var weaponsData = player.WeaponsData;
-            weaponsData.UpdateFirearms();
+        var weaponsData = player.WeaponsData;
+        weaponsData.UpdateFirearms();
 
-            Logger.Debug(
-                "Updated firearms weapons for player: {Player}, new handgun: {HandgunItem} {HandgunAmmo}, new rifle: {RifleItem} {RifleAmmo}",
-                player.Name, weaponsData.SecondaryWeapon.WeaponItem, weaponsData.SecondaryWeapon.CurrentAmmo,
-                weaponsData.PrimaryWeapon.WeaponItem, weaponsData.PrimaryWeapon.CurrentAmmo);
-        }, TimeSpan.Zero);
+        Logger.Debug(
+            "Updated firearms weapons for player: {Player}, new handgun: {HandgunItem} {HandgunAmmo}, new rifle: {RifleItem} {RifleAmmo}",
+            player.Name, weaponsData.SecondaryWeapon.WeaponItem, weaponsData.SecondaryWeapon.CurrentAmmo,
+            weaponsData.PrimaryWeapon.WeaponItem, weaponsData.PrimaryWeapon.CurrentAmmo);
     }
 
     private void UpdateDrawnWhileNotChanged(Player player, WeaponItemType weaponItemType)
@@ -369,7 +378,7 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
 
         var args = new AwaitingDrawnChangeTimerArgs(player, weaponItemType);
         var timer = new PeriodicTimer<AwaitingDrawnChangeTimerArgs>(TimeSpan.Zero, TimeBehavior.TimeModifier, Callback,
-            FinishCondition, null, args, _extendedEvents);
+            FinishCondition, FinishCallback, args, _extendedEvents);
         timer.Start();
 
         _drawnWeaponTimers.Add(playerInstance.UniqueId, timer);
@@ -384,7 +393,7 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
 
             Logger.Debug(
                 "Updated drawn weapon for player: {Player}, new drawn: {WeaponItem}, drawn: {DrawnItemType}, wainting for {WeaponItemType}",
-                playerInstance.Name, weaponsData.CurrentWeaponDrawn.WeaponItem, playerInstance.CurrentWeaponDrawn,
+                player.Name, weaponsData.CurrentWeaponDrawn.WeaponItem, playerInstance.CurrentWeaponDrawn,
                 args.WeaponItemType);
         }
 
@@ -395,6 +404,21 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
 
             return playerInstance?.IsValid() != true || playerInstance.CurrentWeaponDrawn == args.WeaponItemType &&
                 weaponsData.CurrentWeaponDrawn.WeaponItemType == args.WeaponItemType;
+        }
+
+        static void FinishCallback(AwaitingDrawnChangeTimerArgs args)
+        {
+            if (args.WeaponItemType == WeaponItemType.NONE)
+                return;
+
+            var player = args.Player;
+            var playerInstance = player.Instance;
+            if (playerInstance?.IsValid() != true)
+                return;
+
+            var weaponsData = player.WeaponsData;
+            var currentDrawn = weaponsData.CurrentWeaponDrawn;
+            currentDrawn.RaiseEvent(WeaponEvent.Drawn);
         }
     }
 

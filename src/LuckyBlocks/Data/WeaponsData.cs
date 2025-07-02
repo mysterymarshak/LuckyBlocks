@@ -11,10 +11,35 @@ using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Data;
 
+internal enum WeaponEvent
+{
+    None = 0,
+    
+    PickedUp,
+    
+    Dropped,
+    
+    Thrown,
+    
+    GrenadeThrown,
+
+    Drawn,
+    
+    Fired,
+    
+    MeleeHit
+}
+
 internal record Weapon(WeaponItem WeaponItem, WeaponItemType WeaponItemType)
 {
     public static readonly Weapon Empty = new(WeaponItem.NONE, WeaponItemType.NONE);
 
+    public event Action? PickedUp;
+    public event Action? Dropped;
+    public event Action? Thrown;
+    public event Action? Drawn;
+    public event Action? Fired;
+    
     public bool IsInvalid => WeaponItem == WeaponItem.NONE || WeaponItemType == WeaponItemType.NONE;
     public bool IsDropped => Owner?.IsValid() != true;
     public IPlayer? Owner { get; private set; }
@@ -36,17 +61,53 @@ internal record Weapon(WeaponItem WeaponItem, WeaponItemType WeaponItemType)
         Owner = null;
         ObjectId = objectId;
     }
+
+    public virtual void RaiseEvent(WeaponEvent @event)
+    {
+        switch (@event)
+        {
+            case WeaponEvent.PickedUp:
+                PickedUp?.Invoke();
+                break;
+            case WeaponEvent.Dropped:
+                Dropped?.Invoke();
+                break;
+            case WeaponEvent.Thrown:
+                Thrown?.Invoke();
+                break;
+            case WeaponEvent.Drawn:
+                Drawn?.Invoke();
+                break;
+            case WeaponEvent.Fired:
+                Fired?.Invoke();
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(@event), @event, null);
+        }  
+    }
 }
 
 internal record Melee(WeaponItem WeaponItem, WeaponItemType WeaponItemType, float CurrentDurability)
     : Weapon(WeaponItem, WeaponItemType)
 {
+    public event Action? MeleeHit;
+    
     public float CurrentDurability { get; protected set; } = CurrentDurability;
     public float MaxDurability => 1f;
 
     public void Update(in UnsafeMelee newData)
     {
         CurrentDurability = newData.CurrentDurability;
+    }
+    
+    public override void RaiseEvent(WeaponEvent @event)
+    {
+        base.RaiseEvent(@event);
+        
+        if (@event == WeaponEvent.MeleeHit)
+        {
+            MeleeHit?.Invoke();
+        }
     }
 }
 
@@ -124,6 +185,8 @@ internal record Throwable(
     bool IsActive)
     : Weapon(WeaponItem, WeaponItemType)
 {
+    public event Action? GrenadeThrown;
+    
     public int CurrentAmmo { get; protected set; } = CurrentAmmo;
     public bool IsActive { get; protected set; } = IsActive;
 
@@ -131,6 +194,16 @@ internal record Throwable(
     {
         CurrentAmmo = newData.CurrentAmmo;
         IsActive = isActive;
+    }
+
+    public override void RaiseEvent(WeaponEvent @event)
+    {
+        base.RaiseEvent(@event);
+        
+        if (@event == WeaponEvent.GrenadeThrown)
+        {
+            GrenadeThrown?.Invoke();
+        }
     }
 }
 
