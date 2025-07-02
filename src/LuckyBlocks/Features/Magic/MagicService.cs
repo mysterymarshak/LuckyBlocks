@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Autofac;
 using LuckyBlocks.Extensions;
-using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.Magic.AreaMagic;
 using LuckyBlocks.Features.Time;
 using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;

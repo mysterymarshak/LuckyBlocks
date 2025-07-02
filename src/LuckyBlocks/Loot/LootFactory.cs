@@ -114,7 +114,6 @@ internal class LootFactory : ILootFactory
         Item.BowWithPushingAndInfiniteBouncing => new BowWithPushingAndInfiniteBouncing(position, _lootConstructorArgs),
         Item.GrenadeLauncherWithInfiniteBouncing => new GrenadeLauncherWithInfiniteBouncing(position,
             _lootConstructorArgs),
-        Item.Wayback => new Other.Wayback(_lootConstructorArgs),
         Item.WeaponWithRandomPowerup => new WeaponWithRandomPowerup(position, _lootConstructorArgs),
         _ => new ArgumentOutOfRangeException(nameof(item))
     };

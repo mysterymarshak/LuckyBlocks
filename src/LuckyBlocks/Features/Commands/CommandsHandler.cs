@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
@@ -11,15 +10,14 @@ using LuckyBlocks.Features.Buffs;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.LuckyBlocks;
 using LuckyBlocks.Features.Magic;
-using LuckyBlocks.Features.Magic.AreaMagic;
 using LuckyBlocks.Features.Watchers;
 using LuckyBlocks.Features.WeaponPowerups;
 using LuckyBlocks.Loot;
 using LuckyBlocks.Loot.Buffs;
+using LuckyBlocks.Loot.Other;
 using LuckyBlocks.Loot.WeaponPowerups;
 using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
 using LuckyBlocks.Utils;
-using LuckyBlocks.Wayback;
 using Serilog;
 using SFDGameScriptInterface;
 
@@ -40,23 +38,22 @@ internal class CommandsHandler : ICommandsHandler
     private readonly IBuffFactory _buffFactory;
     private readonly IBuffsService _buffsService;
     private readonly IRespawner _respawner;
-    private readonly IWaybackMachine _waybackMachine;
     private readonly IGame _game;
     private readonly ILogger _logger;
     private readonly PowerupConstructorArgs _powerupArgs;
+    private readonly LootConstructorArgs _lootArgs;
     private readonly IWeaponsPowerupsService _weaponsPowerupsService;
     private readonly IExtendedEvents _extendedEvents;
 
     public CommandsHandler(ILuckyBlocksService luckyBlocksService, BuffConstructorArgs buffArgs,
         IIdentityService identityService, IBuffFactory buffFactory, IBuffsService buffsService, IRespawner respawner,
-        IWaybackMachine waybackMachine, PowerupConstructorArgs powerupArgs, IGame game, ILogger logger,
+        PowerupConstructorArgs powerupArgs, LootConstructorArgs lootArgs, IGame game, ILogger logger,
         IWeaponsPowerupsService weaponsPowerupsService, ILifetimeScope lifetimeScope) =>
         (_luckyBlocksService, _magicFactory, _magicService, _buffArgs, _identityService, _buffFactory, _buffsService,
-            _respawner, _waybackMachine, _powerupArgs, _game, _logger, _weaponsPowerupsService, _extendedEvents) = (
-            luckyBlocksService, buffArgs.MagicFactory,
-            buffArgs.MagicService, buffArgs, identityService, buffFactory, buffsService, respawner, waybackMachine,
-            powerupArgs,
-            game, logger, weaponsPowerupsService, lifetimeScope.BeginLifetimeScope().Resolve<IExtendedEvents>());
+            _respawner, _powerupArgs, _lootArgs, _game, _logger, _weaponsPowerupsService, _extendedEvents) = (
+            luckyBlocksService, buffArgs.MagicFactory, buffArgs.MagicService, buffArgs, identityService, buffFactory,
+            buffsService, respawner, powerupArgs, lootArgs, game, logger, weaponsPowerupsService,
+            lifetimeScope.BeginLifetimeScope().Resolve<IExtendedEvents>());
 
     public void Initialize()
     {
@@ -114,11 +111,11 @@ internal class CommandsHandler : ICommandsHandler
                     var buffedPlayer = _game.GetActiveUsers().FirstOrDefault(x => x.Name == playerName)?.GetPlayer();
                     if (buffedPlayer is null)
                         return;
-                    
+
                     var buffType = typeof(CommandsHandler).Assembly
                         .GetLoadableTypes()
                         .Where(x => x.GetInterfaces().Any(y => y.Name == nameof(IBuff)))
-                        .FirstOrDefault(x => x.Name == buffName);   
+                        .FirstOrDefault(x => x.Name == buffName);
 
                     _logger.Debug("Type: {Type}", buffType);
 
@@ -141,44 +138,27 @@ internal class CommandsHandler : ICommandsHandler
                 {
                     var playerName = commandArgs;
                     var userToRespawn = _game.GetActiveUsers().FirstOrDefault(x => x.Name == playerName);
-                    
+
                     _respawner.RespawnPlayer(userToRespawn, userToRespawn.GetProfile());
 
-                    break;
-                }
-                case "powerup":
-                {
-                    var weaponDrawn = playerInstance.CurrentWeaponDrawn;
-
-                    if (weaponDrawn is not (WeaponItemType.Handgun or WeaponItemType.Rifle))
-                        return;
-
-                    var powerupType = typeof(CommandsHandler).Assembly
-                        .GetLoadableTypes()
-                        .Where(x => x.GetInterfaces().Any(y => y.Name == nameof(IFirearmPowerup)))
-                        .FirstOrDefault(x => x.Name == commandArgs);
-
-                    _logger.Debug("Type: {Type}", powerupType);
-
-                    if (powerupType is null)
-                        return;
-
-                    var weaponsData = playerInstance.GetWeaponsData();
-                    var firearm = (Firearm)weaponsData.GetWeaponByType(weaponDrawn);
-
-                    var powerup = (IFirearmPowerup)Activator.CreateInstance(powerupType,
-                        BindingFlags.CreateInstance | BindingFlags.Instance | BindingFlags.Public |
-                        BindingFlags.OptionalParamBinding, null, new object[] { firearm, _powerupArgs },
-                        CultureInfo.CurrentCulture);
-
-                    _weaponsPowerupsService.AddWeaponPowerup(powerup, firearm, playerInstance);
-                    
                     break;
                 }
                 case "1hp":
                 {
                     playerInstance?.SetHealth(1f);
-                    
+
+                    break;
+                }
+                case "shuffle":
+                {
+                    var shuffleWeaponsEvent = new ShuffleWeapons(_lootArgs);
+                    shuffleWeaponsEvent.Run();
+                    break;
+                }
+                case "weapons":
+                {
+                    var player = _identityService.GetPlayerByInstance(playerInstance);
+                    _logger.Debug("Data: {Data}", player.WeaponsData.ToString());
                     break;
                 }
             }

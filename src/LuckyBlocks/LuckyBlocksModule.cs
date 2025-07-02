@@ -22,7 +22,6 @@ using LuckyBlocks.Loot.Attributes;
 using LuckyBlocks.Loot.Buffs;
 using LuckyBlocks.Repositories;
 using LuckyBlocks.Utils;
-using LuckyBlocks.Wayback;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 
@@ -108,11 +107,7 @@ internal class LuckyBlocksModule : Module
         builder.RegisterType<WeaponsPowerupsService>()
             .As<IWeaponsPowerupsService>()
             .SingleInstance();
-
-        builder.RegisterType<PlayersTrajectoryWatcher>()
-            .As<IPlayersTrajectoryWatcher>()
-            .SingleInstance();
-
+        
         builder.RegisterType<PlayerModifiersService>()
             .As<IPlayerModifiersService>()
             .SingleInstance();
@@ -176,11 +171,7 @@ internal class LuckyBlocksModule : Module
         builder.RegisterType<ShockedObjectsService>()
             .As<IShockedObjectsService>()
             .SingleInstance();
-
-        builder.RegisterType<WaybackMachine>()
-            .As<IWaybackMachine>()
-            .SingleInstance();
-
+        
         builder.RegisterType<TimeStopService>()
             .As<ITimeStopService>()
             .SingleInstance();
@@ -199,6 +190,10 @@ internal class LuckyBlocksModule : Module
 
         builder.RegisterType<TimeStopper>()
             .As<ITimeStopper>()
+            .SingleInstance();
+
+        builder.RegisterType<WeaponsDataWatcher>()
+            .As<IWeaponsDataWatcher>()
             .SingleInstance();
     }
 }

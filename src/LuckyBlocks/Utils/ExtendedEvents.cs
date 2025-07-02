@@ -91,6 +91,18 @@ public interface IExtendedEvents
     IEventSubscription HookOnUserJoined(Action<Event<IUser[]>> callback, EventHookMode hookMode,
         bool ignoreHandled = false);
 
+    [GameCallbackType(typeof(Events.PlayerWeaponAddedActionCallback))]
+    IEventSubscription HookOnWeaponAdded(Action<Event<IPlayer, PlayerWeaponAddedArg>> callback, EventHookMode hookMode,
+        bool ignoreHandled = false);
+
+    [GameCallbackType(typeof(Events.PlayerWeaponRemovedActionCallback))]
+    IEventSubscription HookOnWeaponRemoved(Action<Event<IPlayer, PlayerWeaponRemovedArg>> callback,
+        EventHookMode hookMode, bool ignoreHandled = false);
+
+    [GameCallbackType(typeof(Events.PlayerKeyInputCallback))]
+    IEventSubscription HookOnKeyInput(Action<Event<IPlayer, VirtualKeyInfo[]>> callback,
+        EventHookMode hookMode, bool ignoreHandled = false);
+
     void Clear();
 }
 

@@ -1,8 +1,6 @@
 ﻿using Autofac;
-using LuckyBlocks.Reflection;
 using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
 using LuckyBlocks.Utils;
-using Serilog;
 using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Features.Immunity;

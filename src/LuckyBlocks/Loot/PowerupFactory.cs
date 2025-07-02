@@ -3,7 +3,6 @@ using System.Globalization;
 using System.Reflection;
 using LuckyBlocks.Data;
 using LuckyBlocks.Loot.WeaponPowerups;
-using LuckyBlocks.Loot.WeaponPowerups.ThrownItems;
 
 namespace LuckyBlocks.Loot;
 

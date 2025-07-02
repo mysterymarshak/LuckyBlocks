@@ -63,10 +63,6 @@ internal class UnusedAttribute : ItemAttribute
 {
 }
 
-internal class WaybackMachineCanBeUsedAttribute : ItemAttribute
-{
-}
-
 internal class PlayerHasAnyFirearmAttribute : ItemAttribute
 {
 }

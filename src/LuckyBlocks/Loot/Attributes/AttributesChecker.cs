@@ -9,7 +9,6 @@ using LuckyBlocks.Features.PlayerModifiers;
 using LuckyBlocks.Features.WeaponPowerups;
 using LuckyBlocks.Loot.Buffs.Wizards;
 using LuckyBlocks.Utils;
-using LuckyBlocks.Wayback;
 using OneOf;
 using OneOf.Types;
 using SFDGameScriptInterface;
@@ -28,7 +27,7 @@ internal class AttributesChecker : IAttributesChecker
 
     public AttributesChecker(IIdentityService identityService, ISpawnChanceService spawnChanceService,
         IWeaponsPowerupsService weaponsPowerupsService, IPlayerModifiersService playerModifiersService,
-        IComparer<ItemAttribute> attributesComparer, IWaybackMachine waybackMachine, IGame game)
+        IComparer<ItemAttribute> attributesComparer, IGame game)
     {
         _attributesComparer = attributesComparer;
 
@@ -125,11 +124,6 @@ internal class AttributesChecker : IAttributesChecker
             return player.AsT0.Buffs.All(x => x.GetType() != type);
         }
 
-        bool WaybackMachineCanBeUsedAttributeCheck(ItemAttribute attribute, OneOf<Player, Unknown> player)
-        {
-            return waybackMachine.CanBeUsed;
-        }
-
         bool NoOneHaveBuffAttributeCheck(ItemAttribute attribute, OneOf<Player, Unknown> player)
         {
             var type = (attribute as NoOneHaveBuffAttribute)!.BuffType;
@@ -143,7 +137,6 @@ internal class AttributesChecker : IAttributesChecker
             [typeof(OnlyPlayerAttribute)] = OnlyPlayerAttributeCheck,
             [typeof(PlayerIsNotFullHpAttribute)] = PlayerIsNotFullHpAttributeCheck,
             [typeof(BarrelExistsAttribute)] = BarrelExistsAttributeCheck,
-            [typeof(WaybackMachineCanBeUsedAttribute)] = WaybackMachineCanBeUsedAttributeCheck,
             [typeof(LuckyBlockDropChanceCanBeIncreasedAttribute)] = LuckyBlockDropChanceCanBeIncreasedAttributeCheck,
             [typeof(DeadPlayerExistsAttribute)] = DeadPlayerExistsAttributeCheck,
             [typeof(AlivePlayersMoreThanOneAttribute)] = AlivePlayersMoreThanOneAttributeCheck,

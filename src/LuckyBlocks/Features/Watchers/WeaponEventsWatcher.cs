@@ -87,7 +87,10 @@ internal class WeaponEventsWatcher
 
     public void SetOwner(IPlayer player)
     {
-        Drop?.Invoke(player, null);
+        if (Owner is not null)
+        {
+            Drop?.Invoke(Owner, null);
+        }
 
         Owner = player;
         Pickup?.Invoke(player);
@@ -103,8 +106,11 @@ internal class WeaponEventsWatcher
             if (_weaponObject is null && args.SourceObjectID != 0)
                 return;
 
-            if (args.SourceObjectID != 0 && args.WeaponItem == _weaponItem ||
-                args.SourceObjectID == _weaponObject?.UniqueId)
+            Logger.Debug("Weapon picked up: {WeaponItem}, Player: {Player}, ObjID: {ObjectID}, droppedId: {DroppedId}",
+                args.WeaponItem, player.Name, args.SourceObjectID, _weaponObject?.UniqueId);
+
+            if ((PickedUp && args.SourceObjectID != 0 && args.WeaponItem == _weaponItem) ||
+                (!PickedUp && args.SourceObjectID == _weaponObject?.UniqueId))
             {
                 Owner = player;
                 Pickup?.Invoke(player);
@@ -123,17 +129,17 @@ internal class WeaponEventsWatcher
             if (!PickedUp)
                 return;
 
-            Logger.Debug(
-                "weapon dropped: {WeaponItem}, Owner was: {Owner}, Player: {Player}, Event: {Event}, ObjID: {ObjectID}",
-                args.WeaponItem, Owner.Name, player.Name,
-                args.Dropped ? "Dropped" : args.Thrown ? "Thrown" : "Unknown", args.TargetObjectID);
-            // truncate grenades ammo -> Event = Thrown with TargetObjectID = 0
-
             if (Owner != player)
                 return;
 
             if (args.WeaponItem != _weaponItem)
                 return;
+
+            Logger.Debug(
+                "weapon removed: {WeaponItem}, Owner was: {Owner}, Player: {Player}, Event: {Event}, ObjID: {ObjectID}",
+                args.WeaponItem, Owner.Name, player.Name,
+                args.Dropped ? "Dropped" : args.Thrown ? "Thrown" : "Unknown", args.TargetObjectID);
+            // truncate grenades ammo -> Event = Thrown with TargetObjectID = 0
 
             if (args.Thrown && _weaponItemType == WeaponItemType.Thrown && args.TargetObjectID == 0)
             {
@@ -143,22 +149,27 @@ internal class WeaponEventsWatcher
             }
 
             var @object = Game.GetObject(args.TargetObjectID);
+            var isThrownMissile = @object is (IObjectGrenadeThrown or IObjectMineThrown) and { IsMissile: true };
 
             switch (@object)
             {
                 case IObjectGrenadeThrown grenadeThrown:
                     GrenadeThrow?.Invoke(player, grenadeThrown);
-                    return;
+                    break;
                 case IObjectMineThrown mineThrown:
                     MineThrow?.Invoke(player, mineThrown);
-                    return;
+                    break;
                 case IObjectWeaponItem weapon:
                     _weaponObject = weapon;
+                    Drop?.Invoke(player, _weaponObject);
                     break;
             }
 
-            Owner = null;
-            Drop?.Invoke(player, _weaponObject);
+            if (!isThrownMissile)
+            {
+                Logger.Debug("weapon was dropped, Owner: {Owner}; setting to null", Owner.Name);
+                Owner = null;
+            }
         }
         catch (Exception exception)
         {

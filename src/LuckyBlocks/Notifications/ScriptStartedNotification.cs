@@ -27,27 +27,46 @@ internal class ScriptStartedNotificationHandler : INotificationHandler<ScriptSta
     private readonly IIdentityService _identityService;
     private readonly IGame _game;
     private readonly IWeaponsMapper _weaponsMapper;
+    private readonly IWeaponsDataWatcher _weaponsDataWatcher;
     private readonly ITimeProvider _timeProvider;
     private readonly IObjectsWatcher _objectsWatcher;
     private readonly ILogger _logger;
 
     public ScriptStartedNotificationHandler(ILuckyBlocksService luckyBlocksService, ICommandsHandler commandsHandler,
         IPlayerDeathsWatcher playerDeathsWatcher, IIdentityService identityService, IGame game,
-        IWeaponsMapper weaponsMapper, ITimeProvider timeProvider, IObjectsWatcher objectsWatcher, ILogger logger) =>
-        (_luckyBlocksService, _commandsHandler, _playerDeathsWatcher, _identityService, _game, _weaponsMapper,
-            _timeProvider, _objectsWatcher, _logger) = (luckyBlocksService, commandsHandler, playerDeathsWatcher,
-            identityService, game, weaponsMapper, timeProvider, objectsWatcher, logger);
+        IWeaponsMapper weaponsMapper, IWeaponsDataWatcher weaponsDataWatcher, ITimeProvider timeProvider,
+        IObjectsWatcher objectsWatcher, ILogger logger)
+    {
+        _luckyBlocksService = luckyBlocksService;
+        _commandsHandler = commandsHandler;
+        _playerDeathsWatcher = playerDeathsWatcher;
+        _identityService = identityService;
+        _game = game;
+        _weaponsMapper = weaponsMapper;
+        _weaponsDataWatcher = weaponsDataWatcher;
+        _timeProvider = timeProvider;
+        _objectsWatcher = objectsWatcher;
+        _logger = logger;
+    }
 
     public ValueTask Handle(ScriptStartedNotification notification, CancellationToken cancellationToken)
     {
         try
         {
-            InitializeServices();
             InitializeStaticProperties();
         }
         catch (Exception exception)
         {
-            _logger.Error(exception, "Unexpected exception in ScriptStartedNotificationHandler.Handle");
+            _logger.Error(exception, "Unexpected exception while initializing static properties in ScriptStartedNotificationHandler.Handle");
+        }
+
+        try
+        {
+            InitializeServices();
+        }
+        catch (Exception exception)
+        {
+            _logger.Error(exception, "Unexpected exception while initializing services in ScriptStartedNotificationHandler.Handle");
         }
 
         return new ValueTask();
@@ -61,6 +80,7 @@ internal class ScriptStartedNotificationHandler : INotificationHandler<ScriptSta
         _commandsHandler.Initialize();
         _timeProvider.Initialize();
         _objectsWatcher.Initialize();
+        _weaponsDataWatcher.Initialize();
     }
 
     private void InitializeStaticProperties()

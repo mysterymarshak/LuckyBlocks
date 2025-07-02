@@ -35,10 +35,6 @@ internal enum Item
 
     MedkitPoisoned,
 
-    [Disabled]
-    [WaybackMachineCanBeUsed]
-    Wayback,
-
     [LuckyBlockDropChanceCanBeIncreased]
     IncreaseSpawnChance,
 
@@ -54,7 +50,7 @@ internal enum Item
     ShuffleWeapons,
 
     StickyGrenades,
-    
+
     BananaGrenades,
 
     [OnlyPlayer]
@@ -81,7 +77,7 @@ internal enum Item
 
     [Weight(0.5f)]
     BloodyBath,
-    
+
     BowWithPushingAndInfiniteBouncing,
 
     GrenadeLauncherWithInfiniteBouncing,
@@ -140,7 +136,7 @@ internal enum Item
     [OnlyPlayer]
     [CantBeAppliedIfAlreadyExists(typeof(TotemOfUndying))]
     TotemOfUndying,
-    
+
     [OnlyPlayer]
     [PlayerIsNotOtherWizard(SourceWizard = typeof(TimeStopWizard))]
     TimeStopWizard,

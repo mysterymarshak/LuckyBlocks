@@ -1,12 +1,8 @@
 ﻿using System;
 using LuckyBlocks.Data;
 using LuckyBlocks.Entities;
-using LuckyBlocks.Exceptions;
-using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Immunity;
 using LuckyBlocks.Features.PlayerModifiers;
-using LuckyBlocks.Features.Watchers;
-using LuckyBlocks.Utils;
 using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Loot.Buffs.Durable;

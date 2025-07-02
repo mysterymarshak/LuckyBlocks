@@ -15,7 +15,6 @@ namespace LuckyBlocks.Features.Identity;
 internal interface IIdentityService
 {
     void Initialize();
-    OneOf<Player, Unknown> GetPlayerByUserId(int userId);
     OneOf<Player, Unknown> GetPlayerById(int uniqueId);
     Player GetPlayerByInstance(IPlayer player);
     IEnumerable<Player> GetAlivePlayers();
@@ -46,17 +45,6 @@ internal class IdentityService : IIdentityService
         }
 
         _extendedEvents.HookOnUserJoined(OnUserJoined, EventHookMode.Default);
-    }
-
-    public OneOf<Player, Unknown> GetPlayerByUserId(int userId)
-    {
-        var getPlayerResult = _playersRepository.GetPlayerByUserId(userId);
-        if (getPlayerResult.IsT1)
-        {
-            _logger.Warning("attempt to get unknown player with user id  '{UserId}'", userId);
-        }
-
-        return getPlayerResult;
     }
 
     public OneOf<Player, Unknown> GetPlayerById(int uniqueId)

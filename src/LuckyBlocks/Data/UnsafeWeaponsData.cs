@@ -30,13 +30,13 @@ internal readonly ref struct UnsafeMelee
     public static bool operator ==(in UnsafeMelee melee1, Melee melee2)
     {
         return melee1.WeaponItemType == melee2.WeaponItemType && melee1.WeaponItem == melee2.WeaponItem &&
-               melee1.CurrentDurability == melee2.CurrentDurability;
+               melee1.CurrentDurability == melee2.CurrentDurability && melee1.MaxDurability == melee2.MaxDurability;
     }
 
     public static bool operator ==(in UnsafeMelee melee1, in UnsafeMelee melee2)
     {
         return melee1.WeaponItemType == melee2.WeaponItemType && melee1.WeaponItem == melee2.WeaponItem &&
-               melee1.CurrentDurability == melee2.CurrentDurability;
+               melee1.CurrentDurability == melee2.CurrentDurability && melee1.MaxDurability == melee2.MaxDurability;
     }
 
     public static bool operator !=(in UnsafeMelee melee1, in UnsafeMelee melee2)
@@ -78,14 +78,16 @@ internal readonly ref struct UnsafeMeleeTemp
     {
         return meleeTemp1.WeaponItemType == meleeTemp2.WeaponItemType &&
                meleeTemp1.WeaponItem == meleeTemp2.WeaponItem &&
-               meleeTemp1.CurrentDurability == meleeTemp2.CurrentDurability;
+               meleeTemp1.CurrentDurability == meleeTemp2.CurrentDurability &&
+               meleeTemp1.MaxDurability == meleeTemp2.MaxDurability;
     }
 
     public static bool operator ==(in UnsafeMeleeTemp meleeTemp1, in UnsafeMeleeTemp meleeTemp2)
     {
         return meleeTemp1.WeaponItemType == meleeTemp2.WeaponItemType &&
                meleeTemp1.WeaponItem == meleeTemp2.WeaponItem &&
-               meleeTemp1.CurrentDurability == meleeTemp2.CurrentDurability;
+               meleeTemp1.CurrentDurability == meleeTemp2.CurrentDurability &&
+               meleeTemp1.MaxDurability == meleeTemp2.MaxDurability;
     }
 
     public static bool operator !=(in UnsafeMeleeTemp meleeTemp1, in UnsafeMeleeTemp meleeTemp2)
@@ -232,7 +234,7 @@ internal readonly ref struct UnsafePowerup
     [FieldOffset(sizeof(WeaponItemType))]
     public readonly WeaponItem WeaponItem;
 
-    public static bool operator ==(in UnsafePowerup powerup1, Powerup powerup2)
+    public static bool operator ==(in UnsafePowerup powerup1, PowerupItem powerup2)
     {
         return powerup1.WeaponItemType == powerup2.WeaponItemType && powerup1.WeaponItem == powerup2.WeaponItem;
     }
@@ -247,7 +249,7 @@ internal readonly ref struct UnsafePowerup
         return !(powerup1 == powerup2);
     }
 
-    public static bool operator !=(in UnsafePowerup powerup1, Powerup powerup2)
+    public static bool operator !=(in UnsafePowerup powerup1, PowerupItem powerup2)
     {
         return !(powerup1 == powerup2);
     }

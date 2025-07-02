@@ -37,14 +37,13 @@ internal class WeaponsMapper : IWeaponsMapper
             rifleWeaponItem.SpareMags, rifleWeaponItem.MaxCarriedSpareMags, rifleWeaponItem.LazerEquipped,
             ProjectilePowerupData.FromBouncingAndFireRounds(rifleWeaponItem.PowerupBouncingRounds,
                 rifleWeaponItem.PowerupFireRounds), rifleWeaponItem.ProjectileItem),
-        PowerupWeaponItem powerupWeaponItem => new Powerup(powerupWeaponItem.WeaponItem,
+        PowerupWeaponItem powerupWeaponItem => new PowerupItem(powerupWeaponItem.WeaponItem,
             powerupWeaponItem.WeaponItemType),
         ThrownWeaponItem { WeaponItem: WeaponItem.GRENADES } grenade => new Grenade(grenade.WeaponItem,
-            grenade.WeaponItemType, grenade.CurrentAmmo, grenade.MaxCarriedAmmo,
-            player.GetActiveThrowableWeaponItem() == WeaponItem.GRENADES, player.GetActiveThrowableTimer()),
-        ThrownWeaponItem thrownWeaponItem => new Throwable(thrownWeaponItem.WeaponItem,
-            thrownWeaponItem.WeaponItemType, thrownWeaponItem.CurrentAmmo, thrownWeaponItem.MaxCarriedAmmo,
-            player.GetActiveThrowableWeaponItem() == thrownWeaponItem.WeaponItem),
+            grenade.WeaponItemType, grenade.CurrentAmmo, grenade.MaxCarriedAmmo, player.IsHoldingActiveThrowable,
+            player.GetActiveThrowableTimer()),
+        ThrownWeaponItem thrownWeaponItem => new Throwable(thrownWeaponItem.WeaponItem, thrownWeaponItem.WeaponItemType,
+            thrownWeaponItem.CurrentAmmo, thrownWeaponItem.MaxCarriedAmmo, player.IsHoldingActiveThrowable),
         _ => throw new ArgumentOutOfRangeException()
     });
 }

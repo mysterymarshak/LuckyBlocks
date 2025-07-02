@@ -6,14 +6,23 @@ using LuckyBlocks.Features.WeaponPowerups;
 using LuckyBlocks.Loot;
 using LuckyBlocks.Loot.Attributes;
 using LuckyBlocks.Utils;
-using LuckyBlocks.Wayback;
 using Mediator;
 using Serilog;
 using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Data;
 
-internal record LootConstructorArgs(INotificationService NotificationService, IEffectsPlayer EffectsPlayer,
-    IRespawner Respawner, IIdentityService IdentityService, IWeaponsPowerupsService WeaponsPowerupsService,
-    ISpawnChanceService SpawnChanceService, IBuffsService BuffsService, IMediator Mediator,
-    IWaybackMachine WaybackMachine, IPowerupFactory PowerupFactory, IAttributesChecker AttributesChecker, IGame Game, ILogger Logger, ILifetimeScope LifetimeScope);
+internal record LootConstructorArgs(
+    INotificationService NotificationService,
+    IEffectsPlayer EffectsPlayer,
+    IRespawner Respawner,
+    IIdentityService IdentityService,
+    IWeaponsPowerupsService WeaponsPowerupsService,
+    ISpawnChanceService SpawnChanceService,
+    IBuffsService BuffsService,
+    IMediator Mediator,
+    IPowerupFactory PowerupFactory,
+    IAttributesChecker AttributesChecker,
+    IGame Game,
+    ILogger Logger,
+    ILifetimeScope LifetimeScope);

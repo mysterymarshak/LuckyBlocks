@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading;
-using LuckyBlocks.Entities;
 using LuckyBlocks.Features.Chat;
 using LuckyBlocks.Features.Dialogues;
 using LuckyBlocks.Utils;

@@ -5,7 +5,6 @@ namespace LuckyBlocks.Features.Chat;
 
 internal interface IChat
 {
-    void ShowMessage(string message);
     void ShowMessage(string message, Color color);
     void ShowMessage(string message, Color color, int userId);
 }
@@ -18,8 +17,6 @@ internal class Chat : IChat
 
     public Chat(IGame game)
         => (_game) = (game);
-
-    public void ShowMessage(string message) => ShowMessage(message, Color.Grey);
 
     public void ShowMessage(string message, Color color)
     {

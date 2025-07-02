@@ -5,7 +5,6 @@ using LuckyBlocks.Data;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Watchers;
 using LuckyBlocks.Loot.WeaponPowerups;
-using LuckyBlocks.Loot.WeaponPowerups.Bullets;
 using OneOf;
 using OneOf.Types;
 using Serilog;
@@ -40,7 +39,7 @@ internal class WeaponsPowerupsService : IWeaponsPowerupsService
         var appliedAgain = ApplyPowerupAgainIfExists(powerup, weapon, player);
         if (appliedAgain)
             return;
-        
+
         if (powerup is ILimitedAmmoPowerup<Weapon> limitedAmmoPowerup)
         {
             TruncateAmmo(weapon, player, limitedAmmoPowerup.MaxAmmo);
@@ -127,7 +126,7 @@ internal class WeaponsPowerupsService : IWeaponsPowerupsService
         {
             var powerup = powerupItem.Powerup;
             var owner = powerupItem.WeaponEventsWatcher.Owner;
-            
+
             if (owner == player && powerup is IUsablePowerup<Weapon> usablePowerup)
             {
                 usablePowerup.InvalidateWeapon(player);
@@ -185,6 +184,9 @@ internal class WeaponsPowerupsService : IWeaponsPowerupsService
         {
             var existingPowerup = (existingWeaponPowerup.Powerup as IUsablePowerup<Weapon>)!;
             var currentOwner = existingWeaponPowerup.WeaponEventsWatcher.Owner;
+
+            if (currentOwner != player)
+                return false;
 
             existingPowerup.ApplyAgain(currentOwner);
             usesLeft = existingPowerup.UsesLeft;
@@ -253,7 +255,8 @@ internal class WeaponsPowerupsService : IWeaponsPowerupsService
     private OneOf<PowerupWrapper, NotFound> GetAppliedPowerup(IWeaponPowerup<Weapon> powerup, Weapon? weapon)
     {
         var existingPowerup = _powerups.FirstOrDefault(x =>
-            x.Powerup.Weapon == weapon && x.Powerup.GetType() == powerup.GetType());
+            x.Powerup.Weapon == weapon && x.Powerup.GetType() == powerup.GetType() &&
+            x.WeaponEventsWatcher.Owner?.IsValidUser() == true);
 
         if (existingPowerup is null)
             return new NotFound();

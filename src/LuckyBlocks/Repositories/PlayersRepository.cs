@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using LuckyBlocks.Entities;
 using LuckyBlocks.Exceptions;
+using LuckyBlocks.Extensions;
 using OneOf;
 using OneOf.Types;
 using SFDGameScriptInterface;
@@ -12,7 +13,6 @@ namespace LuckyBlocks.Repositories;
 internal interface IPlayersRepository
 {
     OneOf<Success, Unknown> ValidateUser(int userId);
-    OneOf<Player, Unknown> GetPlayerByUserId(int userId);
     OneOf<Player, Unknown> GetPlayerById(int uniqueId);
     Player GetPlayerByInstance(IPlayer player);
     IEnumerable<Player> GetAlivePlayers();
@@ -31,28 +31,23 @@ internal class PlayersRepository : IPlayersRepository
         var getPlayerResult = GetPlayerByUserId(userId);
         return getPlayerResult.IsT0 ? new Success() : new Unknown();
     }
-    
+
     public OneOf<Player, Unknown> GetPlayerById(int uniqueId)
     {
         var playerInstance = _game.GetPlayer(uniqueId);
         return playerInstance is null ? new Unknown() : GetPlayerByUserId(playerInstance.UserIdentifier);
     }
-    
-    public OneOf<Player, Unknown> GetPlayerByUserId(int userId)
-    {
-        return _players.TryGetValue(userId, out var player) ? player : CreatePlayerByUserId(userId);
-    }
 
     public Player GetPlayerByInstance(IPlayer instance)
     {
         var userId = instance.UserIdentifier;
-        
+
         var getPlayerResult = GetPlayerByUserId(userId);
         if (!getPlayerResult.TryPickT0(out var player, out _))
         {
             throw new Exception($"Player with user id '{userId}' not found.");
         }
-        
+
         return player;
     }
 
@@ -60,8 +55,13 @@ internal class PlayersRepository : IPlayersRepository
     {
         var players = _game.GetPlayers();
         return players
-            .Where(x => x is { IsUser: true, IsDead: false })
+            .Where(x => x.IsValidUser() && !x.IsDead)
             .Select(GetPlayerByInstance);
+    }
+
+    private OneOf<Player, Unknown> GetPlayerByUserId(int userId)
+    {
+        return _players.TryGetValue(userId, out var player) ? player : CreatePlayerByUserId(userId);
     }
 
     private OneOf<Player, Unknown> CreatePlayerByUserId(int userId)
@@ -77,7 +77,7 @@ internal class PlayersRepository : IPlayersRepository
     private Player CreatePlayer(IUser? user)
     {
         ArgumentWasNullException.ThrowIfNull(user);
-        
+
         var player = new Player(user);
         _players.Add(user.UserIdentifier, player);
 

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Autofac;
 using LuckyBlocks.Data;
-using LuckyBlocks.Entities;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Notifications;
 using LuckyBlocks.Utils;
