@@ -64,7 +64,6 @@ internal abstract class BulletsPowerupBase : IUsablePowerup<Firearm>
             throw new InvalidCastException("cannot cast weapon to firearm");
         }
 
-        Dispose();
         Weapon = firearm;
         Run();
     }
