@@ -4,7 +4,7 @@ using LuckyBlocks.Loot.WeaponPowerups;
 using LuckyBlocks.Loot.WeaponPowerups.ThrownItems;
 using SFDGameScriptInterface;
 
-namespace LuckyBlocks.Loot.Weapons;
+namespace LuckyBlocks.Loot.Weapons.Grenades;
 
 internal class BananaGrenadesLoot : PowerUppedWeaponBase
 {

@@ -12,6 +12,7 @@ using LuckyBlocks.Loot.Other;
 using LuckyBlocks.Loot.WeaponPowerups;
 using LuckyBlocks.Loot.WeaponPowerups.Bullets;
 using LuckyBlocks.Loot.Weapons;
+using LuckyBlocks.Loot.Weapons.Grenades;
 using LuckyBlocks.Loot.Weapons.InfiniteBouncing;
 using LuckyBlocks.Loot.Weapons.LegendaryWeapon;
 using LuckyBlocks.Utils;
