@@ -1,8 +1,9 @@
 using System;
-using System.Diagnostics.CodeAnalysis;
+using System.Collections.Generic;
+using System.Linq;
 using Autofac;
 using LuckyBlocks.Data;
-using LuckyBlocks.Extensions;
+using LuckyBlocks.Exceptions;
 using LuckyBlocks.Notifications;
 using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
 using LuckyBlocks.Utils;
@@ -11,80 +12,109 @@ using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Loot.WeaponPowerups.ThrownItems;
 
-internal abstract class GrenadesPowerupBase : IThrowableItemPowerup<Grenade>, IUsablePowerup<Grenade>
+internal abstract class GrenadesPowerupBase : IUsablePowerup<Grenade>
 {
+    public abstract Color PaintColor { get; }
     public abstract string Name { get; }
     public abstract int UsesCount { get; }
-    public int UsesLeft { get; private set; }
-    public Grenade? Weapon { get; private set; }
+    public Grenade Weapon { get; private set; }
+    public int UsesLeft  => _usesLeft ??= Math.Min(UsesCount, Weapon.MaxAmmo);
+    
+    protected abstract IEnumerable<Type> IncompatiblePowerups { get; }
+
+    private IPlayer? Player => Weapon.Owner;
 
     private readonly INotificationService _notificationService;
     private readonly IMediator _mediator;
     private readonly IGame _game;
-    private readonly Color _paintColor;
     private readonly IExtendedEvents _extendedEvents;
 
-    protected GrenadesPowerupBase(Grenade grenade, PowerupConstructorArgs args, Color paintColor)
+    private int? _usesLeft;
+
+    protected GrenadesPowerupBase(Grenade grenade, PowerupConstructorArgs args)
     {
         Weapon = grenade;
         _notificationService = args.NotificationService;
         _mediator = args.Mediator;
         _game = args.Game;
-        _paintColor = paintColor;
-        var scope = args.LifetimeScope.BeginLifetimeScope();
-        _extendedEvents = scope.Resolve<IExtendedEvents>();
+        var thisScope = args.LifetimeScope.BeginLifetimeScope();
+        _extendedEvents = thisScope.Resolve<IExtendedEvents>();
     }
 
-    public void OnRan(IPlayer player)
+    public void Run()
     {
-        UsesLeft = UsesCount;
-        ShowGrenadesCount(player);
+        Weapon.PickUp += ShowGrenadesCount;
+        Weapon.Draw += ShowGrenadesCount;
+        Weapon.Throw += OnWeaponDropped;
+        Weapon.Drop += OnWeaponDropped;
+        Weapon.GrenadeThrow += OnThrown;
+        
+        ShowGrenadesCount(ignoreIfDropped: true);
+
+        if (Weapon.IsDropped)
+        {
+            CreatePaint(Weapon.ObjectId, _extendedEvents);
+        }
+    }
+    
+    public bool IsCompatibleWith(Type otherPowerupType) => !IncompatiblePowerups.Contains(otherPowerupType);
+
+    public void AddUses(int usesCount)
+    {
+        _usesLeft = Math.Min(Weapon.MaxAmmo, UsesLeft + usesCount);
+
+        ShowGrenadesCount(ignoreIfDropped: true);
     }
 
-    public void ApplyAgain(IPlayer? player)
+    public void MoveToWeapon(Weapon otherWeapon)
     {
-        UsesLeft = Math.Min(Weapon!.MaxAmmo, UsesLeft + UsesCount);
-        ShowGrenadesCount(player);
+        if (otherWeapon is not Grenade grenade)
+        {
+            throw new InvalidCastException("cannot cast otherWeapon to grenade");
+        }
+        
+        Weapon = grenade;
+        Run();
+    }
+    
+    public void Dispose()
+    {
+        Weapon.PickUp -= ShowGrenadesCount;
+        Weapon.Draw -= ShowGrenadesCount;
+        Weapon.Throw -= OnWeaponDropped;
+        Weapon.Drop -= OnWeaponDropped;
+        Weapon.GrenadeThrow -= OnThrown;
+    }
+    
+    private void ShowGrenadesCount(Weapon weapon)
+    {
+        ShowGrenadesCount();
     }
 
-    public void OnWeaponPickedUp(IPlayer player)
+    private void OnWeaponDropped(IObjectWeaponItem? objectWeaponItem, Weapon weapon)
     {
-        ShowGrenadesCount(player);
-    }
-
-    public void OnWeaponDropped(IPlayer player, IObjectWeaponItem? objectWeaponItem)
-    {
-        if (objectWeaponItem is null)
-            return;
-
+        ArgumentWasNullException.ThrowIfNull(objectWeaponItem);
         CreatePaint(objectWeaponItem, _extendedEvents);
     }
 
-    public void OnThrow(IPlayer player, IObject thrown)
+    private void OnThrown(IPlayer? player, IObject? thrown, Throwable? throwable)
     {
-        var grenadeThrown = (thrown as IObjectGrenadeThrown)!;
+        var grenadeThrown = thrown as IObjectGrenadeThrown;
+        ArgumentWasNullException.ThrowIfNull(grenadeThrown);
+        ArgumentWasNullException.ThrowIfNull(player);
+        ArgumentWasNullException.ThrowIfNull(throwable);
 
         var grenade = CreateGrenadeAndPaint(grenadeThrown);
         grenade.Initialize();
 
-        InvalidateWeapon(player);
-        UsesLeft = Math.Min(Weapon.CurrentAmmo, UsesLeft - 1);
-
+        _usesLeft = Math.Min(Weapon.CurrentAmmo, UsesLeft - 1);
         ShowGrenadesCount(player);
 
         if (UsesLeft > 0)
             return;
 
-        var notification = new WeaponPowerupFinishedNotification(this, Weapon!);
+        var notification = new WeaponPowerupFinishedNotification(this, Weapon);
         _mediator.Publish(notification);
-    }
-
-    [MemberNotNull(nameof(Weapon))]
-    public void InvalidateWeapon(IPlayer player)
-    {
-        var weaponsData = player.GetWeaponsData();
-        var grenade = weaponsData.GetWeaponByType(WeaponItemType.Thrown) as Grenade;
-        Weapon = grenade ?? new Grenade(WeaponItem.GRENADES, WeaponItemType.Thrown, default, 5, default, default);
     }
 
     protected abstract GrenadeBase CreateGrenade(IObjectGrenadeThrown grenadeThrown, IGame game,
@@ -98,16 +128,22 @@ internal abstract class GrenadesPowerupBase : IThrowableItemPowerup<Grenade>, IU
         return grenade;
     }
 
+    private void CreatePaint(int objectId, IExtendedEvents extendedEvents) =>
+        CreatePaint(_game.GetObject(objectId), extendedEvents);
+
     private void CreatePaint(IObject @object, IExtendedEvents extendedEvents)
     {
         var grenadeIndicator = new GrenadeIndicator(@object, extendedEvents);
-        grenadeIndicator.Paint(_paintColor);
+        grenadeIndicator.Paint(PaintColor);
     }
 
-    private void ShowGrenadesCount(IPlayer? player)
+    private void ShowGrenadesCount(IPlayer? player = null, bool ignoreIfDropped = false)
     {
-        if (player is null)
+        player ??= Player;
+        if (player is null && ignoreIfDropped)
             return;
+
+        ArgumentWasNullException.ThrowIfNull(player);
 
         _notificationService.CreateChatNotification($"{UsesLeft} {Name.ToLower()} left", Color.Grey,
             player.UserIdentifier);

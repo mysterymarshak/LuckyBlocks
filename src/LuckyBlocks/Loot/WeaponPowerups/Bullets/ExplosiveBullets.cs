@@ -1,4 +1,6 @@
-﻿using LuckyBlocks.Data;
+﻿using System;
+using System.Collections.Generic;
+using LuckyBlocks.Data;
 using LuckyBlocks.Utils;
 using SFDGameScriptInterface;
 
@@ -8,12 +10,16 @@ internal class ExplosiveBullets : BulletsPowerupBase
 {
     public override string Name => "Explosive bullets";
 
+    protected override IEnumerable<Type> IncompatiblePowerups => _incompatiblePowerups;
+
+    private static readonly List<Type> _incompatiblePowerups = [typeof(TripleRicochetBullets), typeof(InfiniteRicochetBullets)];
+    
     private readonly IGame _game;
 
     public ExplosiveBullets(Firearm firearm, PowerupConstructorArgs args) : base(firearm, args)
         => (_game) = (args.Game);
 
-    protected override void OnFire(IPlayer player, IProjectile projectile)
+    protected override void OnFired(IPlayer player, IProjectile projectile)
     {
         var explosiveBullet = new ExplosiveBullet(projectile, ExtendedEvents);
         explosiveBullet.Hit += OnBulletHit;

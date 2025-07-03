@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using LuckyBlocks.Data;
 using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
 using LuckyBlocks.Utils;
@@ -9,13 +11,17 @@ namespace LuckyBlocks.Loot.WeaponPowerups.Bullets;
 internal class PushBullets : BulletsPowerupBase
 {
     public override string Name => "Push bullets";
+    
+    protected override IEnumerable<Type> IncompatiblePowerups => _incompatiblePowerups;
+
+    private static readonly List<Type> _incompatiblePowerups = [typeof(TripleRicochetBullets), typeof(FreezeBullets)];
 
     private readonly IGame _game;
 
     public PushBullets(Firearm firearm, PowerupConstructorArgs args) : base(firearm, args)
         => (_game) = (args.Game);
 
-    protected override void OnFire(IPlayer player, IProjectile projectile)
+    protected override void OnFired(IPlayer player, IProjectile projectile)
     {
         var pushBullet = new PushBullet(projectile, _game, ExtendedEvents);
         pushBullet.Remove += OnBulletRemoved;

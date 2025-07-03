@@ -6,6 +6,9 @@ using LuckyBlocks.Data;
 using LuckyBlocks.Entities;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Identity;
+using LuckyBlocks.Features.WeaponPowerups;
+using LuckyBlocks.Loot;
+using LuckyBlocks.Loot.WeaponPowerups;
 using LuckyBlocks.Reflection;
 using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
 using LuckyBlocks.Utils;
@@ -18,6 +21,7 @@ namespace LuckyBlocks.Features.Watchers;
 internal interface IWeaponsDataWatcher
 {
     void Initialize();
+    Weapon RegisterWeapon(IObjectWeaponItem objectWeaponItem);
 }
 
 [Inject]
@@ -27,144 +31,262 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
     private static ILogger Logger { get; set; }
 
     private readonly IIdentityService _identityService;
+    private readonly IWeaponPowerupsService _weaponPowerupsService;
+    private readonly INotificationService _notificationService;
+    private readonly IThrowableWeaponsWatcher _throwableWeaponsWatcher;
+    private readonly IReloadWeaponsWatcher _reloadWeaponsWatcher;
+    private readonly IDrawnWeaponsWatcher _drawnWeaponsWatcher;
+    private readonly IChainsawWeaponsWatcher _chainsawWeaponsWatcher;
     private readonly IGame _game;
     private readonly IExtendedEvents _extendedEvents;
-    private readonly List<Grenade> _thrownGrenades;
-    private readonly List<Player> _playersWithThrowable;
     private readonly Dictionary<int, Weapon> _droppedWeapons;
-    private readonly Dictionary<int, TimerBase> _drawnWeaponTimers;
-    private readonly Dictionary<int, List<ReloadAwaitingData>> _reloadWeaponTimers;
 
-    private IEventSubscription? _watchingForThrowablesSubscription;
+    private readonly List<IObjectAmmoStashTrigger> _ammoTriggers;
 
-    public WeaponsDataWatcher(IIdentityService identityService, IGame game, ILifetimeScope lifetimeScope)
+    public WeaponsDataWatcher(IIdentityService identityService, IWeaponPowerupsService weaponPowerupsService,
+        INotificationService notificationService, IThrowableWeaponsWatcher throwableWeaponsWatcher,
+        IReloadWeaponsWatcher reloadWeaponsWatcher, IDrawnWeaponsWatcher drawnWeaponsWatcher,
+        IChainsawWeaponsWatcher chainsawWeaponsWatcher, IGame game, ILifetimeScope lifetimeScope)
     {
         _identityService = identityService;
+        _weaponPowerupsService = weaponPowerupsService;
+        _notificationService = notificationService;
+        _throwableWeaponsWatcher = throwableWeaponsWatcher;
+        _reloadWeaponsWatcher = reloadWeaponsWatcher;
+        _drawnWeaponsWatcher = drawnWeaponsWatcher;
+        _chainsawWeaponsWatcher = chainsawWeaponsWatcher;
         _game = game;
-        _thrownGrenades = [];
-        _playersWithThrowable = [];
         _droppedWeapons = new Dictionary<int, Weapon>();
-        _drawnWeaponTimers = new Dictionary<int, TimerBase>();
-        _reloadWeaponTimers = new Dictionary<int, List<ReloadAwaitingData>>();
+        _ammoTriggers = [];
         var thisScope = lifetimeScope.BeginLifetimeScope();
         _extendedEvents = thisScope.Resolve<IExtendedEvents>();
     }
 
     public void Initialize()
     {
-        _extendedEvents.HookOnWeaponAdded(OnWeaponAdded, EventHookMode.Default);
-        _extendedEvents.HookOnWeaponRemoved(OnWeaponRemoved, EventHookMode.Default);
-        _extendedEvents.HookOnProjectilesCreated(OnProjectilesCreated, EventHookMode.Default);
-        _extendedEvents.HookOnPlayerMeleeAction(OnMeleeAction, EventHookMode.Default);
+        _extendedEvents.HookOnWeaponAdded(OnWeaponAdded, EventHookMode.Prioritized);
+        _extendedEvents.HookOnWeaponRemoved(OnWeaponRemoved, EventHookMode.Prioritized);
+        _extendedEvents.HookOnProjectilesCreated(OnProjectilesCreated, EventHookMode.Prioritized);
+        _extendedEvents.HookOnPlayerMeleeAction(OnMeleeAction, EventHookMode.Prioritized);
         _extendedEvents.HookOnDestroyed(OnObjectDestroyed, EventHookMode.Default);
-        _extendedEvents.HookOnKeyInput(OnKeyInput, EventHookMode.Default);
+        _extendedEvents.HookOnKeyInput(OnKeyInput, EventHookMode.Prioritized);
+        _ammoTriggers.AddRange(_game.GetObjects<IObjectAmmoStashTrigger>());
+        _drawnWeaponsWatcher.Initialize();
+    }
+
+    public Weapon RegisterWeapon(IObjectWeaponItem objectWeaponItem)
+    {
+        if (_droppedWeapons.TryGetValue(objectWeaponItem.UniqueId, out var weapon))
+        {
+            Logger.Warning(
+                "Weapon {WeaponItem} with ID {ObjectId} already registered as dropped weapon, returning existing weapon.",
+                objectWeaponItem.WeaponItem, objectWeaponItem.UniqueId);
+        }
+        else
+        {
+            weapon = objectWeaponItem.ToWeapon();
+            _droppedWeapons.Add(objectWeaponItem.UniqueId, weapon);
+        }
+
+        return weapon;
     }
 
     private void OnWeaponAdded(Event<IPlayer, PlayerWeaponAddedArg> @event)
     {
-        var (playerInstance, args, _) = @event;
-        if (!playerInstance.IsValidUser())
-            return;
-
-        var player = _identityService.GetPlayerByInstance(playerInstance);
-        if (args.SourceObjectID != 0 && _droppedWeapons.TryGetValue(args.SourceObjectID, out var droppedWeapon))
+        try
         {
-            player.WeaponsData.AddWeapon(droppedWeapon);
+            var (playerInstance, args, _) = @event;
+            if (!playerInstance.IsValidUser())
+                return;
+            
+            var player = _identityService.GetPlayerByInstance(playerInstance);
+            if (args.SourceObjectID != 0 && _droppedWeapons.TryGetValue(args.SourceObjectID, out var droppedWeapon))
+            {
+                var weaponsData = player.WeaponsData;
+                var existingWeapon = weaponsData.GetWeaponByType(args.WeaponItemType);
+                var existingWeaponIsValid = !existingWeapon.IsInvalid;
+                var powerupsToConcat = Enumerable.Empty<IWeaponPowerup<Weapon>>();
+                if (existingWeaponIsValid &&
+                    !IsPickedUpWeaponCompatible(existingWeapon, droppedWeapon, player, out powerupsToConcat))
+                    return;
 
-            droppedWeapon.SetOwner(playerInstance);
-            droppedWeapon.RaiseEvent(WeaponEvent.PickedUp);
+                if ((!existingWeaponIsValid || existingWeapon.WeaponItem != args.WeaponItem) &&
+                    args.WeaponItemType != WeaponItemType.InstantPickup)
+                {
+                    weaponsData.AddWeapon(droppedWeapon);
+                    droppedWeapon.SetOwner(playerInstance);
 
-            Logger.Debug("Picked up dropped weapon: {WeaponItem}, id: {ObjectId}, owner: {Player}",
-                droppedWeapon.WeaponItem, args.SourceObjectID, player.Name);
+                    droppedWeapon.RaiseEvent(WeaponEvent.PickedUp);
+                }
+
+                if (existingWeaponIsValid && existingWeapon.WeaponItem == args.WeaponItem)
+                {
+                    player.UpdateWeaponData(args.WeaponItemType, existingWeapon is MeleeTemp);
+                    _weaponPowerupsService.ConcatPowerups(existingWeapon, powerupsToConcat);
+                }
+
+                weaponsData.UpdateDrawn();
+
+                Logger.Debug("Picked up dropped weapon: {WeaponItem}, id: {ObjectId}, owner: {Player}",
+                    droppedWeapon.WeaponItem, args.SourceObjectID, player.Name);
+            }
+            else
+            {
+                OnPickedUpNewWeapon(player, args, playerInstance);
+            }
+
+            if (args.WeaponItemType == WeaponItemType.Thrown)
+            {
+                _throwableWeaponsWatcher.OnThrowablePickedUp(player);
+            }
+
+            if (args.WeaponItem == WeaponItem.CHAINSAW)
+            {
+                _chainsawWeaponsWatcher.StartTrackingChainsaw(player);
+            }
         }
-        else
+        catch (Exception exception)
         {
-            UpdateWeaponData(player, args.WeaponItemType);
+            Logger.Error("Error while processing weapon added event: {Message}", exception);
+        }
+    }
+
+    private bool IsPickedUpWeaponCompatible(Weapon existingWeapon, Weapon pickedUpWeapon, Player player,
+        out IEnumerable<IWeaponPowerup<Weapon>> powerupsToConcat)
+    {
+        var powerupsToConcatInternal = new List<IWeaponPowerup<Weapon>>();
+        foreach (var pickedUpPowerup in pickedUpWeapon.Powerups)
+        {
+            foreach (var existingPowerup in existingWeapon.Powerups)
+            {
+                if (existingPowerup.IsCompatibleWith(pickedUpPowerup.GetType()))
+                    continue;
+                
+                var playerInstance = player.Instance!;
+                playerInstance.SetAmmoFromWeapon(pickedUpWeapon);
+                var disarmedWeapon = playerInstance.Disarm(pickedUpWeapon.WeaponItemType);
+                OnWeaponDropped(pickedUpWeapon, disarmedWeapon, player, WeaponEvent.Dropped);
+
+                _notificationService.CreateTextNotification($"Incompatible | {pickedUpWeapon.GetFormattedName()}",
+                    Color.Grey, TimeSpan.FromSeconds(2), disarmedWeapon.GetWorldPosition());
+
+                playerInstance.GiveWeaponItem(pickedUpWeapon.WeaponItem, false);
+                playerInstance.SetAmmoFromWeapon(existingWeapon);
+                
+                powerupsToConcat = [];
+                return false;
+            }
+
+            powerupsToConcatInternal.Add(pickedUpPowerup);
+        }
+
+        powerupsToConcat = powerupsToConcatInternal;
+
+        return true;
+    }
+
+    private static void OnPickedUpNewWeapon(Player player, PlayerWeaponAddedArg args, IPlayer playerInstance)
+    {
+        if (args.WeaponItemType != WeaponItemType.InstantPickup)
+        {
+            player.UpdateWeaponData(args.WeaponItemType,
+                playerInstance.CurrentMeleeMakeshiftWeapon.WeaponItem == args.WeaponItem);
             var pickedUpWeapon = player.WeaponsData.GetWeaponByType(args.WeaponItemType);
 
             pickedUpWeapon.SetOwner(playerInstance);
             pickedUpWeapon.RaiseEvent(WeaponEvent.PickedUp);
 
-            Logger.Debug("Picked up weapon: {WeaponItem} {ObjectId}, owner: {Player}", args.WeaponItem,
-                args.SourceObjectID, player.Name);
+            var weaponsData = player.WeaponsData;
+            weaponsData.UpdateDrawn();
         }
 
-        OnThrowablePickedUp(args, player);
-    }
-
-    private void OnThrowablePickedUp(PlayerWeaponAddedArg args, Player player)
-    {
-        if (args.WeaponItemType == WeaponItemType.Thrown)
-        {
-            if (!_playersWithThrowable.Contains(player))
-            {
-                _playersWithThrowable.Add(player);
-            }
-
-            _watchingForThrowablesSubscription ??= _extendedEvents.HookOnUpdate(OnUpdate, EventHookMode.Default);
-        }
+        Logger.Debug("Picked up weapon: {WeaponItem} {ObjectId}, owner: {Player}", args.WeaponItem,
+            args.SourceObjectID, player.Name);
     }
 
     private void OnWeaponRemoved(Event<IPlayer, PlayerWeaponRemovedArg> @event)
     {
-        var (playerInstance, args, _) = @event;
-        if (!playerInstance.IsValidUser())
+        try
+        {
+            var (playerInstance, args, _) = @event;
+            if (!playerInstance.IsValidUser())
+                return;
+
+            var player = _identityService.GetPlayerByInstance(playerInstance);
+            var weaponsData = player.WeaponsData;
+            var removedWeapon = weaponsData.GetWeaponByType(args.WeaponItemType);
+
+            if (args.TargetObjectID != 0)
+            {
+                var @object = _game.GetObject(args.TargetObjectID);
+                if (args.Thrown)
+                {
+                    var isGrenadeThrown = @object is not IObjectWeaponItem;
+
+                    if (isGrenadeThrown && removedWeapon is Grenade grenade && @object is IObjectGrenadeThrown)
+                    {
+                        OnGrenadeThrown(grenade, args, player, @object);
+                    }
+
+                    if (!isGrenadeThrown)
+                    {
+                        OnWeaponDropped(removedWeapon, @object, player, WeaponEvent.Thrown);
+                    }
+                }
+                else
+                {
+                    OnWeaponDropped(removedWeapon, @object, player, WeaponEvent.Dropped);
+                }
+            }
+            else
+            {
+                if (args is not { Thrown: true, WeaponItemType: WeaponItemType.Thrown, TargetObjectID: 0 })
+                {
+                    DisposeWeapon(removedWeapon);
+                }
+            }
+            
+            player.UpdateWeaponData(args.WeaponItemType, removedWeapon is MeleeTemp, true);
+
+            if (args.WeaponItemType == WeaponItemType.Thrown && player.WeaponsData.ThrowableItem.IsInvalid)
+            {
+                _throwableWeaponsWatcher.OnThrowableRemoved(player);
+            }
+
+            if (args.WeaponItem == WeaponItem.CHAINSAW)
+            {
+                _chainsawWeaponsWatcher.RemoveChainsawTracking(player, removedWeapon);
+            }
+        }
+        catch (Exception exception)
+        {
+            Logger.Error("Error while processing weapon removed event: {Message}", exception);
+        }
+    }
+
+    private void OnWeaponDropped(Weapon removedWeapon, IObject @object, Player? player, WeaponEvent weaponEvent)
+    {
+        var objectId = @object.UniqueId;
+        if (_droppedWeapons.ContainsKey(objectId))
             return;
 
-        var player = _identityService.GetPlayerByInstance(playerInstance);
-        var weaponsData = player.WeaponsData;
-        var removedWeapon = weaponsData.GetWeaponByType(args.WeaponItemType);
+        removedWeapon.SetObject(objectId);
+        removedWeapon.RaiseEvent(weaponEvent, @object as IObjectWeaponItem);
 
-        if (args.TargetObjectID != 0)
-        {
-            var @object = _game.GetObject(args.TargetObjectID);
-            if (args.Thrown)
-            {
-                var isGrenadeThrown = @object is not IObjectWeaponItem;
+        _droppedWeapons.Add(objectId, removedWeapon);
 
-                if (isGrenadeThrown && removedWeapon is Grenade grenade && @object is IObjectGrenadeThrown)
-                {
-                    OnGrenadeThrown(grenade, args, player);
-                }
-
-                if (!isGrenadeThrown)
-                {
-                    OnWeaponDropped(removedWeapon, args, @object, player, WeaponEvent.Thrown);
-                }
-            }
-            else if (args.Dropped)
-            {
-                OnWeaponDropped(removedWeapon, args, @object, player, WeaponEvent.Dropped);
-            }
-        }
-
-        UpdateWeaponData(player, args.WeaponItemType);
-
-        if (player.WeaponsData.ThrowableItem.IsInvalid)
-        {
-            _playersWithThrowable.Remove(player);
-        }
+        Logger.Debug("Weapon dropped: {WeaponItem} id {ObjectId}, owner: {Player}",
+            removedWeapon.WeaponItem, objectId, player?.Name);
     }
 
-    private void OnWeaponDropped(Weapon removedWeapon, PlayerWeaponRemovedArg args, IObject @object,
-        Player player, WeaponEvent weaponEvent)
-    {
-        removedWeapon.SetObject(args.TargetObjectID);
-        removedWeapon.RaiseEvent(weaponEvent);
-
-        _droppedWeapons.Add(args.TargetObjectID, removedWeapon);
-
-        Logger.Debug("Weapon dropped: {WeaponItem} id {ObjectId} missile {IsMissile}, owner: {Player}",
-            removedWeapon.WeaponItem, args.TargetObjectID, @object.IsMissile, player.Name);
-    }
-
-    private void OnGrenadeThrown(Grenade grenade, PlayerWeaponRemovedArg args, Player player)
+    private void OnGrenadeThrown(Grenade grenade, PlayerWeaponRemovedArg args, Player player, IObject grenadeObject)
     {
         var thrownGrenade = new Grenade(grenade.WeaponItem, grenade.WeaponItemType, 1, grenade.MaxAmmo,
             false, grenade.TimeToExplosion);
         thrownGrenade.SetObject(args.TargetObjectID);
-        thrownGrenade.RaiseEvent(WeaponEvent.GrenadeThrown);
-        _thrownGrenades.Add(thrownGrenade);
+        _throwableWeaponsWatcher.OnGrenadeThrown(thrownGrenade);
+
+        grenade.RaiseEvent(WeaponEvent.GrenadeThrown, player.Instance, grenadeObject, thrownGrenade);
 
         Logger.Debug("grenade thrown id: {ObjectId}, owner: {Player}, timer: {TimeLeft}", args.TargetObjectID,
             player.Name, grenade.TimeToExplosion);
@@ -172,184 +294,215 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
 
     private void OnProjectilesCreated(Event<IProjectile[]> @event)
     {
-        var handledWeapons = new Dictionary<int, List<ProjectileItem>>();
-
-        foreach (var projectile in @event.Args)
+        try
         {
-            var playerId = projectile.InitialOwnerPlayerID;
-            var playerInstance = _game.GetPlayer(playerId);
-            if (playerInstance?.IsValidUser() != true)
-                continue;
+            var handledWeapons = new Dictionary<int, List<ProjectileItem>>();
 
-            if (!handledWeapons.TryGetValue(playerId, out var weapons))
+            foreach (var projectile in @event.Args)
             {
-                weapons = [];
-                handledWeapons.Add(playerId, weapons);
+                var playerId = projectile.InitialOwnerPlayerID;
+                var playerInstance = _game.GetPlayer(playerId);
+                if (playerInstance?.IsValidUser() != true)
+                    continue;
+
+                if (!handledWeapons.TryGetValue(playerId, out var weapons))
+                {
+                    weapons = [];
+                    handledWeapons.Add(playerId, weapons);
+                }
+
+                if (weapons.Contains(projectile.ProjectileItem))
+                    continue;
+
+                weapons.Add(projectile.ProjectileItem);
+
+                var player = _identityService.GetPlayerByInstance(playerInstance);
+                var weaponsData = player.WeaponsData;
+                var currentDrawn = weaponsData.CurrentWeaponDrawn;
+
+                player.UpdateWeaponData(currentDrawn.WeaponItemType);
+                currentDrawn.RaiseEvent(WeaponEvent.Fired, playerInstance, @event.Args);
+
+                Logger.Debug("Shoot with weapon {WeaponItem}, player: {Player}, ammo left: {AmmoLeft}",
+                    projectile.ProjectileItem, player.Name, (currentDrawn as Firearm)!.CurrentAmmo);
             }
-
-            if (weapons.Contains(projectile.ProjectileItem))
-                continue;
-
-            weapons.Add(projectile.ProjectileItem);
-
-            var player = _identityService.GetPlayerByInstance(playerInstance);
-            var weaponsData = player.WeaponsData;
-            var currentDrawn = weaponsData.CurrentWeaponDrawn;
-
-            UpdateWeaponData(player, currentDrawn.WeaponItemType);
-            currentDrawn.RaiseEvent(WeaponEvent.Fired);
-
-            Logger.Debug("Shoot with weapon {WeaponItem}, player: {Player}, ammo left: {AmmoLeft}",
-                projectile.ProjectileItem, player.Name, (currentDrawn as Firearm)!.CurrentAmmo);
+        }
+        catch (Exception exception)
+        {
+            Logger.Error("Error while processing projectiles created event: {Message}", exception);
         }
     }
 
     private void OnMeleeAction(Event<IPlayer, PlayerMeleeHitArg[]> @event)
     {
-        var (playerInstance, args, _) = @event;
-        if (playerInstance?.IsValidUser() != true)
-            return;
-
-        foreach (var meleeHit in args)
+        try
         {
-            if (playerInstance.CurrentWeaponDrawn == WeaponItemType.Melee)
+            var (playerInstance, args, _) = @event;
+            if (playerInstance?.IsValidUser() != true)
+                return;
+
+            foreach (var meleeHit in args)
             {
-                var player = _identityService.GetPlayerByInstance(playerInstance);
-                var weaponsData = player.WeaponsData;
-                var currentDrawn = weaponsData.CurrentWeaponDrawn;
+                if (playerInstance.CurrentWeaponDrawn == WeaponItemType.Melee)
+                {
+                    var player = _identityService.GetPlayerByInstance(playerInstance);
+                    var weaponsData = player.WeaponsData;
+                    var currentDrawn = weaponsData.CurrentWeaponDrawn;
 
-                UpdateWeaponData(player, WeaponItemType.Melee, currentDrawn is MeleeTemp);
-                currentDrawn.RaiseEvent(WeaponEvent.MeleeHit);
+                    player.UpdateWeaponData(WeaponItemType.Melee, currentDrawn is MeleeTemp);
+                    currentDrawn.RaiseEvent(WeaponEvent.MeleeHit);
 
-                Logger.Debug("Melee hit with {WeaponItem}, player: {Player}, durability left: {DurabilityLeft}",
-                    currentDrawn.WeaponItem, player.Name, ((Melee)currentDrawn).CurrentDurability);
+                    Logger.Debug("Melee hit with {WeaponItem}, player: {Player}, durability left: {DurabilityLeft}",
+                        currentDrawn.WeaponItem, player.Name, ((Melee)currentDrawn).CurrentDurability);
+                }
             }
         }
-    }
-
-    private void OnUpdate(Event<float> @event)
-    {
-        UpdatePlayersThrowable();
-        UpdateThrownGrenades();
-
-        if (_thrownGrenades.Count == 0 && _playersWithThrowable.Count == 0)
+        catch (Exception exception)
         {
-            _watchingForThrowablesSubscription!.Dispose();
-            _watchingForThrowablesSubscription = null;
-
-            Logger.Debug("Dispose throwables subscription");
-        }
-    }
-
-    private void UpdateThrownGrenades()
-    {
-        for (var i = _thrownGrenades.Count - 1; i >= 0; i--)
-        {
-            var grenade = _thrownGrenades[i];
-            var grenadeObject = (IObjectGrenadeThrown)_game.GetObject(grenade.ObjectId);
-            if (!grenadeObject.IsValid())
-            {
-                _thrownGrenades.RemoveAt(i);
-                continue;
-            }
-
-            grenade.Update(false, grenadeObject.GetExplosionTimer());
-
-            Logger.Debug("Grenade update: {WeaponItem}, id: {ObjectId}, timer: {TimeLeft}", grenade.WeaponItem,
-                grenadeObject.UniqueId, grenade.TimeToExplosion);
-        }
-    }
-
-    private void UpdatePlayersThrowable()
-    {
-        var playersWithHoldingGrenades = _playersWithThrowable.Where(x =>
-            x is { Instance.IsHoldingActiveThrowable: true } or
-                { Instance.IsHoldingActiveThrowable: false, WeaponsData.ThrowableItem.IsActive: true });
-
-        foreach (var player in playersWithHoldingGrenades)
-        {
-            var throwable = player.WeaponsData.ThrowableItem;
-            var playerInstance = player.Instance!;
-
-            if (throwable is Grenade grenade)
-            {
-                grenade.Update(playerInstance.IsHoldingActiveThrowable, playerInstance.GetActiveThrowableTimer());
-            }
-            else if (throwable.IsActive != playerInstance.IsHoldingActiveThrowable)
-            {
-                UpdateWeaponData(player, WeaponItemType.Thrown);
-            }
-
-            Logger.Debug("Throwable update: {WeaponItem}, player: {Player}, isHolding: {IsHolding}",
-                throwable.WeaponItem, player.Name, playerInstance.IsHoldingActiveThrowable);
+            Logger.Error("Error while processing melee action event: {Message}", exception);
         }
     }
 
     private void OnObjectDestroyed(Event<IObject[]> @event)
     {
-        foreach (var @object in @event.Args)
+        try
         {
-            if (_droppedWeapons.ContainsKey(@object.UniqueId))
+            foreach (var @object in @event.Args)
             {
-                Awaiter.Start(() => _droppedWeapons.Remove(@object.UniqueId), TimeSpan.Zero);
+                if (_droppedWeapons.ContainsKey(@object.UniqueId))
+                {
+                    Awaiter.Start(() =>
+                    {
+                        var weapon = _droppedWeapons[@object.UniqueId];
+                        var weaponObject = _game.GetObject(weapon.ObjectId);
+                        if (weaponObject?.IsValid() != true && weapon.IsDropped)
+                        {
+                            DisposeWeapon(weapon);
+                        }
+
+                        _droppedWeapons.Remove(@object.UniqueId);
+
+                        Logger.Debug("Removed dropped weapon {WeaponItem} with ID {ObjectId}", weapon.WeaponItem,
+                            @object.UniqueId);
+                    }, TimeSpan.Zero);
+                }
             }
         }
+        catch (Exception exception)
+        {
+            Logger.Error("Error while processing object destroyed event: {Message}", exception);
+        }
     }
-
+    
     private void OnKeyInput(Event<IPlayer, VirtualKeyInfo[]> @event)
     {
-        var (playerInstance, keyInputs, _) = @event;
-        foreach (var keyInput in keyInputs)
+        try
         {
-            if (keyInput is not
+            var (playerInstance, keyInputs, _) = @event;
+            foreach (var keyInput in keyInputs)
+            {
+                if (keyInput is not
+                    {
+                        Event: VirtualKeyEvent.Pressed,
+                        Key: VirtualKey.ACTIVATE or VirtualKey.ATTACK or VirtualKey.RELOAD
+                    })
+                    continue;
+
+                var player = _identityService.GetPlayerByInstance(playerInstance);
+                var weaponsData = player.WeaponsData;
+
+                if (keyInput.Key == VirtualKey.ACTIVATE && weaponsData.HasAnyFirearm() && _ammoTriggers.Count > 0 &&
+                    _ammoTriggers.Any(x =>
+                    {
+                        var aabb = x.GetAABB();
+                        aabb.Grow(2f);
+                        return aabb.Intersects(playerInstance.GetAABB());
+                    }))
                 {
-                    Event: VirtualKeyEvent.Pressed,
-                    Key: VirtualKey.DRAW_MELEE or VirtualKey.DRAW_HANDGUN or VirtualKey.DRAW_RIFLE
-                    or VirtualKey.DRAW_GRENADE or VirtualKey.DRAW_SPECIAL or VirtualKey.SHEATHE
-                    or VirtualKey.ACTIVATE or VirtualKey.ATTACK
-                })
-                continue;
+                    UpdateFirearms(player);
+                }
 
-            var player = _identityService.GetPlayerByInstance(playerInstance);
-            var weaponsData = player.WeaponsData;
-            var needUpdateDrawn = (keyInput.Key == VirtualKey.DRAW_MELEE) ||
-                                  (keyInput.Key == VirtualKey.DRAW_HANDGUN && !weaponsData.SecondaryWeapon.IsInvalid) ||
-                                  (keyInput.Key == VirtualKey.DRAW_RIFLE && !weaponsData.PrimaryWeapon.IsInvalid) ||
-                                  (keyInput.Key == VirtualKey.DRAW_GRENADE && !weaponsData.ThrowableItem.IsInvalid) ||
-                                  (keyInput.Key == VirtualKey.DRAW_SPECIAL && !weaponsData.PowerupItem.IsInvalid) ||
-                                  keyInput.Key == VirtualKey.SHEATHE;
-
-            var weaponItemType = keyInput.Key switch
-            {
-                VirtualKey.DRAW_MELEE when weaponsData is
-                    { MeleeWeapon.IsInvalid: true, MeleeWeaponTemp.IsInvalid: true } => WeaponItemType.NONE,
-                VirtualKey.DRAW_MELEE => WeaponItemType.Melee,
-                VirtualKey.DRAW_HANDGUN => WeaponItemType.Handgun,
-                VirtualKey.DRAW_RIFLE => WeaponItemType.Rifle,
-                VirtualKey.DRAW_GRENADE => WeaponItemType.Thrown,
-                VirtualKey.DRAW_SPECIAL => WeaponItemType.Powerup,
-                VirtualKey.SHEATHE => WeaponItemType.NONE,
-                _ => WeaponItemType.NONE
-            };
-
-            if (needUpdateDrawn)
-            {
-                UpdateDrawnWhileNotChanged(player, weaponItemType);
-            }
-
-            if (keyInput.Key == VirtualKey.ACTIVATE && weaponsData.HasAnyFirearm())
-            {
-                // pickup ammo (Helipad for example)
-                UpdateFirearms(player);
-            }
-
-            if (playerInstance.IsReloading || keyInput.Key == VirtualKey.ATTACK &&
-                weaponsData.CurrentWeaponDrawn is Firearm { CurrentSpareMags: > 0, CurrentAmmo: 0 })
-            {
-                UpdateWhileReloadNotCompletedOrInterrupted(player, weaponsData.CurrentWeaponDrawn.WeaponItemType);
+                if (playerInstance.IsReloading || keyInput.Key == VirtualKey.ATTACK &&
+                    weaponsData.CurrentWeaponDrawn is Firearm { CurrentSpareMags: > 0, CurrentAmmo: 0 })
+                {
+                    _reloadWeaponsWatcher.StartReloadTracking(player, weaponsData.CurrentWeaponDrawn.WeaponItemType);
+                }
             }
         }
+        catch (Exception exception)
+        {
+            Logger.Error("Error while processing key input event: {Message}", exception);
+        }
     }
+
+    // private void OnKeyInput(Event<IPlayer, VirtualKeyInfo[]> @event)
+    //      {
+    //          try
+    //          {
+    //              var (playerInstance, keyInputs, _) = @event;
+    //              foreach (var keyInput in keyInputs)
+    //              {
+    //                  if (keyInput is not
+    //                      {
+    //                          Event: VirtualKeyEvent.Pressed,
+    //                          Key: VirtualKey.DRAW_MELEE or VirtualKey.DRAW_HANDGUN or VirtualKey.DRAW_RIFLE
+    //                          or VirtualKey.DRAW_GRENADE or VirtualKey.DRAW_SPECIAL or VirtualKey.SHEATHE
+    //                          or VirtualKey.ACTIVATE or VirtualKey.ATTACK or VirtualKey.RELOAD
+    //                      })
+    //                      continue;
+    //  
+    //                  var player = _identityService.GetPlayerByInstance(playerInstance);
+    //                  var weaponsData = player.WeaponsData;
+    //                  var needUpdateDrawn = (keyInput.Key == VirtualKey.DRAW_MELEE) ||
+    //                                        (keyInput.Key == VirtualKey.DRAW_HANDGUN &&
+    //                                         !weaponsData.SecondaryWeapon.IsInvalid) ||
+    //                                        (keyInput.Key == VirtualKey.DRAW_RIFLE && !weaponsData.PrimaryWeapon.IsInvalid) ||
+    //                                        (keyInput.Key == VirtualKey.DRAW_GRENADE &&
+    //                                         !weaponsData.ThrowableItem.IsInvalid) ||
+    //                                        (keyInput.Key == VirtualKey.DRAW_SPECIAL && !weaponsData.PowerupItem.IsInvalid) ||
+    //                                        keyInput.Key == VirtualKey.SHEATHE;
+    //  
+    //                  var weaponItemType = keyInput.Key switch
+    //                  {
+    //                      VirtualKey.DRAW_MELEE when weaponsData is
+    //                          { MeleeWeapon.IsInvalid: true, MeleeWeaponTemp.IsInvalid: true } => WeaponItemType.NONE,
+    //                      VirtualKey.DRAW_MELEE => WeaponItemType.Melee,
+    //                      VirtualKey.DRAW_HANDGUN => WeaponItemType.Handgun,
+    //                      VirtualKey.DRAW_RIFLE => WeaponItemType.Rifle,
+    //                      VirtualKey.DRAW_GRENADE => WeaponItemType.Thrown,
+    //                      VirtualKey.DRAW_SPECIAL => WeaponItemType.Powerup,
+    //                      VirtualKey.SHEATHE => WeaponItemType.NONE,
+    //                      _ => WeaponItemType.NONE
+    //                  };
+    //  
+    //                  if (needUpdateDrawn)
+    //                  {
+    //                      _drawnWeaponsWatcher.StartDrawnTracking(player, weaponItemType);
+    //                  }
+    //  
+    //                  if (keyInput.Key == VirtualKey.ACTIVATE && weaponsData.HasAnyFirearm() && _ammoTriggers.Count > 0 &&
+    //                      _ammoTriggers.Any(x =>
+    //                      {
+    //                          var aabb = x.GetAABB();
+    //                          aabb.Grow(2f);
+    //                          return aabb.Intersects(playerInstance.GetAABB());
+    //                      }))
+    //                  {
+    //                      UpdateFirearms(player);
+    //                  }
+    //  
+    //                  if (playerInstance.IsReloading || keyInput.Key == VirtualKey.ATTACK &&
+    //                      weaponsData.CurrentWeaponDrawn is Firearm { CurrentSpareMags: > 0, CurrentAmmo: 0 })
+    //                  {
+    //                      _reloadWeaponsWatcher.StartReloadTracking(player, weaponsData.CurrentWeaponDrawn.WeaponItemType);
+    //                  }
+    //              }
+    //          }
+    //          catch (Exception exception)
+    //          {
+    //              Logger.Error("Error while processing key input event: {Message}", exception);
+    //          }
+    //      }
 
     private void UpdateFirearms(Player player)
     {
@@ -362,134 +515,9 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
             weaponsData.PrimaryWeapon.WeaponItem, weaponsData.PrimaryWeapon.CurrentAmmo);
     }
 
-    private void UpdateDrawnWhileNotChanged(Player player, WeaponItemType weaponItemType)
+    private static void DisposeWeapon(Weapon weapon)
     {
-        var playerInstance = player.Instance!;
-
-        if (_drawnWeaponTimers.TryGetValue(playerInstance.UniqueId, out var existingTimer))
-        {
-            existingTimer.Stop();
-            _drawnWeaponTimers.Remove(playerInstance.UniqueId);
-        }
-
-        var weaponsData = player.WeaponsData;
-        if (weaponsData.CurrentWeaponDrawn.WeaponItemType == weaponItemType)
-            return;
-
-        var args = new AwaitingDrawnChangeTimerArgs(player, weaponItemType);
-        var timer = new PeriodicTimer<AwaitingDrawnChangeTimerArgs>(TimeSpan.Zero, TimeBehavior.TimeModifier, Callback,
-            FinishCondition, FinishCallback, args, _extendedEvents);
-        timer.Start();
-
-        _drawnWeaponTimers.Add(playerInstance.UniqueId, timer);
-
-        static void Callback(AwaitingDrawnChangeTimerArgs args)
-        {
-            var player = args.Player;
-            var playerInstance = player.Instance!;
-            var weaponsData = player.WeaponsData;
-
-            weaponsData.UpdateDrawn();
-
-            Logger.Debug(
-                "Updated drawn weapon for player: {Player}, new drawn: {WeaponItem}, drawn: {DrawnItemType}, wainting for {WeaponItemType}",
-                player.Name, weaponsData.CurrentWeaponDrawn.WeaponItem, playerInstance.CurrentWeaponDrawn,
-                args.WeaponItemType);
-        }
-
-        static bool FinishCondition(AwaitingDrawnChangeTimerArgs args)
-        {
-            var playerInstance = args.Player.Instance;
-            var weaponsData = args.Player.WeaponsData;
-
-            return playerInstance?.IsValid() != true || playerInstance.CurrentWeaponDrawn == args.WeaponItemType &&
-                weaponsData.CurrentWeaponDrawn.WeaponItemType == args.WeaponItemType;
-        }
-
-        static void FinishCallback(AwaitingDrawnChangeTimerArgs args)
-        {
-            if (args.WeaponItemType == WeaponItemType.NONE)
-                return;
-
-            var player = args.Player;
-            var playerInstance = player.Instance;
-            if (playerInstance?.IsValid() != true)
-                return;
-
-            var weaponsData = player.WeaponsData;
-            var currentDrawn = weaponsData.CurrentWeaponDrawn;
-            currentDrawn.RaiseEvent(WeaponEvent.Drawn);
-        }
+        weapon.RaiseEvent(WeaponEvent.Disposed);
+        Logger.Debug("Disposed weapon {WeaponItem}", weapon.WeaponItem);
     }
-
-    private void UpdateWhileReloadNotCompletedOrInterrupted(Player player, WeaponItemType weaponItemType)
-    {
-        var playerInstance = player.Instance!;
-        var weaponsData = player.WeaponsData;
-        var savedWeapon = weaponsData.CurrentWeaponDrawn with { } as Firearm;
-
-        if (_reloadWeaponTimers.TryGetValue(playerInstance.UniqueId, out var awaitingReloads))
-        {
-            if (awaitingReloads.Any(x => x.WeaponItemType == weaponItemType))
-                return;
-        }
-        else
-        {
-            awaitingReloads = [];
-            _reloadWeaponTimers.Add(playerInstance.UniqueId, awaitingReloads);
-        }
-
-        Logger.Debug("Start watching reloading for player: {Player}, waiting for changing {WeaponItemType}",
-            player.Name, weaponItemType);
-
-        var args = new AwaitingWeaponChangeTimerArgs(player, weaponItemType, savedWeapon!, awaitingReloads);
-        var timer = new PeriodicTimer<AwaitingWeaponChangeTimerArgs>(TimeSpan.Zero, TimeBehavior.TimeModifier, Callback,
-            FinishCondition, FinishCallback, args, _extendedEvents);
-        timer.Start();
-
-        awaitingReloads.Add(new ReloadAwaitingData(timer, weaponItemType));
-
-        static void Callback(AwaitingWeaponChangeTimerArgs args)
-        {
-            var player = args.Player;
-            UpdateWeaponData(player, args.WeaponItemType);
-
-            Logger.Debug("Updated weapon for player: {Player}, waiting for changing {WeaponItemType}", player.Name,
-                args.WeaponItemType);
-        }
-
-        static bool FinishCondition(AwaitingWeaponChangeTimerArgs args)
-        {
-            var player = args.Player;
-            var playerInstance = player.Instance;
-            var weaponsData = player.WeaponsData;
-
-            return playerInstance?.IsValid() != true ||
-                   weaponsData.CurrentWeaponDrawn.WeaponItemType != args.WeaponItemType ||
-                   (weaponsData.GetWeaponByType(args.WeaponItemType) as Firearm)!.CurrentSpareMags !=
-                   args.SavedWeapon.CurrentSpareMags;
-        }
-
-        static void FinishCallback(AwaitingWeaponChangeTimerArgs args)
-        {
-            var reloadsData = args.ReloadsData;
-            reloadsData.RemoveAll(x => x.WeaponItemType == args.WeaponItemType);
-        }
-    }
-
-    private static void UpdateWeaponData(Player player, WeaponItemType weaponItemType, bool isMakeshift = false)
-    {
-        var weaponsData = new UnsafeWeaponsData(player.Instance!);
-        player.WeaponsData.Update(weaponsData, weaponItemType, isMakeshift);
-    }
-
-    private record AwaitingDrawnChangeTimerArgs(Player Player, WeaponItemType WeaponItemType);
-
-    private record AwaitingWeaponChangeTimerArgs(
-        Player Player,
-        WeaponItemType WeaponItemType,
-        Firearm SavedWeapon,
-        List<ReloadAwaitingData> ReloadsData);
-
-    private record ReloadAwaitingData(TimerBase Timer, WeaponItemType WeaponItemType);
 }

@@ -10,12 +10,15 @@ namespace LuckyBlocks.Loot.WeaponPowerups.ThrownItems;
 
 internal class StickyGrenades : GrenadesPowerupBase
 {
-    public static Color PaintColor => ExtendedColors.Pink;
-    
+    public override Color PaintColor => ExtendedColors.Pink;
     public override string Name => "Sticky grenades";
     public override int UsesCount => 3;
 
-    public StickyGrenades(Grenade grenade, PowerupConstructorArgs args) : base(grenade, args, PaintColor)
+    protected override IEnumerable<Type> IncompatiblePowerups => _incompatiblePowerups;
+
+    private static readonly List<Type> _incompatiblePowerups = [typeof(BananaGrenades)];
+    
+    public StickyGrenades(Grenade grenade, PowerupConstructorArgs args) : base(grenade, args)
     {
     }
 

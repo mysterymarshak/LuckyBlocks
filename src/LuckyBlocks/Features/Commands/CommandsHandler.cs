@@ -1,23 +1,21 @@
 ﻿using System;
-using System.Globalization;
 using System.Linq;
-using System.Reflection;
 using Autofac;
 using Autofac.Util;
 using LuckyBlocks.Data;
-using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Buffs;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.LuckyBlocks;
-using LuckyBlocks.Features.Magic;
 using LuckyBlocks.Features.Watchers;
 using LuckyBlocks.Features.WeaponPowerups;
 using LuckyBlocks.Loot;
 using LuckyBlocks.Loot.Buffs;
 using LuckyBlocks.Loot.Other;
-using LuckyBlocks.Loot.WeaponPowerups;
+using LuckyBlocks.Loot.WeaponPowerups.Bullets;
+using LuckyBlocks.Loot.WeaponPowerups.ThrownItems;
 using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
 using LuckyBlocks.Utils;
+using LuckyBlocks.Utils.Timers;
 using Serilog;
 using SFDGameScriptInterface;
 
@@ -31,29 +29,36 @@ internal interface ICommandsHandler
 internal class CommandsHandler : ICommandsHandler
 {
     private readonly ILuckyBlocksService _luckyBlocksService;
-    private readonly IMagicFactory _magicFactory;
-    private readonly IMagicService _magicService;
-    private readonly BuffConstructorArgs _buffArgs;
     private readonly IIdentityService _identityService;
+    private readonly IPowerupFactory _powerupFactory;
     private readonly IBuffFactory _buffFactory;
     private readonly IBuffsService _buffsService;
     private readonly IRespawner _respawner;
     private readonly IGame _game;
     private readonly ILogger _logger;
-    private readonly PowerupConstructorArgs _powerupArgs;
     private readonly LootConstructorArgs _lootArgs;
-    private readonly IWeaponsPowerupsService _weaponsPowerupsService;
+    private readonly IWeaponPowerupsService _weaponPowerupsService;
+    private readonly IWeaponsDataWatcher _weaponsDataWatcher;
     private readonly IExtendedEvents _extendedEvents;
 
-    public CommandsHandler(ILuckyBlocksService luckyBlocksService, BuffConstructorArgs buffArgs,
-        IIdentityService identityService, IBuffFactory buffFactory, IBuffsService buffsService, IRespawner respawner,
-        PowerupConstructorArgs powerupArgs, LootConstructorArgs lootArgs, IGame game, ILogger logger,
-        IWeaponsPowerupsService weaponsPowerupsService, ILifetimeScope lifetimeScope) =>
-        (_luckyBlocksService, _magicFactory, _magicService, _buffArgs, _identityService, _buffFactory, _buffsService,
-            _respawner, _powerupArgs, _lootArgs, _game, _logger, _weaponsPowerupsService, _extendedEvents) = (
-            luckyBlocksService, buffArgs.MagicFactory, buffArgs.MagicService, buffArgs, identityService, buffFactory,
-            buffsService, respawner, powerupArgs, lootArgs, game, logger, weaponsPowerupsService,
-            lifetimeScope.BeginLifetimeScope().Resolve<IExtendedEvents>());
+    public CommandsHandler(ILuckyBlocksService luckyBlocksService, IIdentityService identityService,
+        IBuffFactory buffFactory, IPowerupFactory powerupFactory, IBuffsService buffsService, IRespawner respawner,
+        LootConstructorArgs lootArgs, IGame game, ILogger logger, IWeaponPowerupsService weaponPowerupsService,
+        ILifetimeScope lifetimeScope, IWeaponsDataWatcher weaponsDataWatcher)
+    {
+        _luckyBlocksService = luckyBlocksService;
+        _identityService = identityService;
+        _powerupFactory = powerupFactory;
+        _buffFactory = buffFactory;
+        _buffsService = buffsService;
+        _respawner = respawner;
+        _game = game;
+        _logger = logger;
+        _lootArgs = lootArgs;
+        _weaponPowerupsService = weaponPowerupsService;
+        _weaponsDataWatcher = weaponsDataWatcher;
+        _extendedEvents = lifetimeScope.BeginLifetimeScope().Resolve<IExtendedEvents>();
+    }
 
     public void Initialize()
     {
@@ -85,6 +90,7 @@ internal class CommandsHandler : ICommandsHandler
 
                     break;
                 }
+#if DEBUG
                 case "spawn":
                 {
                     var supplyCrate = (_game.CreateObject("SupplyCrate00", position) as IObjectSupplyCrate)!;
@@ -161,6 +167,61 @@ internal class CommandsHandler : ICommandsHandler
                     _logger.Debug("Data: {Data}", player.WeaponsData.ToString());
                     break;
                 }
+                case "drawn":
+                {
+                    _logger.Debug("Drawn weapon: {DrawnWeapon}", playerInstance.CurrentWeaponDrawn);
+                    break;
+                }
+                case "test1":
+                {
+                    var revolver = _game.SpawnWeaponItem(WeaponItem.REVOLVER, playerInstance.GetWorldPosition(), true);
+                    var weapon = _weaponsDataWatcher.RegisterWeapon(revolver);
+                    weapon.Draw += delegate
+                    {
+                        _logger.Debug("Weapon {WeaponItem} drawn", weapon.WeaponItem);
+                    };
+                    weapon.Hide += delegate
+                    {
+                        _logger.Debug("Weapon {WeaponItem} hidden", weapon.WeaponItem);
+                    };
+                    var infiniteRicochetPowerup =
+                        _powerupFactory.CreatePowerup(weapon, typeof(InfiniteRicochetBullets));
+                    _weaponPowerupsService.AddWeaponPowerup(infiniteRicochetPowerup, weapon);
+                    break;
+                }
+                case "test2":
+                {
+                    var revolver = _game.SpawnWeaponItem(WeaponItem.REVOLVER, playerInstance.GetWorldPosition(), true);
+                    var weapon = _weaponsDataWatcher.RegisterWeapon(revolver);
+                    var tripleRicochetPowerup = _powerupFactory.CreatePowerup(weapon, typeof(TripleRicochetBullets));
+                    _weaponPowerupsService.AddWeaponPowerup(tripleRicochetPowerup, weapon);
+                    break;
+                }
+                case "test3":
+                {
+                    var revolver = _game.SpawnWeaponItem(WeaponItem.REVOLVER, playerInstance.GetWorldPosition(), true);
+                    var weapon = _weaponsDataWatcher.RegisterWeapon(revolver);
+                    var pushPowerup = _powerupFactory.CreatePowerup(weapon, typeof(PushBullets));
+                    _weaponPowerupsService.AddWeaponPowerup(pushPowerup, weapon);
+                    break;
+                }
+                case "test4":
+                {
+                    var grenade = _game.SpawnWeaponItem(WeaponItem.GRENADES, playerInstance.GetWorldPosition(), true);
+                    var weapon = _weaponsDataWatcher.RegisterWeapon(grenade);
+                    var bananaPowerup = _powerupFactory.CreatePowerup(weapon, typeof(BananaGrenades));
+                    _weaponPowerupsService.AddWeaponPowerup(bananaPowerup, weapon);
+                    break;
+                }
+                case "test5":
+                {
+                    var grenade = _game.SpawnWeaponItem(WeaponItem.GRENADES, playerInstance.GetWorldPosition(), true);
+                    var weapon = _weaponsDataWatcher.RegisterWeapon(grenade);
+                    var stickyPowerup = _powerupFactory.CreatePowerup(weapon, typeof(StickyGrenades));
+                    _weaponPowerupsService.AddWeaponPowerup(stickyPowerup, weapon);
+                    break;
+                }
+#endif
             }
         }
         catch (Exception exception)

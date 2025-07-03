@@ -90,7 +90,7 @@ internal class Vampirism : DurableBuffBase
         _playerModifiersService.AddModifiers(Player, ModifiedModifiers);
 
         ExtendedEvents.HookOnDamage(OnDamage, EventHookMode.Default);
-        ExtendedEvents.HookOnPlayerWeaponPickup(playerInstance, OnWeaponPickedUp, EventHookMode.Default);
+        ExtendedEvents.HookOnWeaponAdded(playerInstance, OnWeaponAdded, EventHookMode.Default);
     }
 
     private void DisableBuff()
@@ -140,10 +140,9 @@ internal class Vampirism : DurableBuffBase
             TimeSpan.FromMilliseconds(300), playerInstance);
     }
 
-    private void OnWeaponPickedUp(Event<PlayerWeaponAddedArg> @event)
+    private void OnWeaponAdded(Event<PlayerWeaponAddedArg> @event)
     {
         var args = @event.Args;
-
         if (args.WeaponItemType != WeaponItemType.InstantPickup)
             return;
 

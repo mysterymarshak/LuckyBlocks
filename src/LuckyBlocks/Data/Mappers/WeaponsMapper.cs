@@ -5,12 +5,12 @@ namespace LuckyBlocks.Data.Mappers;
 
 internal interface IWeaponsMapper
 {
-    T2 Map<T1, T2>(T1 source, IPlayer player) where T1 : struct where T2 : Weapon;
+    T2 Map<T1, T2>(T1 source, IPlayer? player) where T1 : struct where T2 : Weapon;
 }
 
 internal class WeaponsMapper : IWeaponsMapper
 {
-    public T2 Map<T1, T2>(T1 source, IPlayer player) where T1 : struct where T2 : Weapon => (T2)(Weapon)(source switch
+    public T2 Map<T1, T2>(T1 source, IPlayer? player) where T1 : struct where T2 : Weapon => (T2)(Weapon)(source switch
     {
         MeleeWeaponItem { IsMakeshift: true } meleeMakeshiftWeaponItem => new MeleeTemp(
             meleeMakeshiftWeaponItem.WeaponItem, meleeMakeshiftWeaponItem.WeaponItemType,
@@ -37,13 +37,17 @@ internal class WeaponsMapper : IWeaponsMapper
             rifleWeaponItem.SpareMags, rifleWeaponItem.MaxCarriedSpareMags, rifleWeaponItem.LazerEquipped,
             ProjectilePowerupData.FromBouncingAndFireRounds(rifleWeaponItem.PowerupBouncingRounds,
                 rifleWeaponItem.PowerupFireRounds), rifleWeaponItem.ProjectileItem),
+        ThrownWeaponItem { WeaponItem: WeaponItem.GRENADES } grenade => new Grenade(grenade.WeaponItem,
+            grenade.WeaponItemType, grenade.CurrentAmmo, grenade.MaxCarriedAmmo,
+            player is { IsHoldingActiveThrowable: true, CurrentWeaponDrawn: WeaponItemType.Thrown },
+            player is { CurrentThrownItem.WeaponItem: WeaponItem.GRENADES } ? player.GetActiveThrowableTimer() : 0),
+        ThrownWeaponItem thrownWeaponItem => new Throwable(thrownWeaponItem.WeaponItem, thrownWeaponItem.WeaponItemType,
+            thrownWeaponItem.CurrentAmmo, thrownWeaponItem.MaxCarriedAmmo,
+            player is { IsHoldingActiveThrowable: true, CurrentWeaponDrawn: WeaponItemType.Thrown }),
         PowerupWeaponItem powerupWeaponItem => new PowerupItem(powerupWeaponItem.WeaponItem,
             powerupWeaponItem.WeaponItemType),
-        ThrownWeaponItem { WeaponItem: WeaponItem.GRENADES } grenade => new Grenade(grenade.WeaponItem,
-            grenade.WeaponItemType, grenade.CurrentAmmo, grenade.MaxCarriedAmmo, player.IsHoldingActiveThrowable,
-            player.GetActiveThrowableTimer()),
-        ThrownWeaponItem thrownWeaponItem => new Throwable(thrownWeaponItem.WeaponItem, thrownWeaponItem.WeaponItemType,
-            thrownWeaponItem.CurrentAmmo, thrownWeaponItem.MaxCarriedAmmo, player.IsHoldingActiveThrowable),
+        InstantPickupWeaponItem instantPickupWeaponItem => new InstantPickupItem(instantPickupWeaponItem.WeaponItem,
+            instantPickupWeaponItem.WeaponItemType),
         _ => throw new ArgumentOutOfRangeException()
     });
 }

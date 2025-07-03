@@ -58,9 +58,17 @@ public interface IExtendedEvents
         bool ignoreHandled = false);
 
     [GameCallbackType(typeof(Events.PlayerWeaponAddedActionCallback))]
-    IEventSubscription HookOnPlayerWeaponPickup(IPlayer player, Action<Event<PlayerWeaponAddedArg>> callback,
+    IEventSubscription HookOnWeaponAdded(IPlayer player, Action<Event<PlayerWeaponAddedArg>> callback,
         EventHookMode hookMode,
         bool ignoreHandled = false);
+
+    [GameCallbackType(typeof(Events.PlayerWeaponAddedActionCallback))]
+    IEventSubscription HookOnWeaponAdded(Action<Event<IPlayer, PlayerWeaponAddedArg>> callback, EventHookMode hookMode,
+        bool ignoreHandled = false);
+
+    [GameCallbackType(typeof(Events.PlayerWeaponRemovedActionCallback))]
+    IEventSubscription HookOnWeaponRemoved(Action<Event<IPlayer, PlayerWeaponRemovedArg>> callback,
+        EventHookMode hookMode, bool ignoreHandled = false);
 
     [GameCallbackType(typeof(Events.PlayerMeleeActionCallback))]
     IEventSubscription HookOnPlayerMeleeAction(IPlayer player, Action<Event<PlayerMeleeHitArg[]>> callback,
@@ -90,14 +98,6 @@ public interface IExtendedEvents
     [GameCallbackType(typeof(Events.UserJoinCallback))]
     IEventSubscription HookOnUserJoined(Action<Event<IUser[]>> callback, EventHookMode hookMode,
         bool ignoreHandled = false);
-
-    [GameCallbackType(typeof(Events.PlayerWeaponAddedActionCallback))]
-    IEventSubscription HookOnWeaponAdded(Action<Event<IPlayer, PlayerWeaponAddedArg>> callback, EventHookMode hookMode,
-        bool ignoreHandled = false);
-
-    [GameCallbackType(typeof(Events.PlayerWeaponRemovedActionCallback))]
-    IEventSubscription HookOnWeaponRemoved(Action<Event<IPlayer, PlayerWeaponRemovedArg>> callback,
-        EventHookMode hookMode, bool ignoreHandled = false);
 
     [GameCallbackType(typeof(Events.PlayerKeyInputCallback))]
     IEventSubscription HookOnKeyInput(Action<Event<IPlayer, VirtualKeyInfo[]>> callback,

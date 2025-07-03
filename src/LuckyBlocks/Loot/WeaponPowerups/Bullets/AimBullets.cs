@@ -14,15 +14,18 @@ internal class AimBullets : BulletsPowerupBase
 {
     public override string Name => "Aim bullets";
 
-    private const int FIND_TARGET_RADIUS = 100;
-    private const double FIND_TARGET_FOV = 2 * Math.PI / 3; 
+    protected override IEnumerable<Type> IncompatiblePowerups => _incompatiblePowerups;
+
+    private static readonly List<Type> _incompatiblePowerups = [typeof(TripleRicochetBullets)];
+    private const int FindTargetRadius = 100;
+    private const double FindTargetFov = 2 * Math.PI / 3; 
     
     private readonly IGame _game;
 
     public AimBullets(Firearm firearm, PowerupConstructorArgs args) : base(firearm, args)
         => (_game) = (args.Game);
 
-    protected override void OnFire(IPlayer player, IProjectile projectile)
+    protected override void OnFired(IPlayer player, IProjectile projectile)
     {
         var aimBullet = new AimBullet(projectile, _game, ExtendedEvents);
         aimBullet.Remove += OnBulletRemoved;
@@ -84,8 +87,8 @@ internal class AimBullets : BulletsPowerupBase
             var position = Projectile.Position;
             var direction = Projectile.Direction;
             
-            var a = (direction * FIND_TARGET_RADIUS).Rotate(FIND_TARGET_FOV / 2);
-            var b = (direction * FIND_TARGET_RADIUS).Rotate(-(FIND_TARGET_FOV / 2));
+            var a = (direction * FindTargetRadius).Rotate(FindTargetFov / 2);
+            var b = (direction * FindTargetRadius).Rotate(-(FindTargetFov / 2));
 
             var triangle = new Triangle(position, position + a, position + b);
             var players = _game.GetPlayers()

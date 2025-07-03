@@ -21,6 +21,8 @@ public enum EventHookMode
     
     Default,
     
+    Prioritized,
+    
     InstanceThisPre,
     
     InstanceSharedPre,

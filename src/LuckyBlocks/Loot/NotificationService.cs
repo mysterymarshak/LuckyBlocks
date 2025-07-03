@@ -17,6 +17,7 @@ internal interface INotificationService
 
     void RemoveDialogue(IPlayer playerInstance, int id);
     void CreateTextNotification(string message, Color color, TimeSpan displayTime, IPlayer player);
+    void CreateTextNotification(string message, Color color, TimeSpan displayTime, Vector2 position);
     void CreatePopupNotification(string message, Color color, TimeSpan duration);
     void ClosePopupNotification();
 }
@@ -54,11 +55,13 @@ internal class NotificationService : INotificationService
         _dialoguesService.RemoveDialogue(playerInstance, id);
     }
 
-    public void CreateTextNotification(string message, Color color, TimeSpan displayTime, IPlayer player)
+    public void CreateTextNotification(string message, Color color, TimeSpan displayTime, IPlayer player) =>
+        CreateTextNotification(message, color, displayTime, player.GetWorldPosition());
+    
+    public void CreateTextNotification(string message, Color color, TimeSpan displayTime, Vector2 position)
     {
-        _effectsPlayer.PlayEffect(EffectName.CustomFloatText, player.GetWorldPosition(), message, color,
+        _effectsPlayer.PlayEffect(EffectName.CustomFloatText, position, message, color,
             (float)displayTime.TotalMilliseconds, 1f, true);
-        // Text.CreateAnimatedText(message, color, displayTime, player, _game);
     }
 
     public void CreatePopupNotification(string message, Color color, TimeSpan duration)

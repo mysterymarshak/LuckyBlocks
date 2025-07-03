@@ -1,6 +1,8 @@
 ﻿using LuckyBlocks.Data;
 using LuckyBlocks.Data.Mappers;
 using LuckyBlocks.Reflection;
+using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
+using LuckyBlocks.Utils;
 using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Extensions;
@@ -70,37 +72,37 @@ internal static class IPlayerExtensions
             player.SetCurrentThrownItemAmmo(weaponsData.ThrowableItem.CurrentAmmo);
         }
     }
-    
+
     public static void SetWeapons(this IPlayer player, in UnsafeWeaponsData weaponsData, bool forceSet = false)
     {
         if (forceSet)
         {
             player.GiveWeaponItem(weaponsData.MeleeWeapon.WeaponItem);
             player.SetCurrentMeleeDurability(weaponsData.MeleeWeapon.CurrentDurability);
-            
+
             player.GiveWeaponItem(weaponsData.MeleeWeaponTemp.WeaponItem);
             player.SetCurrentMeleeMakeshiftDurability(weaponsData.MeleeWeaponTemp.CurrentDurability);
-            
+
             player.GiveWeaponItem(weaponsData.PrimaryWeapon.WeaponItem);
             player.SetCurrentPrimaryWeaponAmmo(weaponsData.PrimaryWeapon.CurrentAmmo,
                 weaponsData.PrimaryWeapon.CurrentSpareMags,
                 weaponsData.PrimaryWeapon.ProjectilePowerupData.ProjectilePowerup);
-            
+
             player.GiveWeaponItem(weaponsData.SecondaryWeapon.WeaponItem);
             player.SetCurrentSecondaryWeaponAmmo(weaponsData.SecondaryWeapon.CurrentAmmo,
                 weaponsData.SecondaryWeapon.CurrentSpareMags,
                 weaponsData.SecondaryWeapon.ProjectilePowerupData.ProjectilePowerup);
-            
+
             player.GiveWeaponItem(weaponsData.PowerupItem.WeaponItem);
-            
+
             player.GiveWeaponItem(weaponsData.ThrowableItem.WeaponItem);
             player.SetCurrentThrownItemAmmo(weaponsData.ThrowableItem.CurrentAmmo);
-            
+
             return;
         }
-        
+
         player.GetUnsafeWeaponsData(out var currentWeaponsData);
-        
+
         if (currentWeaponsData.MeleeWeapon != weaponsData.MeleeWeapon)
         {
             player.RemoveWeaponItemType(currentWeaponsData.MeleeWeapon.WeaponItemType);
@@ -155,7 +157,32 @@ internal static class IPlayerExtensions
         player.RemoveWeaponItemType(WeaponItemType.Thrown);
         player.RemoveWeaponItemType(WeaponItemType.Powerup);
     }
+
+    public static void SetAmmoFromWeapon(this IPlayer playerInstance, Weapon weapon)
+    {
+        if (weapon is Firearm firearm)
+        {
+            playerInstance.SetAmmo(firearm, firearm.CurrentAmmo, firearm.CurrentSpareMags);
+        }
+        else if (weapon is Throwable throwable)
+        {
+            playerInstance.SetAmmo(throwable, throwable.CurrentAmmo);
+        }
+    }
     
+    public static void SetAmmo(this IPlayer player, Firearm firearm, int ammo, int mags)
+    {
+        switch (firearm.WeaponItemType)
+        {
+            case WeaponItemType.Rifle:
+                player.SetCurrentPrimaryWeaponAmmo(ammo, mags);
+                break;
+            case WeaponItemType.Handgun:
+                player.SetCurrentSecondaryWeaponAmmo(ammo, mags);
+                break;
+        }
+    }
+
     public static void SetAmmo(this IPlayer player, Firearm firearm, int totalAmmo)
     {
         switch (firearm.WeaponItemType)

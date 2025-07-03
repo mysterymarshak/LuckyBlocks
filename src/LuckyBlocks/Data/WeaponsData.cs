@@ -5,6 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using LuckyBlocks.Data.Mappers;
+using LuckyBlocks.Entities;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Loot.WeaponPowerups;
 using SFDGameScriptInterface;
@@ -25,22 +26,27 @@ internal enum WeaponEvent
 
     Drawn,
     
+    Hidden,
+    
     Fired,
     
-    MeleeHit
+    MeleeHit,
+    
+    Disposed
 }
 
 internal record Weapon(WeaponItem WeaponItem, WeaponItemType WeaponItemType)
 {
     public static readonly Weapon Empty = new(WeaponItem.NONE, WeaponItemType.NONE);
 
-    public event Action? PickedUp;
-    public event Action? Dropped;
-    public event Action? Thrown;
-    public event Action? Drawn;
-    public event Action? Fired;
+    public event Action<Weapon>? PickUp;
+    public event Action<IObjectWeaponItem?, Weapon>? Drop;
+    public event Action<IObjectWeaponItem?, Weapon>? Throw;
+    public event Action<Weapon>? Draw;
+    public event Action<Weapon>? Hide;
+    public event Action<Weapon>? Dispose;
     
-    public bool IsInvalid => WeaponItem == WeaponItem.NONE || WeaponItemType == WeaponItemType.NONE;
+    public bool IsInvalid => WeaponItem == WeaponItem.NONE || WeaponItemType == WeaponItemType.NONE || _isDisposed;
     public bool IsDropped => Owner?.IsValid() != true;
     public IPlayer? Owner { get; private set; }
     public int ObjectId { get; private set; }
@@ -48,7 +54,8 @@ internal record Weapon(WeaponItem WeaponItem, WeaponItemType WeaponItemType)
     public IEnumerable<IWeaponPowerup<Weapon>> Powerups =>
         _powerups ?? Enumerable.Empty<IWeaponPowerup<Weapon>>();
 
-    private readonly List<IWeaponPowerup<Weapon>>? _powerups = null;
+    private List<IWeaponPowerup<Weapon>>? _powerups;
+    private bool _isDisposed;
 
     public void SetOwner(IPlayer player)
     {
@@ -62,28 +69,63 @@ internal record Weapon(WeaponItem WeaponItem, WeaponItemType WeaponItemType)
         ObjectId = objectId;
     }
 
-    public virtual void RaiseEvent(WeaponEvent @event)
+    public void AddPowerup(IWeaponPowerup<Weapon> powerup)
+    {
+        _powerups ??= [];
+        _powerups.Add(powerup);
+    }
+
+    public void RemovePowerup(IWeaponPowerup<Weapon> powerup)
+    {
+        _powerups!.Remove(powerup);
+    }
+    
+    public virtual void RaiseEvent(WeaponEvent @event, params object?[] args)
     {
         switch (@event)
         {
             case WeaponEvent.PickedUp:
-                PickedUp?.Invoke();
+                PickUp?.Invoke(this);
                 break;
             case WeaponEvent.Dropped:
-                Dropped?.Invoke();
+                Drop?.Invoke(args[0] as IObjectWeaponItem, this);
                 break;
             case WeaponEvent.Thrown:
-                Thrown?.Invoke();
+                Throw?.Invoke(args[0] as IObjectWeaponItem, this);
                 break;
             case WeaponEvent.Drawn:
-                Drawn?.Invoke();
+                Draw?.Invoke(this);
                 break;
-            case WeaponEvent.Fired:
-                Fired?.Invoke();
+            case WeaponEvent.Hidden:
+                Hide?.Invoke(this);
                 break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(@event), @event, null);
+            case WeaponEvent.Disposed:
+                Dispose?.Invoke(this);
+                _isDisposed = true;
+                break;
         }  
+    }
+
+    public string GetFormattedName()
+    {
+        var stringBuilder = new StringBuilder();
+        stringBuilder.Append(WeaponItem);
+
+        if (Powerups.Any())
+        {
+            stringBuilder.Append(" (");
+            
+            foreach (var powerup in Powerups)
+            {
+                stringBuilder.Append(powerup.Name);
+                stringBuilder.Append(" & ");
+            }
+            
+            stringBuilder.Remove(stringBuilder.Length - 3, 3);
+            stringBuilder.Append(")");
+        }
+
+        return stringBuilder.ToString();
     }
 }
 
@@ -100,9 +142,9 @@ internal record Melee(WeaponItem WeaponItem, WeaponItemType WeaponItemType, floa
         CurrentDurability = newData.CurrentDurability;
     }
     
-    public override void RaiseEvent(WeaponEvent @event)
+    public override void RaiseEvent(WeaponEvent @event, params object?[] args)
     {
-        base.RaiseEvent(@event);
+        base.RaiseEvent(@event, args);
         
         if (@event == WeaponEvent.MeleeHit)
         {
@@ -133,11 +175,13 @@ internal record Firearm(
     ProjectileItem ProjectileItem)
     : Weapon(WeaponItem, WeaponItemType)
 {
+    public event Action<IPlayer?, IEnumerable<IProjectile>?>? Fire;
+    
     public int CurrentAmmo { get; protected set; } = CurrentAmmo;
     public int CurrentSpareMags { get; protected set; } = CurrentSpareMags;
     public bool IsLazerEquipped { get; protected set; } = IsLazerEquipped;
     public ProjectilePowerupData ProjectilePowerupData { get; protected set; } = ProjectilePowerupData;
-    public new IEnumerable<IFirearmPowerup> Powerups => base.Powerups.Cast<IFirearmPowerup>();
+    public new IEnumerable<IWeaponPowerup<Firearm>> Powerups => base.Powerups.Cast<IWeaponPowerup<Firearm>>();
     public int TotalAmmo => CurrentAmmo + (CurrentSpareMags * MagSize);
 
     public void Update(in UnsafeFirearm newData)
@@ -146,6 +190,16 @@ internal record Firearm(
         CurrentSpareMags = newData.CurrentSpareMags;
         IsLazerEquipped = newData.IsLazerEquipped;
         ProjectilePowerupData = newData.ProjectilePowerupData;
+    }
+
+    public override void RaiseEvent(WeaponEvent @event, params object?[] args)
+    {
+        base.RaiseEvent(@event, args);
+        
+        if (@event == WeaponEvent.Fired)
+        {
+            Fire?.Invoke(args[0] as IPlayer, args[1] as IEnumerable<IProjectile>);
+        }
     }
 }
 
@@ -185,7 +239,7 @@ internal record Throwable(
     bool IsActive)
     : Weapon(WeaponItem, WeaponItemType)
 {
-    public event Action? GrenadeThrown;
+    public event Action<IPlayer?, IObject?, Throwable?>? GrenadeThrow;
     
     public int CurrentAmmo { get; protected set; } = CurrentAmmo;
     public bool IsActive { get; protected set; } = IsActive;
@@ -196,13 +250,13 @@ internal record Throwable(
         IsActive = isActive;
     }
 
-    public override void RaiseEvent(WeaponEvent @event)
+    public override void RaiseEvent(WeaponEvent @event, params object?[] args)
     {
-        base.RaiseEvent(@event);
+        base.RaiseEvent(@event, args);
         
         if (@event == WeaponEvent.GrenadeThrown)
         {
-            GrenadeThrown?.Invoke();
+            GrenadeThrow?.Invoke(args[0] as IPlayer, args[1] as IObject, args[2] as Throwable);
         }
     }
 }
@@ -226,6 +280,9 @@ internal sealed record Grenade(
 }
 
 internal sealed record PowerupItem(WeaponItem WeaponItem, WeaponItemType WeaponItemType)
+    : Weapon(WeaponItem, WeaponItemType);
+
+internal sealed record InstantPickupItem(WeaponItem WeaponItem, WeaponItemType WeaponItemType)
     : Weapon(WeaponItem, WeaponItemType);
 
 internal readonly record struct ProjectilePowerupData
@@ -260,7 +317,7 @@ internal readonly record struct ProjectilePowerupData
 
 internal sealed class WeaponsData : IEnumerable<Weapon>
 {
-    public IPlayer Owner { get; }
+    public IPlayer Owner { get; set; }
     public Melee MeleeWeapon { get; private set; }
     public MeleeTemp MeleeWeaponTemp { get; private set; }
     public Firearm SecondaryWeapon { get; private set; }
@@ -289,17 +346,17 @@ internal sealed class WeaponsData : IEnumerable<Weapon>
     {
         switch (weapon.WeaponItemType)
         {
+            case WeaponItemType.Melee when weapon is MeleeTemp meleeTemp:
+                MeleeWeaponTemp = meleeTemp;
+                break;
+            case WeaponItemType.Melee when weapon is Melee melee:
+                MeleeWeapon = melee;
+                break;
             case WeaponItemType.Handgun when weapon is Firearm firearm:
                 SecondaryWeapon = firearm;
                 break;
             case WeaponItemType.Rifle when weapon is Firearm firearm:
                 PrimaryWeapon = firearm;
-                break;
-            case WeaponItemType.Melee when weapon is Melee melee and not MeleeTemp:
-                MeleeWeapon = melee;
-                break;
-            case WeaponItemType.Melee when weapon is MeleeTemp meleeTemp:
-                MeleeWeaponTemp = meleeTemp;
                 break;
             case WeaponItemType.Powerup when weapon is PowerupItem powerupItem:
                 PowerupItem = powerupItem;
@@ -312,7 +369,7 @@ internal sealed class WeaponsData : IEnumerable<Weapon>
         }
     }
 
-    public void Update(in UnsafeWeaponsData newData, WeaponItemType weaponItemType, bool isMakeshift = false)
+    public void Update(in UnsafeWeaponsData newData, WeaponItemType weaponItemType, bool isMakeshift, bool updateDrawn)
     {
         switch (weaponItemType)
         {
@@ -338,7 +395,7 @@ internal sealed class WeaponsData : IEnumerable<Weapon>
                 throw new ArgumentException("Invalid weapon item type", nameof(weaponItemType));
         }
 
-        if (Owner.CurrentWeaponDrawn != CurrentWeaponDrawn.WeaponItemType)
+        if (updateDrawn && Owner.CurrentWeaponDrawn != CurrentWeaponDrawn.WeaponItemType)
         {
             UpdateDrawn();
         }
@@ -457,12 +514,35 @@ internal sealed class WeaponsData : IEnumerable<Weapon>
 
     public IEnumerator<Weapon> GetEnumerator()
     {
-        yield return MeleeWeapon;
-        yield return MeleeWeaponTemp;
-        yield return SecondaryWeapon;
-        yield return PrimaryWeapon;
-        yield return PowerupItem;
-        yield return ThrowableItem;
+        if (!MeleeWeapon.IsInvalid)
+        {
+            yield return MeleeWeapon;
+        }
+
+        if (!MeleeWeaponTemp.IsInvalid)
+        {
+            yield return MeleeWeaponTemp;
+        }
+
+        if (!SecondaryWeapon.IsInvalid)
+        {
+            yield return SecondaryWeapon;
+        }
+
+        if (!PrimaryWeapon.IsInvalid)
+        {
+            yield return PrimaryWeapon;
+        }
+
+        if (!PowerupItem.IsInvalid)
+        {
+            yield return PowerupItem;
+        }
+
+        if (!ThrowableItem.IsInvalid)
+        {
+            yield return ThrowableItem;
+        }
     }
 
     public override string ToString()
@@ -473,15 +553,15 @@ internal sealed class WeaponsData : IEnumerable<Weapon>
 
         foreach (var weapon in this)
         {
-            if (weapon.IsInvalid)
-                continue;
-
             stringBuilder.Append(weapon);
             stringBuilder.Append(", ");
         }
 
         stringBuilder.Append("Weapon drawn: ");
         stringBuilder.Append(CurrentWeaponDrawn.WeaponItem);
+        stringBuilder.Append(" (");
+        stringBuilder.Append(CurrentWeaponDrawn.GetType().Name);
+        stringBuilder.Append(")");
 
         return stringBuilder.ToString();
     }

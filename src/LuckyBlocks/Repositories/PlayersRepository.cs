@@ -6,6 +6,7 @@ using LuckyBlocks.Exceptions;
 using LuckyBlocks.Extensions;
 using OneOf;
 using OneOf.Types;
+using Serilog;
 using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Repositories;
@@ -14,17 +15,22 @@ internal interface IPlayersRepository
 {
     OneOf<Success, Unknown> ValidateUser(int userId);
     OneOf<Player, Unknown> GetPlayerById(int uniqueId);
-    Player GetPlayerByInstance(IPlayer player);
+    Player GetPlayerByInstance(IPlayer playerInstance);
     IEnumerable<Player> GetAlivePlayers();
 }
 
 internal class PlayersRepository : IPlayersRepository
 {
+    private readonly ILogger _logger;
     private readonly IGame _game;
-    private readonly Dictionary<int, Player> _players;
+    private readonly Dictionary<int, Player> _players = new();
+    private readonly Dictionary<int, Player> _fakePlayers = new();
 
-    public PlayersRepository(IGame game)
-        => (_game, _players) = (game, new());
+    public PlayersRepository(ILogger logger, IGame game)
+    {
+        _logger = logger;
+        _game = game;
+    }
 
     public OneOf<Success, Unknown> ValidateUser(int userId)
     {
@@ -38,9 +44,26 @@ internal class PlayersRepository : IPlayersRepository
         return playerInstance is null ? new Unknown() : GetPlayerByUserId(playerInstance.UserIdentifier);
     }
 
-    public Player GetPlayerByInstance(IPlayer instance)
+    public Player GetPlayerByInstance(IPlayer playerInstance)
     {
-        var userId = instance.UserIdentifier;
+        if (playerInstance is { UserIdentifier: 0, IsBot: true })
+        {
+            if (!_fakePlayers.TryGetValue(playerInstance.UniqueId, out var fakePlayer))
+            {
+                fakePlayer = new Player(new FakeUser(playerInstance));
+                _fakePlayers.Add(playerInstance.UniqueId, fakePlayer);
+                
+                _logger.Debug("Created fake player with id {UniqueId} and name {Name}",
+                    playerInstance.UniqueId, playerInstance.Name);
+            }
+
+            _logger.Debug("Returned fake player with id {UniqueId} and name {Name}",
+                playerInstance.UniqueId, playerInstance.Name);
+            
+            return fakePlayer;
+        }
+
+        var userId = playerInstance.UserIdentifier;
 
         var getPlayerResult = GetPlayerByUserId(userId);
         if (!getPlayerResult.TryPickT0(out var player, out _))
@@ -82,5 +105,44 @@ internal class PlayersRepository : IPlayersRepository
         _players.Add(user.UserIdentifier, player);
 
         return player;
+    }
+
+    private class FakeUser : IUser
+    {
+        private IPlayer _player;
+
+        public FakeUser(IPlayer player)
+        {
+            _player = player;
+        }
+
+        public override string Name => _player.Name;
+        public override long UserID => _player.UniqueId;
+        public override long UserId => _player.UniqueId;
+        public override int UserIdentifier => _player.UniqueId;
+        public override int GameSlotIndex => 0;
+        public override bool IsHost => false;
+        public override bool IsModerator => false;
+        public override bool IsSpectator => false;
+        public override bool Spectating => false;
+        public override bool JoinedAsSpectator => false;
+        public override int Ping => 0;
+        public override string ConnectionIP => string.Empty;
+        public override string AccountID => _player.Name;
+        public override string AccountName => _player.Name;
+        public override int TotalGames => 0;
+        public override int TotalWins => 0;
+        public override int TotalLosses => 0;
+        public override bool IsBot => true;
+        public override PredefinedAIType BotPredefinedAIType => PredefinedAIType.BotA;
+        public override bool IsUser => false;
+        public override Gender Gender => Gender.Male;
+        public override bool IsRemoved => !_player.IsValid();
+
+        public override void IncreaseScore() => throw new NotImplementedException();
+        public override PlayerTeam GetTeam() => _player.GetTeam();
+        public override IPlayer GetPlayer() => _player;
+        public override void SetPlayer(IPlayer player, bool flash = true) => _player = player;
+        public override IProfile GetProfile() => _player.GetProfile();
     }
 }

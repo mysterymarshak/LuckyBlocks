@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using LuckyBlocks.Data;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Mathematics;
@@ -10,12 +11,16 @@ internal class TripleRicochetBullets : BulletsPowerupBase
 {
     public override string Name => "Triple ricochet bullets";
 
+    protected override IEnumerable<Type> IncompatiblePowerups => _incompatiblePowerups;
+
+    private static readonly List<Type> _incompatiblePowerups = [typeof(ExplosiveBullets), typeof(FreezeBullets), typeof(InfiniteRicochetBullets), typeof(AimBullets), typeof(PushBullets)];
+    
     private readonly IGame _game;
 
     public TripleRicochetBullets(Firearm firearm, PowerupConstructorArgs args) : base(firearm, args)
         => (_game) = (args.Game);
 
-    protected override void OnFire(IPlayer player, IProjectile projectile)
+    protected override void OnFired(IPlayer player, IProjectile projectile)
     {
         var explosiveBullet = new Bullet(projectile, ExtendedEvents);
         explosiveBullet.Hit += OnBulletHit;

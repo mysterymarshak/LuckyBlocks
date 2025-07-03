@@ -11,7 +11,7 @@ using SFDGameScriptInterface;
 namespace LuckyBlocks.Data;
 
 internal record PowerupConstructorArgs(
-    IWeaponsPowerupsService WeaponsPowerupsService,
+    IWeaponPowerupsService WeaponsPowerupsService,
     IBuffsService BuffsService,
     IEffectsPlayer EffectsPlayer,
     INotificationService NotificationService,

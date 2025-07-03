@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using LuckyBlocks.Data;
 using LuckyBlocks.Entities;
 using LuckyBlocks.Features.Immunity;
+using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Extensions;
 
@@ -43,5 +45,11 @@ internal static class PlayerExtensions
     {
         var playerInstance = player.Instance;
         return playerInstance?.HasAnyWeapon() ?? false;
+    }
+    
+    public static void UpdateWeaponData(this Player player, WeaponItemType weaponItemType, bool isMakeshift = false, bool updateDrawn = false)
+    {
+        var weaponsData = new UnsafeWeaponsData(player.Instance!);
+        player.WeaponsData.Update(weaponsData, weaponItemType, isMakeshift, updateDrawn);
     }
 }

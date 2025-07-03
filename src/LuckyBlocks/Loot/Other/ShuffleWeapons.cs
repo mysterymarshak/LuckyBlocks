@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using LuckyBlocks.Data;
+using LuckyBlocks.Entities;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.WeaponPowerups;
@@ -18,10 +19,10 @@ internal class ShuffleWeapons : ILoot
     private readonly IIdentityService _identityService;
     private readonly IEffectsPlayer _effectsPlayer;
     private readonly INotificationService _notificationService;
-    private readonly IWeaponsPowerupsService _weaponsPowerupsService;
+    private readonly IWeaponPowerupsService _weaponPowerupsService;
 
     public ShuffleWeapons(LootConstructorArgs args)
-        => (_identityService, _effectsPlayer, _notificationService, _weaponsPowerupsService) =
+        => (_identityService, _effectsPlayer, _notificationService, _weaponPowerupsService) =
             (args.IdentityService, args.EffectsPlayer, args.NotificationService, args.WeaponsPowerupsService);
 
     public void Run()
@@ -36,37 +37,26 @@ internal class ShuffleWeapons : ILoot
 
     private void OnSlowMoEnded()
     {
-        var players = _identityService.GetAlivePlayers()
-            .Select(x => x.Instance!)
-            .ToList();
+        var players = _identityService.GetAlivePlayers().ToList();
         var shuffledPlayers = players.ShuffleAndGuaranteeIndexChanging();
         
-        var newWeaponsInfo = new Dictionary<IPlayer, WeaponsData>(players.Count);
+        var newWeaponsInfo = new Dictionary<Player, WeaponsData>(players.Count);
         
         for (var i = 0; i < players.Count; i++)
         {
             var player = players[i];
             var shuffledPlayer = shuffledPlayers[i];
-            newWeaponsInfo.Add(player, shuffledPlayer.GetWeaponsData());
+            newWeaponsInfo.Add(player, shuffledPlayer.WeaponsData);
         }
         
         foreach (var pair in newWeaponsInfo)
         {
             var player = pair.Key;
+            var playerInstance = player.Instance!;
             var weaponsData = pair.Value;
             
-            player.SetWeapons(weaponsData);
-        }
-        
-        foreach (var pair in newWeaponsInfo)
-        {
-            var player = pair.Key;
-            var weaponsData = pair.Value;
-
-            foreach (var weapon in weaponsData)
-            {
-                _weaponsPowerupsService.SetOwner(weapon, player, weaponsData.Owner);
-            }
+            playerInstance.SetWeapons(weaponsData);
+            player.SetWeaponsData(weaponsData);
         }
     }
 }

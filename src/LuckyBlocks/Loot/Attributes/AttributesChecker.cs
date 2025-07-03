@@ -26,7 +26,7 @@ internal class AttributesChecker : IAttributesChecker
     private readonly Dictionary<Type, Func<ItemAttribute, OneOf<Player, Unknown>, bool>> _checks;
 
     public AttributesChecker(IIdentityService identityService, ISpawnChanceService spawnChanceService,
-        IWeaponsPowerupsService weaponsPowerupsService, IPlayerModifiersService playerModifiersService,
+        IWeaponPowerupsService weaponPowerupsService, IPlayerModifiersService playerModifiersService,
         IComparer<ItemAttribute> attributesComparer, IGame game)
     {
         _attributesComparer = attributesComparer;
@@ -100,10 +100,9 @@ internal class AttributesChecker : IAttributesChecker
         bool IncompatibleWithPowerupsAttributeCheck(ItemAttribute attribute, OneOf<Player, Unknown> player)
         {
             var playerInstance = player.AsT0.Instance;
-            var typedAttribute = (attribute as IncompatibleWithPowerupsAttribute)!;
+            var typedAttribute = (attribute as IncompatibleWithSomePowerupsAttribute)!;
 
-            return weaponsPowerupsService.CanAddWeaponPowerup(playerInstance, typedAttribute.SourcePowerup,
-                typedAttribute.Types);
+            return weaponPowerupsService.CanAddWeaponPowerup(playerInstance, typedAttribute.SourcePowerup);
         }
 
         bool PlayerIsNotOtherWizardAttributeCheck(ItemAttribute attribute, OneOf<Player, Unknown> player)
@@ -144,7 +143,7 @@ internal class AttributesChecker : IAttributesChecker
             [typeof(IncompatibleWithBuffsAttribute)] = IncompatibleWithBuffsAttributeCheck,
             [typeof(PlayerHasAnyFirearmAttribute)] = PlayerHasAnyFirearmAttributeCheck,
             [typeof(PlayerHasGotWeaponsAttribute)] = PlayerHasGotWeaponsAttributeCheck,
-            [typeof(IncompatibleWithPowerupsAttribute)] = IncompatibleWithPowerupsAttributeCheck,
+            [typeof(IncompatibleWithSomePowerupsAttribute)] = IncompatibleWithPowerupsAttributeCheck,
             [typeof(PlayerIsNotOtherWizardAttribute)] = PlayerIsNotOtherWizardAttributeCheck,
             [typeof(ModifiedModifiersAttribute)] = ModifiedModifiersAttributeCheck,
             [typeof(CantBeAppliedIfAlreadyExists)] = CantBeAppliedIfAlreadyExistsAttributeCheck,

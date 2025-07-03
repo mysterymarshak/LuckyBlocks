@@ -11,17 +11,17 @@ internal readonly record struct WeaponPowerupFinishedNotification(IWeaponPowerup
 
 internal class WeaponPowerupFinishedNotificationHandler : INotificationHandler<WeaponPowerupFinishedNotification>
 {
-    private readonly IWeaponsPowerupsService _weaponsPowerupsService;
+    private readonly IWeaponPowerupsService _weaponPowerupsService;
 
-    public WeaponPowerupFinishedNotificationHandler(IWeaponsPowerupsService weaponsPowerupsService)
-        => (_weaponsPowerupsService) = (weaponsPowerupsService);
+    public WeaponPowerupFinishedNotificationHandler(IWeaponPowerupsService weaponPowerupsService)
+        => (_weaponPowerupsService) = (weaponPowerupsService);
 
     public ValueTask Handle(WeaponPowerupFinishedNotification notification, CancellationToken cancellationToken)
     {
         var powerup = notification.Powerup;
         var weapon = notification.Weapon;
 
-        _weaponsPowerupsService.RemovePowerup(powerup, weapon);
+        _weaponPowerupsService.RemovePowerup(powerup, weapon);
 
         return new ValueTask();
     }

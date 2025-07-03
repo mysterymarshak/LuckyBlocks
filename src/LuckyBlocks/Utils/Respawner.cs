@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using LuckyBlocks.Extensions;
+using LuckyBlocks.Features.Identity;
 using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Utils;
@@ -13,10 +14,14 @@ internal interface IRespawner
 
 internal class Respawner : IRespawner
 {
+    private readonly IIdentityService _identityService;
     private readonly IGame _game;
 
-    public Respawner(IGame game)
-        => (_game) = (game);
+    public Respawner(IIdentityService identityService, IGame game)
+    {
+        _identityService = identityService;
+        _game = game;
+    }
 
     public IPlayer RespawnUserAtRandomSpawnPoint(IUser user)
     {
@@ -57,18 +62,23 @@ internal class Respawner : IRespawner
 
     private IPlayer CreatePlayer(IUser user, IProfile profile, Vector2 position, int direction)
     {
-        var player = _game.CreatePlayer(position);
+        var playerInstance = _game.CreatePlayer(position);
 
-        player.SetProfile(profile);
-        player.SetFaceDirection(direction);
-        player.SetUser(user);
+        playerInstance.SetProfile(profile);
+        playerInstance.SetFaceDirection(direction);
+        playerInstance.SetUser(user);
 
         if (user.IsBot)
         {
-            SetBotSoul(player, user);
+            SetBotSoul(playerInstance, user);
         }
-
-        return player;
+        else
+        {
+            var player = _identityService.GetPlayerByInstance(playerInstance);
+            player.InvalidateWeaponsDataOwner();
+        }
+        
+        return playerInstance;
     }
 
     private void SetBotSoul(IPlayer player, IUser user)

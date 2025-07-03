@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using Autofac;
 using LuckyBlocks.Data;
-using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Watchers;
 using LuckyBlocks.Features.WeaponPowerups;
 using LuckyBlocks.Loot.WeaponPowerups;
@@ -20,43 +19,37 @@ internal abstract class PowerUppedWeaponBase : ILoot
     protected IExtendedEvents ExtendedEvents { get; }
 
     private readonly Vector2 _spawnPosition;
-    private readonly IWeaponsPowerupsService _weaponsPowerupsService;
+    private readonly IWeaponPowerupsService _weaponPowerupsService;
+    private readonly IWeaponsDataWatcher _weaponsDataWatcher;
     private readonly IGame _game;
 
-    private WeaponEventsWatcher? _weaponEventsWatcher;
-
     protected PowerUppedWeaponBase(Vector2 spawnPosition, LootConstructorArgs args)
-        => (_spawnPosition, _weaponsPowerupsService, _game, ExtendedEvents) = (spawnPosition,
-            args.WeaponsPowerupsService, args.Game, args.LifetimeScope.BeginLifetimeScope().Resolve<IExtendedEvents>());
+    {
+        _spawnPosition = spawnPosition;
+        _weaponPowerupsService = args.WeaponsPowerupsService;
+        _game = args.Game;
+        _weaponsDataWatcher = args.WeaponsDataWatcher;
+        var thisScope =  args.LifetimeScope.BeginLifetimeScope();
+        ExtendedEvents = thisScope.Resolve<IExtendedEvents>();
+    }
 
     public virtual void Run()
     {
         var weaponItem = WeaponItem;
-        var weapon = _game.SpawnWeaponItem(weaponItem, _spawnPosition, true, 20_000f);
-        OnWeaponCreated(weapon);
-        
-        _weaponEventsWatcher = WeaponEventsWatcher.CreateForWeapon(weapon);
-        _weaponEventsWatcher.Pickup += OnWeaponPickedUp;
-        _weaponEventsWatcher.Start();
+        var weaponObject = _game.SpawnWeaponItem(weaponItem, _spawnPosition, true, 20_000f);
+        var weapon = _weaponsDataWatcher.RegisterWeapon(weaponObject);
+
+        AddPowerups(weapon);
     }
 
     protected abstract IEnumerable<IWeaponPowerup<Weapon>> GetPowerups(Weapon weapon);
-
-    protected virtual void OnWeaponCreated(IObjectWeaponItem objectWeaponItem)
+    
+    private void AddPowerups(Weapon weapon)
     {
-    }
-
-    private void OnWeaponPickedUp(IPlayer player)
-    {
-        var weaponsData = player.GetWeaponsData();
-        var weapon = weaponsData.GetWeaponByType(WeaponItemType);
-
         var powerups = GetPowerups(weapon);
         foreach (var powerup in powerups)
         {
-            _weaponsPowerupsService.AddWeaponPowerup(powerup, weapon, player);
+            _weaponPowerupsService.AddWeaponPowerup(powerup, weapon);
         }
-
-        _weaponEventsWatcher!.Dispose();
     }
 }

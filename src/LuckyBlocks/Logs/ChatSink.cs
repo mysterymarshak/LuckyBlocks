@@ -11,10 +11,14 @@ namespace LuckyBlocks.Logs;
 
 internal class ChatSink : ILogEventSink
 {
+    private readonly IGame _game;
     private readonly IChat _chat;
 
-    public ChatSink(IChat chat)
-        => (_chat) = (chat);
+    public ChatSink(IGame game, IChat chat)
+    {
+        _game = game;
+        _chat = chat;
+    }
 
     public void Emit(LogEvent logEvent)
     {
@@ -33,14 +37,14 @@ internal class ChatSink : ILogEventSink
             _ => Color.Grey
         };
 
-        _chat.ShowMessage($"[LB-{logEvent.Level.GetShortName()}]: {message}", color);
+        _chat.ShowMessage($"[LB-{logEvent.Level.GetShortName()}{(logEvent.Level <= LogEventLevel.Debug ? $"-{_game.TotalElapsedRealTime}" : string.Empty)}]: {message}", color);
     }
 }
 
 internal static class ChatSinkExtensions
 {
-    public static LoggerConfiguration Chat(this LoggerSinkConfiguration loggerConfiguration, IChat chat)
+    public static LoggerConfiguration Chat(this LoggerSinkConfiguration loggerConfiguration, IGame game, IChat chat)
     {
-        return loggerConfiguration.Sink(new ChatSink(chat));
+        return loggerConfiguration.Sink(new ChatSink(game, chat));
     }
 }

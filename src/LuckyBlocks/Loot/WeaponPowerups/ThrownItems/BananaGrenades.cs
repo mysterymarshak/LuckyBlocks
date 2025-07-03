@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using LuckyBlocks.Data;
 using LuckyBlocks.Extensions;
@@ -7,17 +8,19 @@ using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Loot.WeaponPowerups.ThrownItems;
 
-internal class BananaGrenades : GrenadesPowerupBase, ILimitedAmmoPowerup<Grenade>
+internal class BananaGrenades : GrenadesPowerupBase
 {
-    public static Color PaintColor => Color.Yellow;
-    
+    public override Color PaintColor => Color.Yellow;
     public override string Name => "Banana grenades";
     public override int UsesCount => 1;
-    public int MaxAmmo => Math.Max(UsesCount, UsesLeft);
+    
+    protected override IEnumerable<Type> IncompatiblePowerups => _incompatiblePowerups;
 
+    private static readonly List<Type> _incompatiblePowerups = [typeof(StickyGrenades)];
+    
     private readonly Func<IObjectGrenadeThrown, BananaGrenade> _createGrenadeAndPaintDelegate;
     
-    public BananaGrenades(Grenade grenade, PowerupConstructorArgs args) : base(grenade, args, PaintColor)
+    public BananaGrenades(Grenade grenade, PowerupConstructorArgs args) : base(grenade, args)
     {
         _createGrenadeAndPaintDelegate = grenadeThrown => (BananaGrenade)CreateGrenadeAndPaint(grenadeThrown);
     }
@@ -54,9 +57,9 @@ internal class BananaGrenades : GrenadesPowerupBase, ILimitedAmmoPowerup<Grenade
 
         public override void Initialize()
         {
-            Awaiter.Start(OnExplosion, TimeSpan.FromMilliseconds(_grenade.GetExplosionTimer()), _cts.Token);
-
             base.Initialize();
+
+            Awaiter.Start(OnExplosion, TimeSpan.FromMilliseconds(_grenade.GetExplosionTimer()), _cts.Token);
         }
 
         private void DisallowSplitting()
@@ -73,7 +76,7 @@ internal class BananaGrenades : GrenadesPowerupBase, ILimitedAmmoPowerup<Grenade
             var parentPosition = _grenade.GetWorldPosition();
             var angularVelocity = _grenade.GetAngularVelocity();
 
-            Awaiter.Start(delegate()
+            Awaiter.Start(delegate
             {
                 for (var i = 0; i < 3; i++)
                 {

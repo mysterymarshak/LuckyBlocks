@@ -22,7 +22,7 @@ internal class Freeze : DurableBuffBase, IRepressibleByImmunityFlagsBuff
     
     private readonly INotificationService _notificationService;
     private readonly BuffConstructorArgs _args;
-
+    
     private bool _isBurning;
     private CancellationTokenSource? _burningEventCts;
 

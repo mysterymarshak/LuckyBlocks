@@ -92,40 +92,34 @@ internal enum Item
 
     [OnlyPlayer]
     [PlayerHasAnyFirearm]
-    [IncompatibleWithPowerups(typeof(TripleRicochetBullets), typeof(InfiniteRicochetBullets),
-        SourcePowerup = typeof(ExplosiveBullets))]
+    [IncompatibleWithSomePowerups(SourcePowerup = typeof(ExplosiveBullets))]
     ExplosiveBullets,
 
     [OnlyPlayer]
     [PlayerHasAnyFirearm]
-    [IncompatibleWithPowerups(typeof(ExplosiveBullets), typeof(FreezeBullets), typeof(InfiniteRicochetBullets),
-        typeof(AimBullets), typeof(PushBullets),
-        SourcePowerup = typeof(TripleRicochetBullets))]
+    [IncompatibleWithSomePowerups(SourcePowerup = typeof(TripleRicochetBullets))]
     TripleRicochetBullets,
 
     [OnlyPlayer]
     [AlivePlayersMoreThanOne]
     [PlayerHasAnyFirearm]
-    [IncompatibleWithPowerups(typeof(TripleRicochetBullets), typeof(PushBullets),
-        SourcePowerup = typeof(FreezeBullets))]
+    [IncompatibleWithSomePowerups(SourcePowerup = typeof(FreezeBullets))]
     FreezeBullets,
 
     [OnlyPlayer]
     [PlayerHasAnyFirearm]
-    [IncompatibleWithPowerups(typeof(TripleRicochetBullets), typeof(FreezeBullets),
-        SourcePowerup = typeof(PushBullets))]
+    [IncompatibleWithSomePowerups(SourcePowerup = typeof(PushBullets))]
     PushBullets,
 
     [OnlyPlayer]
     [AlivePlayersMoreThanOne]
     [PlayerHasAnyFirearm]
-    [IncompatibleWithPowerups(typeof(TripleRicochetBullets), SourcePowerup = typeof(AimBullets))]
+    [IncompatibleWithSomePowerups(SourcePowerup = typeof(AimBullets))]
     AimBullets,
 
     [OnlyPlayer]
     [PlayerHasAnyFirearm]
-    [IncompatibleWithPowerups(typeof(ExplosiveBullets), typeof(TripleRicochetBullets),
-        SourcePowerup = typeof(InfiniteRicochetBullets))]
+    [IncompatibleWithSomePowerups(SourcePowerup = typeof(InfiniteRicochetBullets))]
     InfiniteRicochetBullets,
 
     [OnlyPlayer]

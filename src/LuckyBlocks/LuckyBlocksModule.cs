@@ -24,6 +24,7 @@ using LuckyBlocks.Repositories;
 using LuckyBlocks.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
+using SFDGameScriptInterface;
 
 namespace LuckyBlocks;
 
@@ -41,7 +42,7 @@ internal class LuckyBlocksModule : Module
 #else
                 .MinimumLevel.Information()
 #endif
-                .WriteTo.Chat(x.Resolve<IChat>())
+                .WriteTo.Chat(x.Resolve<IGame>(), x.Resolve<IChat>())
                 .CreateLogger());
 
         builder.RegisterType<Chat>()
@@ -104,8 +105,8 @@ internal class LuckyBlocksModule : Module
             .As<ICommandsHandler>()
             .SingleInstance();
 
-        builder.RegisterType<WeaponsPowerupsService>()
-            .As<IWeaponsPowerupsService>()
+        builder.RegisterType<WeaponPowerupsService>()
+            .As<IWeaponPowerupsService>()
             .SingleInstance();
         
         builder.RegisterType<PlayerModifiersService>()
@@ -194,6 +195,22 @@ internal class LuckyBlocksModule : Module
 
         builder.RegisterType<WeaponsDataWatcher>()
             .As<IWeaponsDataWatcher>()
+            .SingleInstance();
+        
+        builder.RegisterType<ThrowableWeaponsWatcher>()
+            .As<IThrowableWeaponsWatcher>()
+            .SingleInstance();
+        
+        builder.RegisterType<ReloadWeaponsWatcher>()
+            .As<IReloadWeaponsWatcher>()
+            .SingleInstance();
+
+        builder.RegisterType<DrawnWeaponsWatcher>()
+            .As<IDrawnWeaponsWatcher>()
+            .SingleInstance();
+        
+        builder.RegisterType<ChainsawWeaponsWatcher>()
+            .As<IChainsawWeaponsWatcher>()
             .SingleInstance();
     }
 }

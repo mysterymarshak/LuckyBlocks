@@ -22,9 +22,9 @@ internal class TextureDrawer
     {
         _object = @object;
         _texts = new();
-        _drawingWeldJoint = (Game.CreateObject("WeldJoint") as IObjectWeldJoint)!;
+        _drawingWeldJoint = (Game.CreateObject("WeldJoint", @object.GetWorldPosition()) as IObjectWeldJoint)!;
         _drawingWeldJoint.AddTargetObject(@object);
-        
+
         if (autoDisposeOnDestroy)
         {
             _objectDestroyed = extendedEvents?.HookOnDestroyed(@object, OnObjectDestroyed, EventHookMode.Default);
@@ -39,13 +39,14 @@ internal class TextureDrawer
 
         foreach (var offset in pattern)
         {
-            var text = (Game.CreateObject("Text") as IObjectText)!;
+            var text = (Game.CreateObject("Text",
+                position + offset + offsetByFaceDirectionDelegate?.Invoke(_object.GetFaceDirection()) ??
+                Vector2.Zero) as IObjectText)!;
 
+            text.SetMass(float.MinValue);
             text.SetText(".");
             text.SetTextColor(color);
             text.SetTextAlignment(TextAlignment.Middle);
-            text.SetWorldPosition(position + offset +
-                offsetByFaceDirectionDelegate?.Invoke(_object.GetFaceDirection()) ?? Vector2.Zero);
             text.SetBodyType(BodyType.Dynamic);
 
             texts.Add(text);

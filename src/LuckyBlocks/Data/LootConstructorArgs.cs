@@ -2,6 +2,7 @@
 using LuckyBlocks.Features.Buffs;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.LuckyBlocks;
+using LuckyBlocks.Features.Watchers;
 using LuckyBlocks.Features.WeaponPowerups;
 using LuckyBlocks.Loot;
 using LuckyBlocks.Loot.Attributes;
@@ -17,12 +18,13 @@ internal record LootConstructorArgs(
     IEffectsPlayer EffectsPlayer,
     IRespawner Respawner,
     IIdentityService IdentityService,
-    IWeaponsPowerupsService WeaponsPowerupsService,
+    IWeaponPowerupsService WeaponsPowerupsService,
     ISpawnChanceService SpawnChanceService,
     IBuffsService BuffsService,
     IMediator Mediator,
     IPowerupFactory PowerupFactory,
     IAttributesChecker AttributesChecker,
+    IWeaponsDataWatcher WeaponsDataWatcher,
     IGame Game,
     ILogger Logger,
     ILifetimeScope LifetimeScope);

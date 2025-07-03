@@ -19,7 +19,7 @@ internal class Player
     public IProfile Profile { get; }
     public IUser User { get; }
     public PlayerModifiers ModifiedModifiers { get; set; }
-    public WeaponsData WeaponsData { get; }
+    public WeaponsData WeaponsData { get; private set; }
     
     private readonly List<IFinishableBuff> _buffs;
     private readonly List<IImmunity> _immunities;
@@ -81,5 +81,16 @@ internal class Player
         _buffs
             .ToList()
             .ForEach(x => x.ExternalFinish());
+    }
+
+    public void SetWeaponsData(WeaponsData weaponsData)
+    {
+        WeaponsData = weaponsData;
+        InvalidateWeaponsDataOwner();
+    }
+    
+    public void InvalidateWeaponsDataOwner()
+    {
+        WeaponsData.Owner = Instance!;
     }
 }

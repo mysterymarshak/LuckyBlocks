@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using LuckyBlocks.Data;
 using LuckyBlocks.Features.Buffs;
 using LuckyBlocks.Features.Identity;
@@ -13,6 +14,9 @@ internal class FreezeBullets : BulletsPowerupBase
 {
     public override string Name => "Freeze bullets";
 
+    protected override IEnumerable<Type> IncompatiblePowerups => _incompatiblePowerups;
+
+    private static readonly List<Type> _incompatiblePowerups = [typeof(TripleRicochetBullets), typeof(PushBullets)];
     private static TimeSpan FreezeTime => TimeSpan.FromMilliseconds(3000);
 
     private readonly IBuffsService _buffsService;
@@ -25,22 +29,25 @@ internal class FreezeBullets : BulletsPowerupBase
         => (_buffsService, _identityService, _effectsPlayer, _game, _args) =
             (args.BuffsService, args.IdentityService, args.EffectsPlayer, args.Game, args);
 
-    protected override void OnFire(IPlayer player, IProjectile projectile)
+    protected override void OnFired(IPlayer player, IProjectile projectile)
     {
         var freezeBullet = new FreezeBullet(projectile, _effectsPlayer, ExtendedEvents);
-        freezeBullet.PlayerHit += OnBulletPlayerHit;
+        freezeBullet.Hit += OnBulletHit;
         freezeBullet.Remove += OnBulletRemoved;
     }
 
     private void OnBulletRemoved(IBullet bullet, ProjectileHitArgs args)
     {
         bullet.Remove -= OnBulletRemoved;
-        ((FreezeBullet)bullet).PlayerHit -= OnBulletPlayerHit;
+        bullet.Hit -= OnBulletHit;
         bullet.Dispose();
     }
 
-    private void OnBulletPlayerHit(FreezeBullet bullet, ProjectileHitArgs args)
+    private void OnBulletHit(IBullet bullet, ProjectileHitArgs args)
     {
+        if (!args.IsPlayer)
+            return;
+        
         var playerInstance = _game.GetPlayer(args.HitObjectID);
         if (playerInstance.IsDead)
             return;
@@ -54,8 +61,6 @@ internal class FreezeBullets : BulletsPowerupBase
 
     private class FreezeBullet : BulletBase
     {
-        public event Action<FreezeBullet, ProjectileHitArgs>? PlayerHit;
-
         protected override float ProjectileSpeedDivider => 2;
 
         private readonly IEffectsPlayer _effectsPlayer;
@@ -68,14 +73,6 @@ internal class FreezeBullets : BulletsPowerupBase
             _periodicTimer = new PeriodicTimer<IProjectile>(TimeSpan.FromMilliseconds(50), TimeBehavior.TimeModifier, PlayFreezeEffect,
                 projectile => projectile.IsRemoved, default, projectile, ExtendedEvents);
             _periodicTimer.Start();
-        }
-
-        protected override void OnHit(ProjectileHitArgs args)
-        {
-            if (!args.IsPlayer)
-                return;
-
-            PlayerHit?.Invoke(this, args);
         }
 
         protected override void OnDisposed()

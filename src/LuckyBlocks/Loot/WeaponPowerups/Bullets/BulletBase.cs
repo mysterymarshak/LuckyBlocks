@@ -42,10 +42,6 @@ internal abstract class BulletBase : IBullet
     protected virtual void OnDisposed()
     {
     }
-
-    protected virtual void OnHit(ProjectileHitArgs args)
-    {
-    }
     
     protected Vector2 GetNewProjectileVelocity() => Projectile switch
     {
@@ -58,7 +54,6 @@ internal abstract class BulletBase : IBullet
     {
         var args = @event.Args;
         
-        OnHit(args);
         Hit?.Invoke(this, args);
 
         if (args.RemoveFlag)

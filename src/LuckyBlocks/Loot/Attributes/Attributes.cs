@@ -75,13 +75,9 @@ internal class PlayerHasGotWeaponsAttribute : ItemAttribute
         => WeaponItems = weaponItems ?? Enumerable.Empty<WeaponItem>();
 }
 
-internal class IncompatibleWithPowerupsAttribute : ItemAttribute
+internal class IncompatibleWithSomePowerupsAttribute : ItemAttribute
 {
     public required Type SourcePowerup { get; set; }
-    public IEnumerable<Type> Types { get; private set; }
-
-    public IncompatibleWithPowerupsAttribute(params Type[]? powerups)
-        => Types = powerups ?? Enumerable.Empty<Type>();
 }
 
 internal class ModifiedModifiersAttribute : ItemAttribute
