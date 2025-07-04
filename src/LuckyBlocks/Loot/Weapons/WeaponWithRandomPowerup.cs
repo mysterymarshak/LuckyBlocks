@@ -33,7 +33,8 @@ internal class WeaponWithRandomPowerup : PowerUppedWeaponBase
     {
         (typeof(AimBullets), Item.AimBullets), (typeof(ExplosiveBullets), Item.ExplosiveBullets),
         (typeof(FreezeBullets), Item.FreezeBullets), (typeof(InfiniteRicochetBullets), Item.InfiniteRicochetBullets),
-        (typeof(PushBullets), Item.PushBullets), (typeof(TripleRicochetBullets), Item.TripleRicochetBullets)
+        (typeof(PushBullets), Item.PushBullets), (typeof(TripleRicochetBullets), Item.TripleRicochetBullets),
+        (typeof(PoisonBullets), Item.PoisonBullets)
     };
     
     private static readonly List<(Type, Item)> GrenadePowerups = new()

@@ -12,4 +12,5 @@ internal static class ExtendedColors
     public static readonly Color Electric = new(1, 175, 214);
     public static readonly Color Pink = new(255, 105, 180);
     public static readonly Color LightGreen = new(121,174,136);
+    public static readonly Color SwampGreen = new(116, 133, 0);
 }

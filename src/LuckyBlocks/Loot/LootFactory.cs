@@ -73,6 +73,8 @@ internal class LootFactory : ILootFactory
             _lootConstructorArgs),
         Item.InfiniteRicochetBullets => new WeaponPowerupWrapper(typeof(InfiniteRicochetBullets), item, player.Instance,
             _lootConstructorArgs),
+        Item.PoisonBullets => new WeaponPowerupWrapper(typeof(PoisonBullets), item, player.Instance,
+            _lootConstructorArgs),
         Item.Vampirism => CreateWrappedBuff<Vampirism>(player, Item.Vampirism),
         Item.StrongMan => CreateWrappedBuff<StrongMan>(player, Item.StrongMan),
         Item.Shield => CreateWrappedBuff<Shield>(player, Item.Shield),
