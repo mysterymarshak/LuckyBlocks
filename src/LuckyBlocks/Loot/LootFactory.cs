@@ -89,6 +89,7 @@ internal class LootFactory : ILootFactory
         Item.TotemOfUndying => CreateWrappedBuff<TotemOfUndying>(player, Item.TotemOfUndying),
         Item.WindWizard => CreateWrappedBuff<WindWizard>(player, Item.WindWizard),
         Item.TimeStopWizard => CreateWrappedBuff<TimeStopWizard>(player, Item.TimeStopWizard),
+        Item.RemoveWeaponsExceptPlayer => new RemoveWeaponsExceptPlayer(player.Instance, _lootConstructorArgs),
         _ => new ArgumentOutOfRangeException(nameof(item))
     };
 
@@ -119,6 +120,7 @@ internal class LootFactory : ILootFactory
             _lootConstructorArgs),
         Item.WeaponWithRandomPowerup => new WeaponWithRandomPowerup(position, _lootConstructorArgs),
         Item.FlamyKatana => new FlamyKatanaLoot(position, _lootConstructorArgs),
+        Item.RemoveWeapons => new RemoveWeapons(_lootConstructorArgs),
         _ => new ArgumentOutOfRangeException(nameof(item))
     };
 }

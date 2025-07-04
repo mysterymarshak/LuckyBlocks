@@ -4,35 +4,25 @@ using System.Linq;
 using LuckyBlocks.Data;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Identity;
-using LuckyBlocks.Utils;
 using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Loot.Other;
 
-internal class ShufflePositions : ILoot
+internal class ShufflePositions : GameEventWithSlowMoBase
 {
-    public Item Item => Item.ShufflePositions;
-    public string Name => "Shuffle positions";
+    public override Item Item => Item.ShufflePositions;
+    public override string Name => "Shuffle positions";
+
+    protected override TimeSpan SlowMoDuration => TimeSpan.FromMilliseconds(1500);
 
     private readonly IIdentityService _identityService;
-    private readonly IEffectsPlayer _effectsPlayer;
-    private readonly INotificationService _notificationService;
 
-    public ShufflePositions(LootConstructorArgs args)
-        => (_identityService, _effectsPlayer, _notificationService) =
-            (args.IdentityService, args.EffectsPlayer, args.NotificationService);
-
-    public void Run()
+    public ShufflePositions(LootConstructorArgs args) : base(args)
     {
-        var slowMoDuration = TimeSpan.FromMilliseconds(1500);
-
-        _effectsPlayer.PlaySloMoEffect(slowMoDuration);
-        _notificationService.CreatePopupNotification("SHUFFLE POSITIONS", ExtendedColors.ImperialRed, slowMoDuration);
-
-        Awaiter.Start(OnSlowMoEnded, slowMoDuration);
+        _identityService = args.IdentityService;
     }
 
-    private void OnSlowMoEnded()
+    protected override void OnSlowMoEnded()
     {
         var players = _identityService.GetAlivePlayers()
             .Select(x => x.Instance!)

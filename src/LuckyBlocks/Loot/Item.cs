@@ -138,9 +138,20 @@ internal enum Item
     WeaponWithRandomPowerup,
 
     FlamyKatana,
-    
+
     [OnlyPlayer]
     [PlayerHasAnyFirearm]
     [IncompatibleWithSomePowerups(SourcePowerup = typeof(PoisonBullets))]
-    PoisonBullets
+    PoisonBullets,
+
+    [OnlyPlayer]
+    [Weight(0.5f / 2)]
+    [AnyPlayerHaveAnyWeapon]
+    [AlivePlayersMoreThanOne]
+    RemoveWeaponsExceptPlayer,
+
+    [Weight(0.5f / 2)]
+    [AnyPlayerHaveAnyWeapon]
+    [AlivePlayersMoreThanOne]
+    RemoveWeapons
 }
