@@ -98,7 +98,7 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
             var (playerInstance, args, _) = @event;
             if (!playerInstance.IsValidUser())
                 return;
-            
+
             var player = _identityService.GetPlayerByInstance(playerInstance);
             if (args.SourceObjectID != 0 && _droppedWeapons.TryGetValue(args.SourceObjectID, out var droppedWeapon))
             {
@@ -161,7 +161,7 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
             {
                 if (existingPowerup.IsCompatibleWith(pickedUpPowerup.GetType()))
                     continue;
-                
+
                 var playerInstance = player.Instance!;
                 playerInstance.SetAmmoFromWeapon(pickedUpWeapon);
                 var disarmedWeapon = playerInstance.Disarm(pickedUpWeapon.WeaponItemType);
@@ -172,7 +172,7 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
 
                 playerInstance.GiveWeaponItem(pickedUpWeapon.WeaponItem, false);
                 playerInstance.SetAmmoFromWeapon(existingWeapon);
-                
+
                 powerupsToConcat = [];
                 return false;
             }
@@ -245,7 +245,7 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
                     DisposeWeapon(removedWeapon);
                 }
             }
-            
+
             player.UpdateWeaponData(args.WeaponItemType, removedWeapon is MeleeTemp, true);
 
             if (args.WeaponItemType == WeaponItemType.Thrown && player.WeaponsData.ThrowableItem.IsInvalid)
@@ -350,7 +350,7 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
                     var currentDrawn = weaponsData.CurrentWeaponDrawn;
 
                     player.UpdateWeaponData(WeaponItemType.Melee, currentDrawn is MeleeTemp);
-                    currentDrawn.RaiseEvent(WeaponEvent.MeleeHit);
+                    currentDrawn.RaiseEvent(WeaponEvent.MeleeHit, meleeHit);
 
                     Logger.Debug("Melee hit with {WeaponItem}, player: {Player}, durability left: {DurabilityLeft}",
                         currentDrawn.WeaponItem, player.Name, ((Melee)currentDrawn).CurrentDurability);
@@ -393,7 +393,7 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
             Logger.Error("Error while processing object destroyed event: {Message}", exception);
         }
     }
-    
+
     private void OnKeyInput(Event<IPlayer, VirtualKeyInfo[]> @event)
     {
         try
@@ -410,6 +410,7 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
 
                 var player = _identityService.GetPlayerByInstance(playerInstance);
                 var weaponsData = player.WeaponsData;
+                var currentDrawn = weaponsData.CurrentWeaponDrawn;
 
                 if (keyInput.Key == VirtualKey.ACTIVATE && weaponsData.HasAnyFirearm() && _ammoTriggers.Count > 0 &&
                     _ammoTriggers.Any(x =>
@@ -423,9 +424,9 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
                 }
 
                 if (playerInstance.IsReloading || keyInput.Key == VirtualKey.ATTACK &&
-                    weaponsData.CurrentWeaponDrawn is Firearm { CurrentSpareMags: > 0, CurrentAmmo: 0 })
+                    currentDrawn is Firearm { CurrentSpareMags: > 0, CurrentAmmo: 0 })
                 {
-                    _reloadWeaponsWatcher.StartReloadTracking(player, weaponsData.CurrentWeaponDrawn.WeaponItemType);
+                    _reloadWeaponsWatcher.StartReloadTracking(player, currentDrawn.WeaponItemType);
                 }
             }
         }

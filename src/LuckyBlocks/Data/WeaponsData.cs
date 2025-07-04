@@ -15,23 +15,23 @@ namespace LuckyBlocks.Data;
 internal enum WeaponEvent
 {
     None = 0,
-    
+
     PickedUp,
-    
+
     Dropped,
-    
+
     Thrown,
-    
+
     GrenadeThrown,
 
     Drawn,
-    
+
     Hidden,
-    
+
     Fired,
-    
+
     MeleeHit,
-    
+
     Disposed
 }
 
@@ -45,9 +45,13 @@ internal record Weapon(WeaponItem WeaponItem, WeaponItemType WeaponItemType)
     public event Action<Weapon>? Draw;
     public event Action<Weapon>? Hide;
     public event Action<Weapon>? Dispose;
-    
+
     public bool IsInvalid => WeaponItem == WeaponItem.NONE || WeaponItemType == WeaponItemType.NONE || _isDisposed;
+
+    [MemberNotNullWhen(false, nameof(Owner))]
     public bool IsDropped => Owner?.IsValid() != true;
+
+    public bool IsDrawn => !IsDropped && Owner!.CurrentWeaponDrawn == WeaponItemType;
     public IPlayer? Owner { get; private set; }
     public int ObjectId { get; private set; }
 
@@ -79,7 +83,7 @@ internal record Weapon(WeaponItem WeaponItem, WeaponItemType WeaponItemType)
     {
         _powerups!.Remove(powerup);
     }
-    
+
     public virtual void RaiseEvent(WeaponEvent @event, params object?[] args)
     {
         switch (@event)
@@ -103,7 +107,7 @@ internal record Weapon(WeaponItem WeaponItem, WeaponItemType WeaponItemType)
                 Dispose?.Invoke(this);
                 _isDisposed = true;
                 break;
-        }  
+        }
     }
 
     public string GetFormattedName()
@@ -114,13 +118,13 @@ internal record Weapon(WeaponItem WeaponItem, WeaponItemType WeaponItemType)
         if (Powerups.Any())
         {
             stringBuilder.Append(" (");
-            
+
             foreach (var powerup in Powerups)
             {
                 stringBuilder.Append(powerup.Name);
                 stringBuilder.Append(" & ");
             }
-            
+
             stringBuilder.Remove(stringBuilder.Length - 3, 3);
             stringBuilder.Append(")");
         }
@@ -132,8 +136,8 @@ internal record Weapon(WeaponItem WeaponItem, WeaponItemType WeaponItemType)
 internal record Melee(WeaponItem WeaponItem, WeaponItemType WeaponItemType, float CurrentDurability)
     : Weapon(WeaponItem, WeaponItemType)
 {
-    public event Action? MeleeHit;
-    
+    public event Action<PlayerMeleeHitArg>? MeleeHit;
+
     public float CurrentDurability { get; protected set; } = CurrentDurability;
     public float MaxDurability => 1f;
 
@@ -141,14 +145,34 @@ internal record Melee(WeaponItem WeaponItem, WeaponItemType WeaponItemType, floa
     {
         CurrentDurability = newData.CurrentDurability;
     }
-    
+
     public override void RaiseEvent(WeaponEvent @event, params object?[] args)
     {
         base.RaiseEvent(@event, args);
-        
+
         if (@event == WeaponEvent.MeleeHit)
         {
-            MeleeHit?.Invoke();
+            MeleeHit?.Invoke((PlayerMeleeHitArg)args[0]!);
+        }
+    }
+
+    public void SetDurability(float durability)
+    {
+        if (IsDropped)
+        {
+            throw new InvalidOperationException();
+        }
+
+        durability = MathHelper.Clamp(durability, 0f, MaxDurability);
+        CurrentDurability = durability;
+        
+        if (this is MeleeTemp)
+        {
+            Owner.SetCurrentMeleeMakeshiftDurability(durability);
+        }
+        else
+        {
+            Owner.SetCurrentMeleeDurability(durability);
         }
     }
 }
@@ -176,7 +200,7 @@ internal record Firearm(
     : Weapon(WeaponItem, WeaponItemType)
 {
     public event Action<IPlayer?, IEnumerable<IProjectile>?>? Fire;
-    
+
     public int CurrentAmmo { get; protected set; } = CurrentAmmo;
     public int CurrentSpareMags { get; protected set; } = CurrentSpareMags;
     public bool IsLazerEquipped { get; protected set; } = IsLazerEquipped;
@@ -195,7 +219,7 @@ internal record Firearm(
     public override void RaiseEvent(WeaponEvent @event, params object?[] args)
     {
         base.RaiseEvent(@event, args);
-        
+
         if (@event == WeaponEvent.Fired)
         {
             Fire?.Invoke(args[0] as IPlayer, args[1] as IEnumerable<IProjectile>);
@@ -240,7 +264,7 @@ internal record Throwable(
     : Weapon(WeaponItem, WeaponItemType)
 {
     public event Action<IPlayer?, IObject?, Throwable?>? GrenadeThrow;
-    
+
     public int CurrentAmmo { get; protected set; } = CurrentAmmo;
     public bool IsActive { get; protected set; } = IsActive;
 
@@ -253,7 +277,7 @@ internal record Throwable(
     public override void RaiseEvent(WeaponEvent @event, params object?[] args)
     {
         base.RaiseEvent(@event, args);
-        
+
         if (@event == WeaponEvent.GrenadeThrown)
         {
             GrenadeThrow?.Invoke(args[0] as IPlayer, args[1] as IObject, args[2] as Throwable);

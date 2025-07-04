@@ -116,6 +116,7 @@ internal class LootFactory : ILootFactory
         Item.GrenadeLauncherWithInfiniteBouncing => new GrenadeLauncherWithInfiniteBouncing(position,
             _lootConstructorArgs),
         Item.WeaponWithRandomPowerup => new WeaponWithRandomPowerup(position, _lootConstructorArgs),
+        Item.FlamyKatana => new FlamyKatanaLoot(position, _lootConstructorArgs),
         _ => new ArgumentOutOfRangeException(nameof(item))
     };
 }
