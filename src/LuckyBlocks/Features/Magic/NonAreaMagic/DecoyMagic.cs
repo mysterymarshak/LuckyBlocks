@@ -23,6 +23,11 @@ internal class DecoyMagic : NonAreaMagicBase
 
     private static readonly SFDPlayerModifiers DecoysModifiers = new()
     {
+        MeleeDamageTakenModifier = 2f,
+        ExplosionDamageTakenModifier = 2f,
+        FireDamageTakenModifier = 2f,
+        ImpactDamageTakenModifier = 2f,
+        ProjectileDamageTakenModifier = 2f,
         ProjectileDamageDealtModifier = 0,
         ProjectileCritChanceDealtModifier = 0,
         MeleeForceModifier = 0,
