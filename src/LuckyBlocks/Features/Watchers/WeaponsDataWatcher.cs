@@ -12,6 +12,7 @@ using LuckyBlocks.Loot.WeaponPowerups;
 using LuckyBlocks.Reflection;
 using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
 using LuckyBlocks.Utils;
+using LuckyBlocks.Utils.Timers;
 using Serilog;
 using SFDGameScriptInterface;
 
@@ -34,6 +35,7 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
     private readonly INotificationService _notificationService;
     private readonly IThrowableWeaponsWatcher _throwableWeaponsWatcher;
     private readonly IReloadWeaponsWatcher _reloadWeaponsWatcher;
+    private readonly IDrawnWeaponsWatcher _drawnWeaponsWatcher;
     private readonly IChainsawWeaponsWatcher _chainsawWeaponsWatcher;
     private readonly IGame _game;
     private readonly IExtendedEvents _extendedEvents;
@@ -43,14 +45,15 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
 
     public WeaponsDataWatcher(IIdentityService identityService, IWeaponPowerupsService weaponPowerupsService,
         INotificationService notificationService, IThrowableWeaponsWatcher throwableWeaponsWatcher,
-        IReloadWeaponsWatcher reloadWeaponsWatcher, IChainsawWeaponsWatcher chainsawWeaponsWatcher, IGame game,
-        ILifetimeScope lifetimeScope)
+        IReloadWeaponsWatcher reloadWeaponsWatcher, IDrawnWeaponsWatcher drawnWeaponsWatcher,
+        IChainsawWeaponsWatcher chainsawWeaponsWatcher, IGame game, ILifetimeScope lifetimeScope)
     {
         _identityService = identityService;
         _weaponPowerupsService = weaponPowerupsService;
         _notificationService = notificationService;
         _throwableWeaponsWatcher = throwableWeaponsWatcher;
         _reloadWeaponsWatcher = reloadWeaponsWatcher;
+        _drawnWeaponsWatcher = drawnWeaponsWatcher;
         _chainsawWeaponsWatcher = chainsawWeaponsWatcher;
         _game = game;
         _droppedWeapons = new Dictionary<int, Weapon>();
@@ -68,6 +71,7 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
         _extendedEvents.HookOnDestroyed(OnObjectDestroyed, EventHookMode.Default);
         _extendedEvents.HookOnKeyInput(OnKeyInput, EventHookMode.Prioritized);
         _ammoTriggers.AddRange(_game.GetObjects<IObjectAmmoStashTrigger>());
+        _drawnWeaponsWatcher.Initialize();
     }
 
     public Weapon RegisterWeapon(IObjectWeaponItem objectWeaponItem)
@@ -506,12 +510,10 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
         var weaponsData = player.WeaponsData;
         weaponsData.UpdateFirearms();
 
-#if DEBUG
         Logger.Debug(
             "Updated firearms weapons for player: {Player}, new handgun: {HandgunItem} {HandgunAmmo}, new rifle: {RifleItem} {RifleAmmo}",
             player.Name, weaponsData.SecondaryWeapon.WeaponItem, weaponsData.SecondaryWeapon.CurrentAmmo,
             weaponsData.PrimaryWeapon.WeaponItem, weaponsData.PrimaryWeapon.CurrentAmmo);
-#endif
     }
 
     private static void DisposeWeapon(Weapon weapon)

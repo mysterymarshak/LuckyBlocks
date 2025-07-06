@@ -204,6 +204,10 @@ internal class LuckyBlocksModule : Module
         builder.RegisterType<ReloadWeaponsWatcher>()
             .As<IReloadWeaponsWatcher>()
             .SingleInstance();
+
+        builder.RegisterType<DrawnWeaponsWatcher>()
+            .As<IDrawnWeaponsWatcher>()
+            .SingleInstance();
         
         builder.RegisterType<ChainsawWeaponsWatcher>()
             .As<IChainsawWeaponsWatcher>()
