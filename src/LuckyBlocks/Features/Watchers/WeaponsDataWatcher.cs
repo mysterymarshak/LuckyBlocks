@@ -12,7 +12,6 @@ using LuckyBlocks.Loot.WeaponPowerups;
 using LuckyBlocks.Reflection;
 using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
 using LuckyBlocks.Utils;
-using LuckyBlocks.Utils.Timers;
 using Serilog;
 using SFDGameScriptInterface;
 
@@ -436,84 +435,17 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
         }
     }
 
-    // private void OnKeyInput(Event<IPlayer, VirtualKeyInfo[]> @event)
-    //      {
-    //          try
-    //          {
-    //              var (playerInstance, keyInputs, _) = @event;
-    //              foreach (var keyInput in keyInputs)
-    //              {
-    //                  if (keyInput is not
-    //                      {
-    //                          Event: VirtualKeyEvent.Pressed,
-    //                          Key: VirtualKey.DRAW_MELEE or VirtualKey.DRAW_HANDGUN or VirtualKey.DRAW_RIFLE
-    //                          or VirtualKey.DRAW_GRENADE or VirtualKey.DRAW_SPECIAL or VirtualKey.SHEATHE
-    //                          or VirtualKey.ACTIVATE or VirtualKey.ATTACK or VirtualKey.RELOAD
-    //                      })
-    //                      continue;
-    //  
-    //                  var player = _identityService.GetPlayerByInstance(playerInstance);
-    //                  var weaponsData = player.WeaponsData;
-    //                  var needUpdateDrawn = (keyInput.Key == VirtualKey.DRAW_MELEE) ||
-    //                                        (keyInput.Key == VirtualKey.DRAW_HANDGUN &&
-    //                                         !weaponsData.SecondaryWeapon.IsInvalid) ||
-    //                                        (keyInput.Key == VirtualKey.DRAW_RIFLE && !weaponsData.PrimaryWeapon.IsInvalid) ||
-    //                                        (keyInput.Key == VirtualKey.DRAW_GRENADE &&
-    //                                         !weaponsData.ThrowableItem.IsInvalid) ||
-    //                                        (keyInput.Key == VirtualKey.DRAW_SPECIAL && !weaponsData.PowerupItem.IsInvalid) ||
-    //                                        keyInput.Key == VirtualKey.SHEATHE;
-    //  
-    //                  var weaponItemType = keyInput.Key switch
-    //                  {
-    //                      VirtualKey.DRAW_MELEE when weaponsData is
-    //                          { MeleeWeapon.IsInvalid: true, MeleeWeaponTemp.IsInvalid: true } => WeaponItemType.NONE,
-    //                      VirtualKey.DRAW_MELEE => WeaponItemType.Melee,
-    //                      VirtualKey.DRAW_HANDGUN => WeaponItemType.Handgun,
-    //                      VirtualKey.DRAW_RIFLE => WeaponItemType.Rifle,
-    //                      VirtualKey.DRAW_GRENADE => WeaponItemType.Thrown,
-    //                      VirtualKey.DRAW_SPECIAL => WeaponItemType.Powerup,
-    //                      VirtualKey.SHEATHE => WeaponItemType.NONE,
-    //                      _ => WeaponItemType.NONE
-    //                  };
-    //  
-    //                  if (needUpdateDrawn)
-    //                  {
-    //                      _drawnWeaponsWatcher.StartDrawnTracking(player, weaponItemType);
-    //                  }
-    //  
-    //                  if (keyInput.Key == VirtualKey.ACTIVATE && weaponsData.HasAnyFirearm() && _ammoTriggers.Count > 0 &&
-    //                      _ammoTriggers.Any(x =>
-    //                      {
-    //                          var aabb = x.GetAABB();
-    //                          aabb.Grow(2f);
-    //                          return aabb.Intersects(playerInstance.GetAABB());
-    //                      }))
-    //                  {
-    //                      UpdateFirearms(player);
-    //                  }
-    //  
-    //                  if (playerInstance.IsReloading || keyInput.Key == VirtualKey.ATTACK &&
-    //                      weaponsData.CurrentWeaponDrawn is Firearm { CurrentSpareMags: > 0, CurrentAmmo: 0 })
-    //                  {
-    //                      _reloadWeaponsWatcher.StartReloadTracking(player, weaponsData.CurrentWeaponDrawn.WeaponItemType);
-    //                  }
-    //              }
-    //          }
-    //          catch (Exception exception)
-    //          {
-    //              Logger.Error("Error while processing key input event: {Message}", exception);
-    //          }
-    //      }
-
     private void UpdateFirearms(Player player)
     {
         var weaponsData = player.WeaponsData;
         weaponsData.UpdateFirearms();
 
+#if DEBUG
         Logger.Debug(
             "Updated firearms weapons for player: {Player}, new handgun: {HandgunItem} {HandgunAmmo}, new rifle: {RifleItem} {RifleAmmo}",
             player.Name, weaponsData.SecondaryWeapon.WeaponItem, weaponsData.SecondaryWeapon.CurrentAmmo,
             weaponsData.PrimaryWeapon.WeaponItem, weaponsData.PrimaryWeapon.CurrentAmmo);
+#endif
     }
 
     private static void DisposeWeapon(Weapon weapon)
