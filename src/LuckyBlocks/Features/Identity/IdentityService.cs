@@ -17,7 +17,7 @@ internal interface IIdentityService
     void Initialize();
     OneOf<Player, Unknown> GetPlayerById(int uniqueId);
     Player GetPlayerByInstance(IPlayer player);
-    IEnumerable<Player> GetAlivePlayers();
+    IEnumerable<Player> GetAlivePlayers(bool includeFakePlayers = true);
     IEnumerable<IUser> GetDeadUsers();
 }
 
@@ -45,6 +45,7 @@ internal class IdentityService : IIdentityService
         }
 
         _extendedEvents.HookOnUserJoined(OnUserJoined, EventHookMode.Default);
+        _extendedEvents.HookOnDestroyed(OnObjectDestroyed, EventHookMode.Default);
     }
 
     public OneOf<Player, Unknown> GetPlayerById(int uniqueId)
@@ -63,9 +64,9 @@ internal class IdentityService : IIdentityService
         return _playersRepository.GetPlayerByInstance(player);
     }
 
-    public IEnumerable<Player> GetAlivePlayers()
+    public IEnumerable<Player> GetAlivePlayers(bool includeFakePlayers = true)
     {
-        return _playersRepository.GetAlivePlayers();
+        return _playersRepository.GetAlivePlayers(includeFakePlayers);
     }
 
     public IEnumerable<IUser> GetDeadUsers()
@@ -78,6 +79,17 @@ internal class IdentityService : IIdentityService
         foreach (var user in @event.Args)
         {
             RegisterUser(user.UserIdentifier);
+        }
+    }
+    
+    private void OnObjectDestroyed(Event<IObject[]> @event)
+    {
+        foreach (var @object in @event.Args)
+        {
+            if (@object is IPlayer { IsBot: true, UserIdentifier: 0 })
+            {
+                _playersRepository.RemoveFakePlayer(@object.UniqueId);
+            }
         }
     }
 

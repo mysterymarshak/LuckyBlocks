@@ -96,7 +96,7 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
         try
         {
             var (playerInstance, args, _) = @event;
-            if (!playerInstance.IsValidUser())
+            if (!playerInstance.IsValid())
                 return;
 
             var player = _identityService.GetPlayerByInstance(playerInstance);
@@ -209,7 +209,7 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
         try
         {
             var (playerInstance, args, _) = @event;
-            if (!playerInstance.IsValidUser())
+            if (!playerInstance.IsValid())
                 return;
 
             var player = _identityService.GetPlayerByInstance(playerInstance);
@@ -302,7 +302,7 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
             {
                 var playerId = projectile.InitialOwnerPlayerID;
                 var playerInstance = _game.GetPlayer(playerId);
-                if (playerInstance?.IsValidUser() != true)
+                if (playerInstance?.IsValid() != true)
                     continue;
 
                 if (!handledWeapons.TryGetValue(playerId, out var weapons))
@@ -338,7 +338,7 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
         try
         {
             var (playerInstance, args, _) = @event;
-            if (playerInstance?.IsValidUser() != true)
+            if (playerInstance?.IsValid() != true)
                 return;
 
             foreach (var meleeHit in args)

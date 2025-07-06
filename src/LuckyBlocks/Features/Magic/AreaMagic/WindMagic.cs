@@ -56,7 +56,7 @@ internal class WindMagic : AreaMagicBase
 
         foreach (var objectToPush in objectsToPush)
         {
-            if (objectToPush is not IPlayer playerInstance || !playerInstance.IsValidUser())
+            if (objectToPush is not IPlayer playerInstance || !playerInstance.IsValid())
                 continue;
 
             // decoys cant be disarmed
@@ -97,7 +97,7 @@ internal class WindMagic : AreaMagicBase
         {
             foreach (var obj in objects)
             {
-                if (obj is IPlayer playerInstance && playerInstance.IsValidUser() && HasPlayerImmunity(playerInstance))
+                if (obj is IPlayer playerInstance && playerInstance.IsValid() && HasPlayerImmunity(playerInstance))
                     continue;
 
                 obj.SetLinearVelocity(new Vector2(0, obj.GetLinearVelocity().Y) + PushSpeed * direction);

@@ -16,7 +16,8 @@ internal interface IPlayersRepository
     OneOf<Success, Unknown> ValidateUser(int userId);
     OneOf<Player, Unknown> GetPlayerById(int uniqueId);
     Player GetPlayerByInstance(IPlayer playerInstance);
-    IEnumerable<Player> GetAlivePlayers();
+    IEnumerable<Player> GetAlivePlayers(bool includeFakePlayers = true);
+    void RemoveFakePlayer(int uniqueId);
 }
 
 internal class PlayersRepository : IPlayersRepository
@@ -48,19 +49,7 @@ internal class PlayersRepository : IPlayersRepository
     {
         if (playerInstance is { UserIdentifier: 0, IsBot: true })
         {
-            if (!_fakePlayers.TryGetValue(playerInstance.UniqueId, out var fakePlayer))
-            {
-                fakePlayer = new Player(new FakeUser(playerInstance));
-                _fakePlayers.Add(playerInstance.UniqueId, fakePlayer);
-                
-                _logger.Debug("Created fake player with id {UniqueId} and name {Name}",
-                    playerInstance.UniqueId, playerInstance.Name);
-            }
-
-            _logger.Debug("Returned fake player with id {UniqueId} and name {Name}",
-                playerInstance.UniqueId, playerInstance.Name);
-            
-            return fakePlayer;
+            return GetFakePlayer(playerInstance);
         }
 
         var userId = playerInstance.UserIdentifier;
@@ -74,12 +63,34 @@ internal class PlayersRepository : IPlayersRepository
         return player;
     }
 
-    public IEnumerable<Player> GetAlivePlayers()
+    public IEnumerable<Player> GetAlivePlayers(bool includeFakePlayers = true)
     {
         var players = _game.GetPlayers();
         return players
-            .Where(x => x.IsValidUser() && !x.IsDead)
+            .Where(x => (includeFakePlayers ? x.IsValid() : x.IsValidUser()) && !x.IsDead)
             .Select(GetPlayerByInstance);
+    }
+
+    public void RemoveFakePlayer(int uniqueId)
+    {
+        if (_fakePlayers.Remove(uniqueId))
+        {
+            _logger.Debug("Removed fake player with id {UniqueId}", uniqueId);
+        }
+    }
+
+    private Player GetFakePlayer(IPlayer playerInstance)
+    {
+        if (!_fakePlayers.TryGetValue(playerInstance.UniqueId, out var fakePlayer))
+        {
+            fakePlayer = new Player(new FakeUser(playerInstance));
+            _fakePlayers.Add(playerInstance.UniqueId, fakePlayer);
+
+            _logger.Debug("Created fake player with id {UniqueId} and name {Name}",
+                playerInstance.UniqueId, playerInstance.Name);
+        }
+
+        return fakePlayer;
     }
 
     private OneOf<Player, Unknown> GetPlayerByUserId(int userId)

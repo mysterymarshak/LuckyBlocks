@@ -13,6 +13,11 @@ internal static class IPlayerExtensions
     [InjectWeaponsMapper]
     private static IWeaponsMapper WeaponsMapper { get; set; }
 
+    public static bool IsValidUser(this IPlayer playerInstance)
+    {
+        return playerInstance.IsValid() && playerInstance is { IsUser: true, UserIdentifier: > 0 };
+    }
+    
     public static WeaponsData GetWeaponsData(this IPlayer player)
     {
         return new WeaponsData(player, WeaponsMapper);

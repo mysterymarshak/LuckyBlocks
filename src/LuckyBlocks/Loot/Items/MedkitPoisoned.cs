@@ -63,7 +63,7 @@ internal class MedkitPoisoned : ILoot
 
     private void Poison(IPlayer playerInstance)
     {
-        if (!playerInstance.IsValidUser() || playerInstance.IsDead)
+        if (!playerInstance.IsValid() || playerInstance.IsDead)
             return;
 
         var player = _identityService.GetPlayerByInstance(playerInstance);

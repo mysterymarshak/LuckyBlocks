@@ -106,7 +106,7 @@ internal class ChainsawWeaponsWatcher : IChainsawWeaponsWatcher
             foreach (var chainsaw in _drawnChainsaws)
             {
                 var playerInstance = chainsaw.Owner;
-                if (playerInstance?.IsValidUser() == true)
+                if (playerInstance?.IsValid() == true)
                 {
                     var player = _identityService.GetPlayerByInstance(playerInstance);
                     player.UpdateWeaponData(WeaponItemType.Melee);

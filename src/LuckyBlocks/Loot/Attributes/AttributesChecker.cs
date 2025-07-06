@@ -57,14 +57,14 @@ internal class AttributesChecker : IAttributesChecker
 
         bool AlivePlayersMoreThanOneAttributeCheck(ItemAttribute attribute, OneOf<Player, Unknown> player)
         {
-            return identityService.GetAlivePlayers()
+            return identityService.GetAlivePlayers(false)
                 .Take(2)
                 .Count() == 2;
         }
 
         bool AnyPlayerHaveAnyWeaponAttributeCheck(ItemAttribute attribute, OneOf<Player, Unknown> player)
         {
-            return identityService.GetAlivePlayers()
+            return identityService.GetAlivePlayers(false)
                 .Any(x => x.HasAnyWeapon());
         }
 

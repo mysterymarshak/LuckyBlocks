@@ -11,11 +11,6 @@ internal static class IObjectExtensions
         return @object is { DestructionInitiated: false, IsRemoved: false, RemovalInitiated: false };
     }
 
-    public static bool IsValidUser(this IPlayer playerInstance)
-    {
-        return playerInstance.IsValid() && playerInstance is { IsUser: true, UserIdentifier: > 0 };
-    }
-
     public static void RemoveDelayed(this IObject @object)
     {
         if (!@object.IsValid())

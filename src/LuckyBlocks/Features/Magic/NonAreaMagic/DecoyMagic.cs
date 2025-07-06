@@ -18,8 +18,8 @@ internal class DecoyMagic : NonAreaMagicBase
 {
     public override string Name => "Decoy magic";
 
-    private const int DECOYS_COUNT = 3;
-    private const PlayerTeam DECOYS_TEAM = PlayerTeam.Team1;
+    private const int DecoysCount = 3;
+    private const PlayerTeam DecoysTeam = PlayerTeam.Team1;
 
     private static readonly SFDPlayerModifiers DecoysModifiers = new()
     {
@@ -31,32 +31,33 @@ internal class DecoyMagic : NonAreaMagicBase
     };
 
     private static TimeSpan DecoysLifeTime => TimeSpan.FromSeconds(10);
-    
+
     private readonly IGame _game;
     private readonly IDialoguesService _dialoguesService;
     private readonly IExtendedEvents _extendedEvents;
     private readonly List<IPlayer> _decoys;
     private readonly Action<Event> _cachedDecoyDeadEvent;
     private readonly BotBehavior _cachedBotBehavior;
-    
+
     private Timer? _finishTimer;
     private int _decoysDead;
 
-    public DecoyMagic(Player player, BuffConstructorArgs args) : base(player, args)
-        => (_game, _dialoguesService, _extendedEvents, _decoys, _cachedDecoyDeadEvent, _cachedBotBehavior) =
-            (args.Game, args.DialoguesService, LifetimeScope.Resolve<IExtendedEvents>(), new(), OnDecoyDead,
-                new BotBehavior(true, PredefinedAIType.BotA));
+    public DecoyMagic(Player player, BuffConstructorArgs args) : base(player, args) =>
+        (_game, _dialoguesService, _extendedEvents, _decoys, _cachedDecoyDeadEvent, _cachedBotBehavior) = (args.Game,
+            args.DialoguesService, LifetimeScope.Resolve<IExtendedEvents>(), [], OnDecoyDead,
+            new BotBehavior(true, PredefinedAIType.BotA));
 
     public override void Cast()
     {
         var wizardInstance = Wizard.Instance!;
-        
-        CreateDecoys(DECOYS_TEAM);
 
-        wizardInstance.SetTeam(DECOYS_TEAM);
+        CreateDecoys(DecoysTeam);
+
+        wizardInstance.SetTeam(DecoysTeam);
         _extendedEvents.HookOnDead(wizardInstance, OnDead, EventHookMode.Default);
 
-        _finishTimer = new Timer(DecoysLifeTime, TimeBehavior.TimeModifier, ExternalFinish, LifetimeScope.Resolve<IExtendedEvents>());
+        _finishTimer = new Timer(DecoysLifeTime, TimeBehavior.TimeModifier, ExternalFinish,
+            LifetimeScope.Resolve<IExtendedEvents>());
         _finishTimer.Start();
     }
 
@@ -71,11 +72,11 @@ internal class DecoyMagic : NonAreaMagicBase
         var name = wizardInstance.Name;
         var dialogues = _dialoguesService.CopyDialogues(wizardInstance).ToList();
         wizardInstance.GetUnsafeWeaponsData(out var weaponsData);
-        
-        for (var i = 0; i < DECOYS_COUNT; i++)
+
+        for (var i = 0; i < DecoysCount; i++)
         {
             var bot = _game.CreatePlayer(position);
-            
+
             bot.SetBotBehavior(_cachedBotBehavior);
             bot.SetBotName(name);
             bot.SetProfile(profile);
@@ -97,12 +98,12 @@ internal class DecoyMagic : NonAreaMagicBase
     {
         _decoysDead++;
 
-        if (_decoysDead != _decoys?.Count)
+        if (_decoysDead != _decoys.Count)
             return;
 
         ExternalFinish();
     }
-    
+
     private void OnDead(Event @event)
     {
         ExternalFinish();
@@ -111,7 +112,7 @@ internal class DecoyMagic : NonAreaMagicBase
     protected override void OnFinished()
     {
         Dispose();
-        
+
         RemoveDecoys();
 
         var wizardInstance = Wizard.Instance;
@@ -123,7 +124,7 @@ internal class DecoyMagic : NonAreaMagicBase
         _decoys.ForEach(x => x.RemoveDelayed());
         _decoys.Clear();
     }
-    
+
     private void Dispose()
     {
         _extendedEvents.Clear();
