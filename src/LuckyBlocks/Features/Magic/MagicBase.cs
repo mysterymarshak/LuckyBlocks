@@ -9,13 +9,13 @@ internal abstract class MagicBase : IMagic
     public abstract string Name { get; }
 
     public IFinishCondition<IMagic> WhenFinish => _finishCondition;
-    
+
     protected ILifetimeScope LifetimeScope { get; }
-    
+
     private readonly MagicFinishCondition _finishCondition;
 
     private bool _isFinished;
-    
+
     public MagicBase(BuffConstructorArgs args)
         => (LifetimeScope, _finishCondition) = (args.LifetimeScope.BeginLifetimeScope(), new());
 
@@ -23,7 +23,7 @@ internal abstract class MagicBase : IMagic
     {
         if (_isFinished)
             return;
-        
+
         OnFinishedInternal();
         OnFinished();
         SendFinishNotification();
@@ -39,10 +39,11 @@ internal abstract class MagicBase : IMagic
     {
         LifetimeScope.Dispose();
     }
-    
+
     private void SendFinishNotification()
     {
         _finishCondition.Callbacks?.Invoke(this);
+        _finishCondition.Dispose();
     }
 
     private class MagicFinishCondition : IFinishCondition<IMagic>
@@ -53,6 +54,11 @@ internal abstract class MagicBase : IMagic
         {
             Callbacks += callback;
             return this;
+        }
+
+        public void Dispose()
+        {
+            Callbacks = null;
         }
     }
 }

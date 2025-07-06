@@ -11,9 +11,9 @@ namespace LuckyBlocks.Loot.Buffs.Wizards;
 internal enum WizardFinishCondition
 {
     None = 0,
-    
+
     RanOutOfCasts,
-    
+
     LastCastedMagicFinishNotification
 }
 
@@ -21,12 +21,15 @@ internal abstract class WizardBase : FinishableBuffBase, IWizard
 {
     public abstract int CastsCount { get; }
     public int CastsLeft { get; private set; }
-    
+
     private readonly INotificationService _notificationService;
     private readonly IEffectsPlayer _effectsPlayer;
     private readonly WizardFinishCondition _wizardFinishCondition;
 
-    protected WizardBase(Player wizard, BuffConstructorArgs args, int castsLeft = default, WizardFinishCondition wizardFinishCondition = WizardFinishCondition.RanOutOfCasts) :
+    private bool _disposed;
+
+    protected WizardBase(Player wizard, BuffConstructorArgs args, int castsLeft = default,
+        WizardFinishCondition wizardFinishCondition = WizardFinishCondition.RanOutOfCasts) :
         base(wizard, args.NotificationService, args.LifetimeScope) =>
         (_notificationService, _effectsPlayer, _wizardFinishCondition, CastsLeft) = (args.NotificationService,
             args.EffectsPlayer, wizardFinishCondition, castsLeft == default ? CastsCount : castsLeft);
@@ -35,7 +38,7 @@ internal abstract class WizardBase : FinishableBuffBase, IWizard
     {
         var playerInstance = Player.Instance;
         ArgumentWasNullException.ThrowIfNull(playerInstance);
-        
+
         ExtendedEvents.HookOnPlayerMeleeAction(playerInstance, OnMeleeAction, EventHookMode.Default);
 
         _notificationService.CreateChatNotification($"{Player.Name} is {Name.ToUpper()}", BuffColor);
@@ -66,20 +69,20 @@ internal abstract class WizardBase : FinishableBuffBase, IWizard
     private void OnMeleeAction(Event<PlayerMeleeHitArg[]> @event)
     {
         var playerInstance = Player.Instance!;
-        
+
         if (playerInstance is { IsMeleeAttacking: false, IsJumpAttacking: false } || !playerInstance.IsWalking)
             return;
 
         if (CastsLeft == 0)
             return;
-        
+
         UseMagic();
     }
 
     private void UseMagic()
     {
         var playerInstance = Player.Instance!;
-        
+
         if (!CanUseMagic())
         {
             _notificationService.CreateChatNotification("You can't use magic now", ExtendedColors.ImperialRed,
@@ -88,9 +91,9 @@ internal abstract class WizardBase : FinishableBuffBase, IWizard
         }
 
         CastsLeft--;
-        
+
         _effectsPlayer.PlaySoundEffect("BarrelExplode", playerInstance.GetWorldPosition());
-        
+
         OnUseMagic();
         ShowCastsCount();
 
@@ -107,9 +110,13 @@ internal abstract class WizardBase : FinishableBuffBase, IWizard
 
     private void OnFinishInternal()
     {
+        if (_disposed)
+            return;
+
         ExtendedEvents.Clear();
         LifetimeScope.Dispose();
-        
         SendFinishNotification();
+
+        _disposed = true;
     }
 }

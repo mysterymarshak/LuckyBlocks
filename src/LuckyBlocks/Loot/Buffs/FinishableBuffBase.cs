@@ -17,7 +17,7 @@ internal abstract class FinishableBuffBase : IFinishableBuff
     protected Player Player { get; }
     protected ILifetimeScope LifetimeScope { get; }
     protected IExtendedEvents ExtendedEvents { get; }
-    
+
     private readonly INotificationService _notificationService;
     private readonly BuffFinishCondition _finishCondition;
 
@@ -34,7 +34,7 @@ internal abstract class FinishableBuffBase : IFinishableBuff
 
     public abstract void Run();
     public abstract void ExternalFinish();
-    
+
     protected void ShowDialogue(string message, Color color, TimeSpan displayTime, IPlayer? player = default,
         bool ignoreDeath = false, bool realTime = false)
     {
@@ -64,6 +64,7 @@ internal abstract class FinishableBuffBase : IFinishableBuff
     protected void SendFinishNotification()
     {
         _finishCondition.Callbacks?.Invoke(this);
+        _finishCondition.Dispose();
     }
 
     private class BuffFinishCondition : IFinishCondition<IFinishableBuff>
@@ -74,6 +75,11 @@ internal abstract class FinishableBuffBase : IFinishableBuff
         {
             Callbacks += callback;
             return this;
+        }
+
+        public void Dispose()
+        {
+            Callbacks = null;
         }
     }
 }

@@ -37,13 +37,11 @@ internal class TotemOfUndying : FinishableBuffBase, IImmunityFlagsIndicatorBuff
 
     public override void ExternalFinish()
     {
-        if (!_disposed)
-        {
-            CloseDialogue();
-        }
+        if (_disposed)
+            return;
 
+        CloseDialogue();
         SendFinishNotification();
-
         Dispose();
     }
 
@@ -72,7 +70,8 @@ internal class TotemOfUndying : FinishableBuffBase, IImmunityFlagsIndicatorBuff
 
     private void Dispose()
     {
-        _disposed = true;
         ExtendedEvents.Clear();
+
+        _disposed = true;
     }
 }
