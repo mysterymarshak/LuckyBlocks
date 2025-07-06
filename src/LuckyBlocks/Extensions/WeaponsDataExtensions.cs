@@ -7,15 +7,12 @@ namespace LuckyBlocks.Extensions;
 
 internal static class WeaponsDataExtensions
 {
-    public static IEnumerable<Firearm> GetFirearms(this WeaponsData weaponsData)
+    public static bool HasAnyWeapon(this WeaponsData weaponsData)
     {
-        var secondaryWeapon = weaponsData.SecondaryWeapon;
-        if (secondaryWeapon is { IsInvalid: false })
-            yield return secondaryWeapon;
-
-        var primaryWeapon = weaponsData.PrimaryWeapon;
-        if (primaryWeapon is { IsInvalid: false } and not Flamethrower)
-            yield return primaryWeapon;
+        return !(weaponsData.MeleeWeapon.IsInvalid && weaponsData.MeleeWeaponTemp.IsInvalid &&
+                 weaponsData.SecondaryWeapon.IsInvalid &&
+                 weaponsData.PrimaryWeapon.IsInvalid && weaponsData.PowerupItem.IsInvalid &&
+                 weaponsData.ThrowableItem.IsInvalid);
     }
 
     public static bool HasAnyFirearm(this WeaponsData weaponsData)
@@ -24,6 +21,22 @@ internal static class WeaponsDataExtensions
         var primaryWeapon = weaponsData.PrimaryWeapon;
 
         return secondaryWeapon is { IsInvalid: false } || primaryWeapon is { IsInvalid: false } and not Flamethrower;
+    }
+
+    public static bool WeaponsExists(this WeaponsData weaponsData, IEnumerable<WeaponItem> weaponItems)
+    {
+        foreach (var weaponItem in weaponItems)
+        {
+            if (!(weaponsData.MeleeWeapon.WeaponItem == weaponItem ||
+                  weaponsData.MeleeWeaponTemp.WeaponItem == weaponItem ||
+                  weaponsData.SecondaryWeapon.WeaponItem == weaponItem ||
+                  weaponsData.PrimaryWeapon.WeaponItem == weaponItem ||
+                  weaponsData.PowerupItem.WeaponItem == weaponItem ||
+                  weaponsData.ThrowableItem.WeaponItem == weaponItem))
+                return false;
+        }
+
+        return true;
     }
 
     public static void UpdateFirearms(this WeaponsData weaponsData)
@@ -70,7 +83,7 @@ internal static class WeaponsDataExtensions
                 {
                     yield return weaponsData.PrimaryWeapon;
                 }
-                
+
                 if (weaponsData.CurrentWeaponDrawn.WeaponItemType == weaponsData.PrimaryWeapon.WeaponItemType &&
                     !weaponsData.SecondaryWeapon.IsInvalid)
                 {

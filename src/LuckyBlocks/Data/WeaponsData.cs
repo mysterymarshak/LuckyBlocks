@@ -361,8 +361,8 @@ internal sealed class WeaponsData : IEnumerable<Weapon>
         SetMeleeTempWeapon();
         SetSecondaryWeapon();
         SetPrimaryWeapon();
-        SetPowerupItem();
         SetThrowableItem();
+        SetPowerupItem();
         SetCurrentDrawnWeapon();
     }
 

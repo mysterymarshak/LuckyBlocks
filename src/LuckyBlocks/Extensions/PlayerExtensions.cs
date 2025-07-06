@@ -4,6 +4,7 @@ using System.Linq;
 using LuckyBlocks.Data;
 using LuckyBlocks.Entities;
 using LuckyBlocks.Features.Immunity;
+using LuckyBlocks.Loot.Buffs;
 using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Extensions;
@@ -14,28 +15,21 @@ internal static class PlayerExtensions
     {
         return player.Instance?.IsValid() ?? false;
     }
-    
-    public static bool HasBuff(this Player player, Type buffType)
-    {
-        var buffs = player.Buffs;
-        return buffs.Any(buffType.IsInstanceOfType);
-    }
-    
-    public static bool HasAnyOfBuffs(this Player player, IEnumerable<Type> buffTypes,
-        IEnumerable<Type>? exclusions = default)
-    {
-        var buffs = player.Buffs;
-        return buffs.Any(x =>
-            buffTypes.Any(y => y.IsInstanceOfType(x)) && exclusions?.Any(z => z.IsInstanceOfType(x)) == false);
-    }
+
+    public static bool HasBuff(this Player player, Type buffType) => HasBuff(player, buffType, out _);
+
+    public static bool HasAnyOfBuffs(this Player player, IEnumerable<Type> buffTypes, IEnumerable<Type>? exclusions = null)
+        => buffTypes.Any(x => HasBuff(player, x, out var buff) && exclusions?.Any(y => y.IsInstanceOfType(buff)) == false);
 
     public static ImmunityFlag GetImmunityFlags(this Player player)
     {
-        var immunities = player.Immunities;
-        
-        if (!immunities.Any())
+        var immunities = player.Immunities.ToList();
+
+        if (immunities.Count == 0)
+        {
             return ImmunityFlag.None;
-        
+        }
+
         return immunities
             .Select(x => x.Flag)
             .Aggregate((x, y) => x | y);
@@ -43,13 +37,109 @@ internal static class PlayerExtensions
 
     public static bool HasAnyWeapon(this Player player)
     {
-        var playerInstance = player.Instance;
-        return playerInstance?.HasAnyWeapon() ?? false;
+        var weaponsData = player.WeaponsData;
+        return weaponsData.HasAnyWeapon();
+    }
+
+    public static void UpdateWeaponData(this Player player, WeaponItemType weaponItemType, bool isMakeshift = false,
+        bool updateDrawn = false)
+    {
+        var weaponsData = new UnsafeWeaponsData(player.Instance!, weaponItemType);
+        player.WeaponsData.Update(weaponsData, weaponItemType, isMakeshift, updateDrawn);
+    }
+
+    public static void SetWeapons(this Player player, WeaponsData weaponsData, bool forceSet = false)
+    {
+        var playerInstance = player.Instance!;
+
+        if (forceSet)
+        {
+            playerInstance.GiveWeaponItem(weaponsData.MeleeWeapon.WeaponItem);
+            playerInstance.SetCurrentMeleeDurability(weaponsData.MeleeWeapon.CurrentDurability);
+
+            playerInstance.GiveWeaponItem(weaponsData.MeleeWeaponTemp.WeaponItem);
+            playerInstance.SetCurrentMeleeMakeshiftDurability(weaponsData.MeleeWeaponTemp.CurrentDurability);
+
+            playerInstance.GiveWeaponItem(weaponsData.PrimaryWeapon.WeaponItem);
+            playerInstance.SetCurrentPrimaryWeaponAmmo(weaponsData.PrimaryWeapon.CurrentAmmo,
+                weaponsData.PrimaryWeapon.CurrentSpareMags,
+                weaponsData.PrimaryWeapon.ProjectilePowerupData.ProjectilePowerup);
+
+            playerInstance.GiveWeaponItem(weaponsData.SecondaryWeapon.WeaponItem);
+            playerInstance.SetCurrentSecondaryWeaponAmmo(weaponsData.SecondaryWeapon.CurrentAmmo,
+                weaponsData.SecondaryWeapon.CurrentSpareMags,
+                weaponsData.SecondaryWeapon.ProjectilePowerupData.ProjectilePowerup);
+
+            playerInstance.GiveWeaponItem(weaponsData.PowerupItem.WeaponItem);
+
+            playerInstance.GiveWeaponItem(weaponsData.ThrowableItem.WeaponItem);
+            playerInstance.SetCurrentThrownItemAmmo(weaponsData.ThrowableItem.CurrentAmmo);
+
+            return;
+        }
+
+        var currentWeaponsData = player.WeaponsData;
+
+        if (currentWeaponsData.MeleeWeapon != weaponsData.MeleeWeapon)
+        {
+            playerInstance.RemoveWeaponItemType(currentWeaponsData.MeleeWeapon.WeaponItemType);
+            playerInstance.GiveWeaponItem(weaponsData.MeleeWeapon.WeaponItem);
+            playerInstance.SetCurrentMeleeDurability(weaponsData.MeleeWeapon.CurrentDurability);
+        }
+
+        if (currentWeaponsData.MeleeWeaponTemp != weaponsData.MeleeWeaponTemp)
+        {
+            playerInstance.RemoveWeaponItemType(currentWeaponsData.MeleeWeaponTemp.WeaponItemType);
+            playerInstance.GiveWeaponItem(weaponsData.MeleeWeaponTemp.WeaponItem);
+            playerInstance.SetCurrentMeleeMakeshiftDurability(weaponsData.MeleeWeaponTemp.CurrentDurability);
+        }
+
+        if (currentWeaponsData.PrimaryWeapon != weaponsData.PrimaryWeapon)
+        {
+            playerInstance.RemoveWeaponItemType(currentWeaponsData.PrimaryWeapon.WeaponItemType);
+            playerInstance.GiveWeaponItem(weaponsData.PrimaryWeapon.WeaponItem);
+            playerInstance.SetCurrentPrimaryWeaponAmmo(weaponsData.PrimaryWeapon.CurrentAmmo,
+                weaponsData.PrimaryWeapon.CurrentSpareMags,
+                weaponsData.PrimaryWeapon.ProjectilePowerupData.ProjectilePowerup);
+        }
+
+        if (currentWeaponsData.SecondaryWeapon != weaponsData.SecondaryWeapon)
+        {
+            playerInstance.RemoveWeaponItemType(currentWeaponsData.SecondaryWeapon.WeaponItemType);
+            playerInstance.GiveWeaponItem(weaponsData.SecondaryWeapon.WeaponItem);
+            playerInstance.SetCurrentSecondaryWeaponAmmo(weaponsData.SecondaryWeapon.CurrentAmmo,
+                weaponsData.SecondaryWeapon.CurrentSpareMags,
+                weaponsData.SecondaryWeapon.ProjectilePowerupData.ProjectilePowerup);
+        }
+
+        if (currentWeaponsData.ThrowableItem != weaponsData.ThrowableItem)
+        {
+            playerInstance.RemoveWeaponItemType(currentWeaponsData.ThrowableItem.WeaponItemType);
+            playerInstance.GiveWeaponItem(weaponsData.ThrowableItem.WeaponItem);
+            playerInstance.SetCurrentThrownItemAmmo(weaponsData.ThrowableItem.CurrentAmmo);
+        }
+
+        if (currentWeaponsData.PowerupItem != weaponsData.PowerupItem)
+        {
+            playerInstance.RemoveWeaponItemType(currentWeaponsData.PowerupItem.WeaponItemType);
+            playerInstance.GiveWeaponItem(weaponsData.PowerupItem.WeaponItem);
+        }
     }
     
-    public static void UpdateWeaponData(this Player player, WeaponItemType weaponItemType, bool isMakeshift = false, bool updateDrawn = false)
+    private static bool HasBuff(this Player player, Type buffType, out IFinishableBuff? existingBuff)
     {
-        var weaponsData = new UnsafeWeaponsData(player.Instance!);
-        player.WeaponsData.Update(weaponsData, weaponItemType, isMakeshift, updateDrawn);
+        var buffs = player.Buffs;
+
+        foreach (var buff in buffs)
+        {
+            if (buffType.IsInstanceOfType(buff))
+            {
+                existingBuff = buff;
+                return true;
+            }
+        }
+
+        existingBuff = null;
+        return false;
     }
 }

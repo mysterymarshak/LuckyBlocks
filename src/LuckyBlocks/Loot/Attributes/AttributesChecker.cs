@@ -82,17 +82,14 @@ internal class AttributesChecker : IAttributesChecker
 
         bool PlayerHasAnyFirearmAttributeCheck(ItemAttribute attribute, OneOf<Player, Unknown> player)
         {
-            var playerInstance = player.AsT0.Instance;
-            playerInstance.GetUnsafeWeaponsData(out var weaponsData);
-
+            var weaponsData = player.AsT0.WeaponsData;
             return weaponsData.HasAnyFirearm();
         }
 
         bool PlayerHasGotWeaponsAttributeCheck(ItemAttribute attribute, OneOf<Player, Unknown> player)
         {
             var weaponsToFind = (attribute as PlayerHasGotWeaponsAttribute)!.WeaponItems;
-            var playerInstance = player.AsT0.Instance;
-            playerInstance.GetUnsafeWeaponsData(out var weaponsData);
+            var weaponsData = player.AsT0.WeaponsData;
 
             return weaponsData.WeaponsExists(weaponsToFind);
         }

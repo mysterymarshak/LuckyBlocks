@@ -39,10 +39,9 @@ internal class ShuffleWeapons : GameEventWithSlowMoBase
         foreach (var pair in newWeaponsInfo)
         {
             var player = pair.Key;
-            var playerInstance = player.Instance!;
             var weaponsData = pair.Value;
 
-            playerInstance.SetWeapons(weaponsData);
+            player.SetWeapons(weaponsData);
             player.SetWeaponsData(weaponsData);
         }
     }

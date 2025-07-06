@@ -299,7 +299,7 @@ internal readonly ref struct UnsafeThrowable
 
 internal readonly ref struct UnsafeWeaponsData
 {
-    public bool IsEmpty => !this.HasAnyWeapon();
+    public bool IsEmpty => !HasAnyWeapon();
 
     public readonly UnsafeMelee MeleeWeapon;
     public readonly UnsafeMeleeTemp MeleeWeaponTemp;
@@ -308,17 +308,17 @@ internal readonly ref struct UnsafeWeaponsData
     public readonly UnsafePowerup PowerupItem;
     public readonly UnsafeThrowable ThrowableItem;
 
-    public UnsafeWeaponsData(IPlayer player)
+    public UnsafeWeaponsData(IPlayer playerInstance)
     {
-        var meleeWeapon = player.CurrentMeleeWeapon;
+        var meleeWeapon = playerInstance.CurrentMeleeWeapon;
         meleeWeapon.MaxValue = 1f;
         new UnsafeCasterMeleeWeaponItemToUnsafeMelee(ref meleeWeapon, ref MeleeWeapon);
 
-        var meleeWeaponTemp = player.CurrentMeleeMakeshiftWeapon;
+        var meleeWeaponTemp = playerInstance.CurrentMeleeMakeshiftWeapon;
         meleeWeaponTemp.MaxValue = 1f;
         new UnsafeCasterMeleeWeaponItemToUnsafeMeleeTemp(ref meleeWeaponTemp, ref MeleeWeaponTemp);
 
-        var secondaryWeapon = player.CurrentSecondaryWeapon;
+        var secondaryWeapon = playerInstance.CurrentSecondaryWeapon;
         var (secondaryWeaponProjectilePowerup, secondaryWeaponPowerUppedAmmo) =
             UnsafePowerupProjectileData.FromBouncingAndFireRounds(secondaryWeapon.PowerupBouncingRounds,
                 secondaryWeapon.PowerupFireRounds);
@@ -326,7 +326,7 @@ internal readonly ref struct UnsafeWeaponsData
         secondaryWeapon.PowerupFireRounds = secondaryWeaponPowerUppedAmmo;
         new UnsafeCasterHandgunWeaponItemToUnsafeFirearm(ref secondaryWeapon, ref SecondaryWeapon);
 
-        var primaryWeapon = player.CurrentPrimaryWeapon;
+        var primaryWeapon = playerInstance.CurrentPrimaryWeapon;
         var (primaryWeaponProjectilePowerup, primaryWeaponPowerUppedAmmo) =
             UnsafePowerupProjectileData.FromBouncingAndFireRounds(primaryWeapon.PowerupBouncingRounds,
                 primaryWeapon.PowerupFireRounds);
@@ -334,11 +334,66 @@ internal readonly ref struct UnsafeWeaponsData
         primaryWeapon.PowerupFireRounds = primaryWeaponPowerUppedAmmo;
         new UnsafeCasterRifleWeaponItemToUnsafeFirearm(ref primaryWeapon, ref PrimaryWeapon);
 
-        var powerupItem = player.CurrentPowerupItem;
-        new UnsafeCasterPowerupWeaponItemToUnsafePowerup(ref powerupItem, ref PowerupItem);
-
-        var thrownItem = player.CurrentThrownItem;
+        var thrownItem = playerInstance.CurrentThrownItem;
         new UnsafeCasterThrownWeaponItemToUnsafeThrowable(ref thrownItem, ref ThrowableItem);
+        
+        var powerupItem = playerInstance.CurrentPowerupItem;
+        new UnsafeCasterPowerupWeaponItemToUnsafePowerup(ref powerupItem, ref PowerupItem);
+    }
+
+    public UnsafeWeaponsData(IPlayer playerInstance, WeaponItemType weaponItemType)
+    {
+        switch (weaponItemType)
+        {
+            case WeaponItemType.Melee:
+                var meleeWeapon = playerInstance.CurrentMeleeWeapon;
+                meleeWeapon.MaxValue = 1f;
+                new UnsafeCasterMeleeWeaponItemToUnsafeMelee(ref meleeWeapon, ref MeleeWeapon);
+
+                var meleeWeaponTemp = playerInstance.CurrentMeleeMakeshiftWeapon;
+                meleeWeaponTemp.MaxValue = 1f;
+                new UnsafeCasterMeleeWeaponItemToUnsafeMeleeTemp(ref meleeWeaponTemp, ref MeleeWeaponTemp);
+
+                break;
+            case WeaponItemType.Handgun:
+                var secondaryWeapon = playerInstance.CurrentSecondaryWeapon;
+                var (secondaryWeaponProjectilePowerup, secondaryWeaponPowerUppedAmmo) =
+                    UnsafePowerupProjectileData.FromBouncingAndFireRounds(secondaryWeapon.PowerupBouncingRounds,
+                        secondaryWeapon.PowerupFireRounds);
+                secondaryWeapon.PowerupBouncingRounds = (int)secondaryWeaponProjectilePowerup;
+                secondaryWeapon.PowerupFireRounds = secondaryWeaponPowerUppedAmmo;
+                new UnsafeCasterHandgunWeaponItemToUnsafeFirearm(ref secondaryWeapon, ref SecondaryWeapon);
+                
+                break;
+            case WeaponItemType.Rifle:
+                var primaryWeapon = playerInstance.CurrentPrimaryWeapon;
+                var (primaryWeaponProjectilePowerup, primaryWeaponPowerUppedAmmo) =
+                    UnsafePowerupProjectileData.FromBouncingAndFireRounds(primaryWeapon.PowerupBouncingRounds,
+                        primaryWeapon.PowerupFireRounds);
+                primaryWeapon.PowerupBouncingRounds = (int)primaryWeaponProjectilePowerup;
+                primaryWeapon.PowerupFireRounds = primaryWeaponPowerUppedAmmo;
+                new UnsafeCasterRifleWeaponItemToUnsafeFirearm(ref primaryWeapon, ref PrimaryWeapon);
+                
+                break;
+            case WeaponItemType.Thrown:
+                var thrownItem = playerInstance.CurrentThrownItem;
+                new UnsafeCasterThrownWeaponItemToUnsafeThrowable(ref thrownItem, ref ThrowableItem);
+                
+                break;
+            case WeaponItemType.Powerup:
+                var powerupItem = playerInstance.CurrentPowerupItem;
+                new UnsafeCasterPowerupWeaponItemToUnsafePowerup(ref powerupItem, ref PowerupItem);
+                
+                break;
+            default:
+                throw new ArgumentException(nameof(weaponItemType));
+        }
+    }
+    
+    private bool HasAnyWeapon()
+    {
+        return !(MeleeWeapon.IsInvalid && MeleeWeaponTemp.IsInvalid && SecondaryWeapon.IsInvalid &&
+                 PrimaryWeapon.IsInvalid && PowerupItem.IsInvalid && ThrowableItem.IsInvalid);
     }
 
     [StructLayout(LayoutKind.Explicit)]
