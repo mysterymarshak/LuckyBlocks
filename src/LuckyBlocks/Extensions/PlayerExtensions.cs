@@ -75,6 +75,8 @@ internal static class PlayerExtensions
             playerInstance.GiveWeaponItem(weaponsData.ThrowableItem.WeaponItem);
             playerInstance.SetCurrentThrownItemAmmo(weaponsData.ThrowableItem.CurrentAmmo);
 
+            player.SetWeaponsData(weaponsData);
+            
             return;
         }
 
