@@ -12,6 +12,7 @@ using LuckyBlocks.Loot;
 using LuckyBlocks.Loot.Buffs;
 using LuckyBlocks.Loot.Other;
 using LuckyBlocks.Loot.WeaponPowerups.Bullets;
+using LuckyBlocks.Loot.WeaponPowerups.Melees;
 using LuckyBlocks.Loot.WeaponPowerups.ThrownItems;
 using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
 using LuckyBlocks.Utils;
@@ -134,6 +135,18 @@ internal class CommandsHandler : ICommandsHandler
 
                     break;
                 }
+                case "powerups":
+                {
+                    var player = _identityService.GetPlayerByInstance(playerInstance);
+                    var weaponsData = player.WeaponsData;
+                    var drawn = weaponsData.CurrentWeaponDrawn;
+                    var powerups = drawn.Powerups.Select(x => x.Name);
+
+                    _logger.Debug("Powerups for {WeaponItem}: {Powerups}", drawn.WeaponItem,
+                        string.Join(", ", powerups));
+
+                    break;
+                }
                 case "kill":
                 {
                     playerInstance?.Kill();
@@ -163,8 +176,19 @@ internal class CommandsHandler : ICommandsHandler
                 }
                 case "weapons":
                 {
-                    var player = _identityService.GetPlayerByInstance(playerInstance);
+                    var player = string.IsNullOrWhiteSpace(commandArgs)
+                        ? _identityService.GetPlayerByInstance(playerInstance)
+                        : _identityService.GetPlayerByInstance(_game.GetActiveUsers()
+                            .FirstOrDefault(x => x.Name == commandArgs).GetPlayer());
                     _logger.Debug("Data: {Data}", player.WeaponsData.ToString());
+                    break;
+                }
+                case "buffs":
+                {
+                    var player = _identityService.GetPlayerByInstance(playerInstance);
+                    var buffs = player.Buffs;
+                    _logger.Debug("Buffs: '{BuffsCount}' | {Buffs}", buffs.Count(), buffs.Select(x => x.Name).ToList());
+
                     break;
                 }
                 case "drawn":
@@ -176,14 +200,6 @@ internal class CommandsHandler : ICommandsHandler
                 {
                     var revolver = _game.SpawnWeaponItem(WeaponItem.REVOLVER, playerInstance.GetWorldPosition(), true);
                     var weapon = _weaponsDataWatcher.RegisterWeapon(revolver);
-                    weapon.Draw += delegate
-                    {
-                        _logger.Debug("Weapon {WeaponItem} drawn", weapon.WeaponItem);
-                    };
-                    weapon.Hide += delegate
-                    {
-                        _logger.Debug("Weapon {WeaponItem} hidden", weapon.WeaponItem);
-                    };
                     var infiniteRicochetPowerup =
                         _powerupFactory.CreatePowerup(weapon, typeof(InfiniteRicochetBullets));
                     _weaponPowerupsService.AddWeaponPowerup(infiniteRicochetPowerup, weapon);
@@ -219,6 +235,14 @@ internal class CommandsHandler : ICommandsHandler
                     var weapon = _weaponsDataWatcher.RegisterWeapon(grenade);
                     var stickyPowerup = _powerupFactory.CreatePowerup(weapon, typeof(StickyGrenades));
                     _weaponPowerupsService.AddWeaponPowerup(stickyPowerup, weapon);
+                    break;
+                }
+                case "test6":
+                {
+                    var katana = _game.SpawnWeaponItem(WeaponItem.KATANA, playerInstance.GetWorldPosition(), true);
+                    var weapon = _weaponsDataWatcher.RegisterWeapon(katana);
+                    var flamyPowerup = _powerupFactory.CreatePowerup(weapon, typeof(FlamyKatana));
+                    _weaponPowerupsService.AddWeaponPowerup(flamyPowerup, weapon);
                     break;
                 }
 #endif
