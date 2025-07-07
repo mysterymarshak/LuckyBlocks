@@ -14,7 +14,7 @@ internal class BananaGrenades : GrenadesPowerupBase
 {
     public override Color PaintColor => Color.Yellow;
     public override string Name => "Banana grenades";
-    public override int UsesCount => 1;
+    public override int UsesCount => 3;
 
     protected override IEnumerable<Type> IncompatiblePowerups => _incompatiblePowerups;
 
