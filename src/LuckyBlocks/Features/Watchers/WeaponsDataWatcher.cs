@@ -338,13 +338,15 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
 
                 var player = _identityService.GetPlayerByInstance(playerInstance);
                 var weaponsData = player.WeaponsData;
-                var currentDrawn = weaponsData.CurrentWeaponDrawn;
+                var shotWeapon =
+                    weaponsData.GetWeaponByType(((WeaponItem)(int)projectile.ProjectileItem).GetWeaponItemType(),
+                        false);
 
-                player.UpdateWeaponData(currentDrawn.WeaponItemType);
-                currentDrawn.RaiseEvent(WeaponEvent.Fired, playerInstance, @event.Args);
+                player.UpdateWeaponData(shotWeapon.WeaponItemType);
+                shotWeapon.RaiseEvent(WeaponEvent.Fired, playerInstance, @event.Args);
 
                 Logger.Debug("Shoot with weapon {WeaponItem}, player: {Player}, ammo left: {AmmoLeft}",
-                    projectile.ProjectileItem, player.Name, (currentDrawn as Firearm)!.CurrentAmmo);
+                    projectile.ProjectileItem, player.Name, (shotWeapon as Firearm)!.CurrentAmmo);
             }
         }
         catch (Exception exception)
