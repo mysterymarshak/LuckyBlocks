@@ -66,7 +66,7 @@ internal class FreezeBullets : BulletsPowerupBase
         if (playerInstance.IsDead)
             return;
 
-        playerInstance.SetHealth(playerInstance.GetHealth() + args.Damage);
+        // playerInstance.SetHealth(playerInstance.GetHealth() + args.Damage);
 
         var player = _identityService.GetPlayerByInstance(playerInstance);
         var freeze = new Freeze(player, _args.BuffConstructorArgs, FreezeTime);

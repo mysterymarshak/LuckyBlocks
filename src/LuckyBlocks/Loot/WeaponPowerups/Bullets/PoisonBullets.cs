@@ -71,7 +71,7 @@ internal class PoisonBullets : BulletsPowerupBase
         if (playerInstance.IsDead)
             return;
 
-        playerInstance.SetHealth(playerInstance.GetHealth() + args.Damage);
+        // playerInstance.SetHealth(playerInstance.GetHealth() + args.Damage);
 
         var player = _identityService.GetPlayerByInstance(playerInstance);
         var freeze = new DurablePoison(player, _buffArgs);
