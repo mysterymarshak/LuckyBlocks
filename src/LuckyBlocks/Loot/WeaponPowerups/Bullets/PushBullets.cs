@@ -34,15 +34,15 @@ internal class PushBullets : BulletsPowerupBase
         return new PushBullets(firearm, _args) { UsesLeft = UsesLeft };
     }
 
-    protected override void OnFired(IPlayer player, IProjectile projectile)
+    protected override void OnFireInternal(IPlayer playerInstance, IProjectile projectile)
     {
         var pushBullet = new PushBullet(projectile, _game, ExtendedEvents);
-        pushBullet.Remove += OnBulletRemoved;
+        pushBullet.Remove += OnBulletRemove;
     }
 
-    private void OnBulletRemoved(IBullet bullet, ProjectileHitArgs args)
+    private void OnBulletRemove(IBullet bullet, ProjectileHitArgs args)
     {
-        bullet.Remove -= OnBulletRemoved;
+        bullet.Remove -= OnBulletRemove;
         bullet.Dispose();
     }
 

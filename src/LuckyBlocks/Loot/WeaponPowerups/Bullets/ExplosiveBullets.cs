@@ -33,7 +33,7 @@ internal class ExplosiveBullets : BulletsPowerupBase
         return new ExplosiveBullets(firearm, _args) { UsesLeft = UsesLeft };
     }
 
-    protected override void OnFired(IPlayer player, IProjectile projectile)
+    protected override void OnFireInternal(IPlayer playerInstance, IProjectile projectile)
     {
         var explosiveBullet = new ExplosiveBullet(projectile, ExtendedEvents);
         explosiveBullet.Hit += OnBulletHit;

@@ -48,16 +48,16 @@ internal class PoisonBullets : BulletsPowerupBase
         return new PoisonBullets(firearm, _args) { UsesLeft = UsesLeft };
     }
 
-    protected override void OnFired(IPlayer player, IProjectile projectile)
+    protected override void OnFireInternal(IPlayer playerInstance, IProjectile projectile)
     {
         var bullet = new PoisonBullet(projectile, _effectsPlayer, ExtendedEvents);
         bullet.Hit += OnBulletHit;
-        bullet.Remove += OnBulletRemoved;
+        bullet.Remove += OnBulletRemove;
     }
 
-    private void OnBulletRemoved(IBullet bullet, ProjectileHitArgs args)
+    private void OnBulletRemove(IBullet bullet, ProjectileHitArgs args)
     {
-        bullet.Remove -= OnBulletRemoved;
+        bullet.Remove -= OnBulletRemove;
         bullet.Hit -= OnBulletHit;
         bullet.Dispose();
     }

@@ -31,19 +31,19 @@ internal class InfiniteRicochetBullets : BulletsPowerupBase
         return new InfiniteRicochetBullets(firearm, _args) { UsesLeft = UsesLeft };
     }
 
-    protected override void OnFired(IPlayer player, IProjectile projectile)
+    protected override void OnFireInternal(IPlayer playerInstance, IProjectile projectile)
     {
         var bullet = new Bullet(projectile, ExtendedEvents);
         bullet.Hit += OnBulletHit;
-        bullet.Remove += OnBulletRemoved;
+        bullet.Remove += OnBulletRemove;
 
         projectile.PowerupBounceActive = true;
     }
 
-    private void OnBulletRemoved(IBullet bullet, ProjectileHitArgs args)
+    private void OnBulletRemove(IBullet bullet, ProjectileHitArgs args)
     {
         bullet.Hit -= OnBulletHit;
-        bullet.Remove -= OnBulletRemoved;
+        bullet.Remove -= OnBulletRemove;
         bullet.Dispose();
     }
 

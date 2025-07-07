@@ -37,7 +37,7 @@ internal class TripleRicochetBullets : BulletsPowerupBase
         return new TripleRicochetBullets(firearm, _args) { UsesLeft = UsesLeft };
     }
 
-    protected override void OnFired(IPlayer player, IProjectile projectile)
+    protected override void OnFireInternal(IPlayer playerInstance, IProjectile projectile)
     {
         var explosiveBullet = new Bullet(projectile, ExtendedEvents);
         explosiveBullet.Hit += OnBulletHit;

@@ -110,7 +110,7 @@ internal class StickyGrenades : GrenadesPowerupBase
 
         private void StartFollowing(IObject @object)
         {
-            _objectWeldJoint = (_game.CreateObject("WeldJoint") as IObjectWeldJoint)!;
+            _objectWeldJoint = (_game.CreateObject("WeldJoint", _grenade.GetWorldPosition()) as IObjectWeldJoint)!;
             _objectWeldJoint.AddTargetObject(@object);
             _objectWeldJoint.AddTargetObject(_grenade);
         }
