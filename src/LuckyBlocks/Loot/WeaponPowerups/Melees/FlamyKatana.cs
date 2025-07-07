@@ -3,8 +3,10 @@ using Autofac;
 using LuckyBlocks.Data;
 using LuckyBlocks.Data.Weapons;
 using LuckyBlocks.Exceptions;
+using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
 using LuckyBlocks.Utils;
 using LuckyBlocks.Utils.Timers;
+using Serilog;
 using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Loot.WeaponPowerups.Melees;
@@ -51,6 +53,8 @@ internal class FlamyKatana : IStackablePowerup<Melee>
 
     public void Run()
     {
+        Weapon.Throw += OnDrop;
+        Weapon.Drop += OnDrop;
         Weapon.Draw += OnDraw;
         Weapon.MeleeHit += OnMeleeHit;
 
@@ -78,6 +82,8 @@ internal class FlamyKatana : IStackablePowerup<Melee>
         {
             AddFlameToObject();
         }
+
+        _extendedEvents.HookOnDamage(OnPlayerDamage, EventHookMode.Default);
     }
 
     public bool IsCompatibleWith(Type otherPowerupType) => true;
@@ -95,16 +101,38 @@ internal class FlamyKatana : IStackablePowerup<Melee>
 
     public void Dispose()
     {
+        Weapon.Throw -= OnDrop;
+        Weapon.Drop -= OnDrop;
         Weapon.Draw -= OnDraw;
         Weapon.MeleeHit -= OnMeleeHit;
 
         _drawnTimer.Stop();
         _objectWeaponTimer.Stop();
         _durabilityTimer.Stop();
+        _extendedEvents.Clear();
+    }
+
+    private void OnDrop(IObjectWeaponItem? objectWeaponItem, Weapon weapon)
+    {
+        _drawnTimer.Stop();
+
+        AddFlameToObject();
+    }
+
+    private void OnPlayerDamage(Event<IPlayer, PlayerDamageArgs> @event)
+    {
+        var (playerInstance, args, _) = @event;
+
+        if (Weapon.IsDropped && args.SourceID == Weapon.ObjectId && args.DamageType == PlayerDamageEventType.Missile)
+        {
+            playerInstance.SetMaxFire();
+        }
     }
 
     private void OnDraw(Weapon weapon)
     {
+        _objectWeaponTimer.Stop();
+
         AddFlameToDrawn();
 
         _durabilityTimer.Reset();
