@@ -104,6 +104,7 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
             }
 
             player.SetWeaponsData(playerInstance.CreateWeaponsData());
+            Logger.Debug("Initialized weapon data for {Player}", player.Name);
         }
     }
 

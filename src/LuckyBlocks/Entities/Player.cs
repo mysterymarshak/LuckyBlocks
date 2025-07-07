@@ -20,7 +20,7 @@ internal class Player
     public IProfile Profile { get; }
     public IUser User { get; }
     public PlayerModifiers ModifiedModifiers { get; set; }
-    public WeaponsData WeaponsData { get; private set; } = null!;
+    public WeaponsData WeaponsData { get; private set; }
 
     private readonly List<IFinishableBuff> _buffs;
     private readonly List<IImmunity> _immunities;
@@ -32,6 +32,7 @@ internal class Player
         ModifiedModifiers = new PlayerModifiers();
         _buffs = [];
         _immunities = [];
+        WeaponsData = Instance?.CreateWeaponsData()!;
     }
 
     public void AddBuff(IBuff buff)
