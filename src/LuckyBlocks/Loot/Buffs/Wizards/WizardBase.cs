@@ -64,6 +64,7 @@ internal abstract class WizardBase : FinishableBuffBase, IWizard
     public abstract IWizard Clone();
 
     protected virtual bool CanUseMagic() => true;
+    protected virtual bool ShouldPlayUseSound() => true;
     protected abstract void OnUseMagic();
 
     private void OnMeleeAction(Event<PlayerMeleeHitArg[]> @event)
@@ -92,7 +93,10 @@ internal abstract class WizardBase : FinishableBuffBase, IWizard
 
         CastsLeft--;
 
-        _effectsPlayer.PlaySoundEffect("BarrelExplode", playerInstance.GetWorldPosition());
+        if (ShouldPlayUseSound())
+        {
+            _effectsPlayer.PlaySoundEffect("BarrelExplode", playerInstance.GetWorldPosition());
+        }
 
         OnUseMagic();
         ShowCastsCount();

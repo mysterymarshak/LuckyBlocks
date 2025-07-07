@@ -156,6 +156,7 @@ internal enum Item
     RemoveWeapons,
 
     [OnlyPlayer]
+    [CantBeAppliedIfAlreadyExists(typeof(RestoreWizard))]
     [PlayerIsNotOtherWizard(SourceWizard = typeof(RestoreWizard))]
     RestoreWizard
 }

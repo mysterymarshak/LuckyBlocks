@@ -1,3 +1,4 @@
+using System;
 using LuckyBlocks.Data;
 using LuckyBlocks.Entities;
 using LuckyBlocks.Features.Magic;
@@ -16,6 +17,7 @@ internal class RestoreWizard : WizardBase
 
     private readonly IMagicFactory _magicFactory;
     private readonly INotificationService _notificationService;
+    private readonly IEffectsPlayer _effectsPlayer;
     private readonly BuffConstructorArgs _args;
 
     private RestoreMagic? _magic;
@@ -25,6 +27,7 @@ internal class RestoreWizard : WizardBase
     {
         _magicFactory = args.MagicFactory;
         _notificationService = args.NotificationService;
+        _effectsPlayer = args.EffectsPlayer;
         _args = args;
     }
 
@@ -40,15 +43,22 @@ internal class RestoreWizard : WizardBase
         _magic = _magicFactory.CreateMagic<RestoreMagic>(Player, _args);
     }
 
+    protected override bool ShouldPlayUseSound() => CastsLeft == 0;
+
     protected override void OnUseMagic()
     {
         if (CastsLeft == 1)
         {
+            var playerInstance = Player.Instance!;
+            _effectsPlayer.PlayEffect(EffectName.ItemGleam,
+                playerInstance.GetWorldPosition() + new Vector2(0, 9) +
+                playerInstance.GetFaceDirection() * new Vector2(12, 0));
+            
             _notificationService.CreateChatNotification("You saved your state", BuffColor);
         }
         else if (CastsLeft == 0)
         {
-            _notificationService.CreateChatNotification("State restored", BuffColor);
+            ShowDialogue("State restored", BuffColor, TimeSpan.FromMilliseconds(2500));
         }
 
         _magic!.Cast();
