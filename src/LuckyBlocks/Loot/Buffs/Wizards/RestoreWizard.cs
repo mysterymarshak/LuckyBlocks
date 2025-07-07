@@ -54,7 +54,7 @@ internal class RestoreWizard : WizardBase
                 playerInstance.GetWorldPosition() + new Vector2(0, 9) +
                 playerInstance.GetFaceDirection() * new Vector2(12, 0));
             
-            _notificationService.CreateChatNotification("You saved your state", BuffColor);
+            _notificationService.CreateChatNotification("You saved your state", BuffColor, Player.UserIdentifier);
         }
         else if (CastsLeft == 0)
         {
