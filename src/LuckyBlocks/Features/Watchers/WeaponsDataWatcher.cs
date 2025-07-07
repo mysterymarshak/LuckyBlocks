@@ -70,6 +70,7 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
         _extendedEvents.HookOnPlayerMeleeAction(OnMeleeAction, EventHookMode.Prioritized);
         _extendedEvents.HookOnDestroyed(OnObjectDestroyed, EventHookMode.Default);
         _extendedEvents.HookOnKeyInput(OnKeyInput, EventHookMode.Prioritized);
+        _extendedEvents.HookOnPlayerCreated(OnPlayerCreated, EventHookMode.Default);
         _ammoTriggers.AddRange(_game.GetObjects<IObjectAmmoStashTrigger>());
         _drawnWeaponsWatcher.Initialize();
     }
@@ -89,6 +90,21 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
         }
 
         return weapon;
+    }
+
+    private void OnPlayerCreated(Event<IPlayer[]> @event)
+    {
+        foreach (var playerInstance in @event.Args)
+        {
+            var getPlayerResult = _identityService.GetPlayerById(playerInstance.UniqueId);
+            if (!getPlayerResult.TryPickT0(out var player, out _))
+            {
+                Logger.Warning("Cannot give Player for playerInstance id '{PlayerId}'", playerInstance.UniqueId);
+                return;
+            }
+
+            player.SetWeaponsData(playerInstance.CreateWeaponsData());
+        }
     }
 
     private void OnWeaponAdded(Event<IPlayer, PlayerWeaponAddedArg> @event)
