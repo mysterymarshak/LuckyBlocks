@@ -103,6 +103,10 @@ public interface IExtendedEvents
     IEventSubscription HookOnKeyInput(Action<Event<IPlayer, VirtualKeyInfo[]>> callback,
         EventHookMode hookMode, bool ignoreHandled = false);
 
+    [GameCallbackType(typeof(Events.PlayerCreatedCallback))]
+    IEventSubscription HookOnPlayerCreated(Action<Event<IPlayer[]>> callback, EventHookMode hookMode,
+        bool ignoreHandled = false);
+
     void Clear();
 }
 
