@@ -8,7 +8,7 @@ using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Loot.WeaponPowerups.Mined;
 
-internal class MinedFirearmPowerup : IWeaponPowerup<Firearm>
+internal class MinedFirearmPowerup : IStackablePowerup<Firearm>
 {
     public string Name => "Mined weapon";
     public Firearm Weapon { get; private set; }
@@ -38,6 +38,10 @@ internal class MinedFirearmPowerup : IWeaponPowerup<Firearm>
     }
 
     public bool IsCompatibleWith(Type otherPowerupType) => true;
+
+    public void Stack(IStackablePowerup<Weapon> powerup)
+    {
+    }
 
     public void MoveToWeapon(Weapon otherWeapon)
     {

@@ -21,7 +21,7 @@ internal abstract class UsablePowerupBase<T> : IUsablePowerup<T> where T : Weapo
 
     protected abstract IEnumerable<Type> IncompatiblePowerups { get; }
     protected IExtendedEvents ExtendedEvents { get; }
-    
+
     private IPlayer? Player => Weapon.Owner;
 
     private readonly INotificationService _notificationService;
@@ -71,8 +71,12 @@ internal abstract class UsablePowerupBase<T> : IUsablePowerup<T> where T : Weapo
         OnDisposeInternal();
     }
 
-    public void AddUses(int usesCount)
+    public void Stack(IStackablePowerup<Weapon> powerup)
     {
+        var usablePowerup = powerup as IUsablePowerup<T>;
+        ArgumentWasNullException.ThrowIfNull(usablePowerup);
+
+        var usesCount = usablePowerup.UsesCount;
         var maxAmmo =
             Weapon switch
             {
@@ -129,7 +133,8 @@ internal abstract class UsablePowerupBase<T> : IUsablePowerup<T> where T : Weapo
         {
             PowerupEvent.Run => $"You picked up {UsesLeft} {Name.ToLower()} for {Weapon.WeaponItem}!",
             PowerupEvent.PickUp => $"You picked up {Weapon.WeaponItem} with {UsesLeft} {Name.ToLower()}!",
-            PowerupEvent.Draw or PowerupEvent.FirearmUse or PowerupEvent.GrenadeUse => $"{UsesLeft} {Name.ToLower()} left",
+            PowerupEvent.Draw or PowerupEvent.FirearmUse or PowerupEvent.GrenadeUse =>
+                $"{UsesLeft} {Name.ToLower()} left",
             PowerupEvent.AddUses => $"{Name} count was increased to {UsesLeft} for {Weapon.WeaponItem}",
             _ => throw new ArgumentOutOfRangeException(nameof(powerupEvent), powerupEvent, null)
         };
@@ -150,27 +155,27 @@ internal abstract class UsablePowerupBase<T> : IUsablePowerup<T> where T : Weapo
     private void OnUseThrowable(IPlayer? playerInstance, IObject? objectThrown, Throwable? throwable)
     {
         OnThrowInternal(playerInstance, objectThrown, throwable);
-        
+
         if (UsesLeft <= 0)
         {
             OnFinish();
         }
-        
+
         ShowUsesLeft(PowerupEvent.GrenadeUse, playerInstance);
     }
 
     private void OnUseFirearm(IPlayer? playerInstance, IEnumerable<IProjectile>? projectiles)
     {
         OnFireInternal(playerInstance, projectiles);
-        
+
         if (UsesLeft <= 0)
         {
             OnFinish();
         }
-        
+
         ShowUsesLeft(PowerupEvent.FirearmUse, playerInstance);
     }
-    
+
     private void OnFinish()
     {
         _lifetimeScope.Dispose();

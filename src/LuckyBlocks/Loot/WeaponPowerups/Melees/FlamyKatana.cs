@@ -3,16 +3,13 @@ using Autofac;
 using LuckyBlocks.Data;
 using LuckyBlocks.Data.Weapons;
 using LuckyBlocks.Exceptions;
-using LuckyBlocks.Extensions;
-using LuckyBlocks.Mathematics;
 using LuckyBlocks.Utils;
 using LuckyBlocks.Utils.Timers;
-using Serilog;
 using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Loot.WeaponPowerups.Melees;
 
-internal class FlamyKatana : IWeaponPowerup<Melee>
+internal class FlamyKatana : IStackablePowerup<Melee>
 {
     public string Name => "Flamy katana";
     public Melee Weapon { get; private set; }
@@ -45,6 +42,11 @@ internal class FlamyKatana : IWeaponPowerup<Melee>
         var melee = weapon as Melee;
         ArgumentWasNullException.ThrowIfNull(melee);
         return new FlamyKatana(melee, _args);
+    }
+
+    public void Stack(IStackablePowerup<Weapon> powerup)
+    {
+        Weapon.SetDurability(Weapon.MaxDurability);
     }
 
     public void Run()

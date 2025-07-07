@@ -116,8 +116,7 @@ internal class WeaponPowerupsService : IWeaponPowerupsService
         {
             if (TryAddPowerupAgain(powerup, existingWeapon))
             {
-                var usablePowerup = (IUsablePowerup<Weapon>)powerup;
-                RemovePowerup(usablePowerup, usablePowerup.Weapon);
+                RemovePowerup(powerup, powerup.Weapon);
                 continue;
             }
 
@@ -173,19 +172,26 @@ internal class WeaponPowerupsService : IWeaponPowerupsService
 
     private bool TryAddPowerupAgain(IWeaponPowerup<Weapon> powerup, Weapon weapon)
     {
-        if (powerup is IUsablePowerup<Weapon> usablePowerup)
+        if (powerup is not IStackablePowerup<Weapon> stackablePowerup)
+            return false;
+
+        var existingPowerupSameType = weapon.Powerups.FirstOrDefault(x => x.GetType() == powerup.GetType());
+        if (existingPowerupSameType is IStackablePowerup<Weapon> existingPowerup)
         {
-            var existingPowerupSameType = weapon.Powerups.FirstOrDefault(x => x.GetType() == powerup.GetType());
-            if (existingPowerupSameType is IUsablePowerup<Weapon> existingPowerup)
+            existingPowerup.Stack(stackablePowerup);
+
+            if (existingPowerup is IUsablePowerup<Weapon>)
             {
-                existingPowerup.AddUses(usablePowerup.UsesLeft);
                 EnsureWeaponHasEnoughAmmoForPowerups(weapon);
 
                 _logger.Debug("Powerup {PowerupName} uses increased for {WeaponItem} (owner {Player})", powerup.Name,
                     weapon.WeaponItem, weapon.Owner?.Name);
-
-                return true;
             }
+
+            _logger.Debug("Powerup {PowerupName} stacked on {WeaponItem} (owner {Player})", powerup.Name,
+                weapon.WeaponItem, weapon.Owner?.Name);
+
+            return true;
         }
 
         return false;
