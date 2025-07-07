@@ -84,7 +84,15 @@ internal class WeaponPowerupsService : IWeaponPowerupsService
         if (TryAddPowerupAgain(powerup, weapon))
             return;
 
-        weapon.PickUp += EnsureWeaponHasEnoughAmmoForPowerups;
+        if (weapon.IsDropped)
+        {
+            weapon.PickUp += EnsureWeaponHasEnoughAmmoForPowerups;
+        }
+        else
+        {
+            EnsureWeaponHasEnoughAmmoForPowerups(weapon);
+        }
+
         weapon.Dispose += OnWeaponDisposed;
         weapon.AddPowerup(powerup);
 
