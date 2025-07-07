@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Autofac;
 using LuckyBlocks.Data;
+using LuckyBlocks.Data.Weapons;
 using LuckyBlocks.Entities;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Reflection;
@@ -23,7 +24,7 @@ internal class ReloadWeaponsWatcher : IReloadWeaponsWatcher
 {
     [InjectLogger]
     private static ILogger Logger { get; set; }
-    
+
     private readonly Dictionary<int, List<ReloadAwaitingData>> _reloadWeaponTimers = new();
     private readonly IExtendedEvents _extendedEvents;
 
@@ -32,7 +33,7 @@ internal class ReloadWeaponsWatcher : IReloadWeaponsWatcher
         var thisScope = lifetimeScope.BeginLifetimeScope();
         _extendedEvents = thisScope.Resolve<IExtendedEvents>();
     }
-    
+
     public void StartReloadTracking(Player player, WeaponItemType weaponItemType)
     {
         var playerInstance = player.Instance!;
@@ -77,7 +78,7 @@ internal class ReloadWeaponsWatcher : IReloadWeaponsWatcher
 
             return playerInstance?.IsValid() != true || playerInstance.IsDead ||
                    weaponsData.CurrentWeaponDrawn.WeaponItemType != args.WeaponItemType ||
-                   (weaponsData.GetWeaponByType(args.WeaponItemType) as Firearm)!.CurrentSpareMags !=
+                   (weaponsData.GetWeaponByType(args.WeaponItemType, false) as Firearm)!.CurrentSpareMags !=
                    args.SavedWeapon.CurrentSpareMags;
         }
 
@@ -87,7 +88,7 @@ internal class ReloadWeaponsWatcher : IReloadWeaponsWatcher
             reloadsData.RemoveAll(x => x.WeaponItemType == args.WeaponItemType);
         }
     }
-    
+
     private record AwaitingWeaponChangeTimerArgs(
         Player Player,
         WeaponItemType WeaponItemType,

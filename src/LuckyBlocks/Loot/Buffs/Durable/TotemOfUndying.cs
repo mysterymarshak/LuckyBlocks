@@ -9,19 +9,26 @@ using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Loot.Buffs.Durable;
 
-internal class TotemOfUndying : FinishableBuffBase, IImmunityFlagsIndicatorBuff
+internal class TotemOfUndying : FinishableBuffBase, ICloneableBuff<IFinishableBuff>, IImmunityFlagsIndicatorBuff
 {
     public override string Name => "Totem of undying";
     public ImmunityFlag ImmunityFlags => ImmunityFlag.ImmunityToDeath;
 
     protected override Color BuffColor => Color.Yellow;
 
+    private readonly BuffConstructorArgs _args;
+
     private bool _disposed;
-    private IPlayer? _savedPlayerInstance;
 
     public TotemOfUndying(Player player, BuffConstructorArgs args) : base(player, args.NotificationService,
         args.LifetimeScope)
     {
+        _args = args;
+    }
+
+    public IFinishableBuff Clone()
+    {
+        return new TotemOfUndying(Player, _args);
     }
 
     public override void Run()
@@ -29,10 +36,8 @@ internal class TotemOfUndying : FinishableBuffBase, IImmunityFlagsIndicatorBuff
         var playerInstance = Player.Instance;
         ArgumentWasNullException.ThrowIfNull(playerInstance);
 
-        _savedPlayerInstance = playerInstance;
-
         ExtendedEvents.HookOnDead(playerInstance, OnDead, EventHookMode.Default);
-        ShowTotemDialogue();
+        ShowTotemDialogue("Totem of Undying");
     }
 
     public override void ExternalFinish()
@@ -41,8 +46,7 @@ internal class TotemOfUndying : FinishableBuffBase, IImmunityFlagsIndicatorBuff
             return;
 
         CloseDialogue();
-        SendFinishNotification();
-        Dispose();
+        OnFinish();
     }
 
     private void OnDead(Event<PlayerDeathArgs> @event)
@@ -52,20 +56,24 @@ internal class TotemOfUndying : FinishableBuffBase, IImmunityFlagsIndicatorBuff
             return;
 
         var playerInstance = Player.Instance;
-        if (_savedPlayerInstance?.IsValid() == true && playerInstance?.IsValid() == true)
+        if (playerInstance?.IsValid() == true)
         {
-            _savedPlayerInstance.GetUnsafeWeaponsData(out var weaponsData);
-            _savedPlayerInstance.RemoveAllWeapons();
-            playerInstance.SetWeapons(weaponsData, true);
+            Player.SetWeapons(Player.WeaponsData, true);
         }
 
-        ShowTotemDialogue();
+        ShowTotemDialogue("Totem saved you");
+        OnFinish();
+    }
+
+    private void OnFinish()
+    {
+        SendFinishNotification();
         Dispose();
     }
 
-    private void ShowTotemDialogue()
+    private void ShowTotemDialogue(string message)
     {
-        ShowDialogue("Totem of Undying", BuffColor, TimeSpan.FromMilliseconds(2500), default, true);
+        ShowDialogue(message, BuffColor, TimeSpan.FromMilliseconds(2500));
     }
 
     private void Dispose()

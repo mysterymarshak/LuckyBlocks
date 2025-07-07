@@ -2,10 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using LuckyBlocks.Data;
+using LuckyBlocks.Data.Weapons;
+using LuckyBlocks.Entities;
 using LuckyBlocks.Exceptions;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Loot.WeaponPowerups;
+using LuckyBlocks.Utils;
 using OneOf;
 using OneOf.Types;
 using Serilog;
@@ -20,6 +23,8 @@ internal interface IWeaponPowerupsService
     void AddWeaponPowerup(IWeaponPowerup<Weapon> powerup, Weapon weapon);
     void RemovePowerup(IWeaponPowerup<Weapon> powerup, Weapon weapon);
     void ConcatPowerups(Weapon existingWeapon, IEnumerable<IWeaponPowerup<Weapon>> powerupsToConcat);
+    WeaponsData CreateWeaponsDataCopy(Player player);
+    void RestoreWeaponsDataFromCopy(Player player, WeaponsData copiedWeaponsData);
 }
 
 internal class WeaponPowerupsService : IWeaponPowerupsService
@@ -71,19 +76,27 @@ internal class WeaponPowerupsService : IWeaponPowerupsService
         return new NotFound();
     }
 
-    public void AddWeaponPowerup(IWeaponPowerup<Weapon> powerup, Weapon weapon)
+    public void AddWeaponPowerup(IWeaponPowerup<Weapon> powerup, Weapon weapon) =>
+        AddWeaponPowerup(powerup, weapon, true);
+
+    public void AddWeaponPowerup(IWeaponPowerup<Weapon> powerup, Weapon weapon, bool run)
     {
         if (TryAddPowerupAgain(powerup, weapon))
             return;
 
-        weapon.AddPowerup(powerup);
-        powerup.Run();
-
         weapon.PickUp += EnsureWeaponHasEnoughAmmoForPowerups;
         weapon.Dispose += OnWeaponDisposed;
+        weapon.AddPowerup(powerup);
 
-        _logger.Debug("Powerup {PowerupName} added to {WeaponItem} (owner {Player})", powerup.Name, weapon.WeaponItem,
-            weapon.Owner?.Name);
+        if (run)
+        {
+            powerup.Run();
+        }
+
+#if DEBUG
+        _logger.Debug("Powerup {PowerupName} added to {WeaponItem} (owner {Player}, copied: {Copied})", powerup.Name,
+            weapon.WeaponItem, weapon.Owner?.Name, weapon.Copied);
+#endif
     }
 
     public void RemovePowerup(IWeaponPowerup<Weapon> powerup, Weapon weapon)
@@ -110,6 +123,52 @@ internal class WeaponPowerupsService : IWeaponPowerupsService
 
             MovePowerup(existingWeapon, powerup);
         }
+    }
+
+    public WeaponsData CreateWeaponsDataCopy(Player player)
+    {
+        var playerInstance = player.Instance!;
+        var weaponsData = player.WeaponsData;
+        var weaponsDataCopy = playerInstance.CreateWeaponsData();
+        weaponsDataCopy.SetCopied();
+
+        foreach (var weapon in weaponsData)
+        {
+            foreach (var powerup in weapon.Powerups)
+            {
+                var copiedWeapon = weaponsDataCopy.GetWeaponByType(weapon.WeaponItemType, weapon is MeleeTemp);
+                var copiedPowerup = powerup.Clone(copiedWeapon);
+                AddWeaponPowerup(copiedPowerup, copiedWeapon, false);
+            }
+        }
+
+        return weaponsDataCopy;
+    }
+
+    public void RestoreWeaponsDataFromCopy(Player player, WeaponsData copiedWeaponsData)
+    {
+        var playerInstance = player.Instance!;
+        var weaponsData = player.WeaponsData;
+
+        weaponsData.Dispose();
+        playerInstance.RemoveAllWeapons();
+
+        Awaiter.Start(delegate
+        {
+            player.SetWeapons(copiedWeaponsData, true);
+
+            foreach (var weapon in copiedWeaponsData)
+            {
+                weapon.SetOwner(playerInstance);
+
+                foreach (var powerup in weapon.Powerups)
+                {
+                    powerup.Run();
+
+                    _logger.Debug("Run restored powerup {PowerupName}", powerup.Name);
+                }
+            }
+        }, TimeSpan.Zero);
     }
 
     private bool TryAddPowerupAgain(IWeaponPowerup<Weapon> powerup, Weapon weapon)

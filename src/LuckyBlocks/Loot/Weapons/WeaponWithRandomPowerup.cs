@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using LuckyBlocks.Data;
+using LuckyBlocks.Data.Weapons;
 using LuckyBlocks.Entities;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Loot.Attributes;
@@ -36,7 +37,7 @@ internal class WeaponWithRandomPowerup : PowerUppedWeaponBase
         (typeof(PushBullets), Item.PushBullets), (typeof(TripleRicochetBullets), Item.TripleRicochetBullets),
         (typeof(PoisonBullets), Item.PoisonBullets)
     };
-    
+
     private static readonly List<(Type, Item)> GrenadePowerups = new()
     {
         (typeof(StickyGrenades), Item.StickyGrenades), (typeof(BananaGrenades), Item.BananaGrenades)

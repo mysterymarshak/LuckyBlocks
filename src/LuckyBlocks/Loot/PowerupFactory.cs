@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.Reflection;
 using LuckyBlocks.Data;
+using LuckyBlocks.Data.Weapons;
 using LuckyBlocks.Loot.WeaponPowerups;
 
 namespace LuckyBlocks.Loot;
@@ -17,7 +18,7 @@ internal class PowerupFactory : IPowerupFactory
 
     public PowerupFactory(PowerupConstructorArgs args)
         => (_args) = (args);
-    
+
     public IWeaponPowerup<Weapon> CreatePowerup(Weapon weapon, Type powerupType)
     {
         return (IWeaponPowerup<Weapon>)Activator.CreateInstance(powerupType,

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Autofac;
 using LuckyBlocks.Data;
+using LuckyBlocks.Data.Weapons;
 using LuckyBlocks.Entities;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Identity;
@@ -102,7 +103,7 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
             if (args.SourceObjectID != 0 && _droppedWeapons.TryGetValue(args.SourceObjectID, out var droppedWeapon))
             {
                 var weaponsData = player.WeaponsData;
-                var existingWeapon = weaponsData.GetWeaponByType(args.WeaponItemType);
+                var existingWeapon = weaponsData.GetWeaponByType(args.WeaponItemType, droppedWeapon is MeleeTemp);
                 var existingWeaponIsValid = !existingWeapon.IsInvalid;
                 var powerupsToConcat = Enumerable.Empty<IWeaponPowerup<Weapon>>();
                 if (existingWeaponIsValid &&
@@ -188,14 +189,17 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
     {
         if (args.WeaponItemType != WeaponItemType.InstantPickup)
         {
-            player.UpdateWeaponData(args.WeaponItemType,
-                playerInstance.CurrentMeleeMakeshiftWeapon.WeaponItem == args.WeaponItem);
-            var pickedUpWeapon = player.WeaponsData.GetWeaponByType(args.WeaponItemType);
-
-            pickedUpWeapon.SetOwner(playerInstance);
-            pickedUpWeapon.RaiseEvent(WeaponEvent.PickedUp);
-
             var weaponsData = player.WeaponsData;
+            var isMakeshift = playerInstance.CurrentMeleeMakeshiftWeapon.WeaponItem == args.WeaponItem;
+            player.UpdateWeaponData(args.WeaponItemType, isMakeshift);
+            var pickedUpWeapon = weaponsData.GetWeaponByType(args.WeaponItemType, isMakeshift);
+
+            if (pickedUpWeapon.IsDropped)
+            {
+                pickedUpWeapon.SetOwner(playerInstance);
+                pickedUpWeapon.RaiseEvent(WeaponEvent.PickedUp);
+            }
+
             weaponsData.UpdateDrawn();
         }
 
@@ -213,7 +217,8 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
 
             var player = _identityService.GetPlayerByInstance(playerInstance);
             var weaponsData = player.WeaponsData;
-            var removedWeapon = weaponsData.GetWeaponByType(args.WeaponItemType);
+            var removedWeapon = weaponsData.GetWeaponByType(args.WeaponItemType,
+                weaponsData.MeleeWeaponTemp.WeaponItem == args.WeaponItem);
 
             if (args.TargetObjectID != 0)
             {

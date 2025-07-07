@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using LuckyBlocks.Data;
+using LuckyBlocks.Data.Weapons;
+using LuckyBlocks.Exceptions;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Utils;
 using SFDGameScriptInterface;
@@ -17,12 +19,23 @@ internal class StickyGrenades : GrenadesPowerupBase
     protected override IEnumerable<Type> IncompatiblePowerups => _incompatiblePowerups;
 
     private static readonly List<Type> _incompatiblePowerups = [typeof(BananaGrenades)];
-    
+
+    private readonly PowerupConstructorArgs _args;
+
     public StickyGrenades(Grenade grenade, PowerupConstructorArgs args) : base(grenade, args)
     {
+        _args = args;
     }
 
-    protected override GrenadeBase CreateGrenade(IObjectGrenadeThrown grenadeThrown, IGame game, IExtendedEvents extendedEvents)
+    public override IWeaponPowerup<Grenade> Clone(Weapon weapon)
+    {
+        var grenade = weapon as Grenade;
+        ArgumentWasNullException.ThrowIfNull(grenade);
+        return new StickyGrenades(grenade, _args) { UsesLeft = UsesLeft };
+    }
+
+    protected override GrenadeBase CreateGrenade(IObjectGrenadeThrown grenadeThrown, IGame game,
+        IExtendedEvents extendedEvents)
     {
         return new StickyGrenade(grenadeThrown, game, extendedEvents);
     }
@@ -30,6 +43,7 @@ internal class StickyGrenades : GrenadesPowerupBase
     private class StickyGrenade : GrenadeBase
     {
         private const int CollisionVectorLength = 2;
+
         private static readonly IReadOnlyList<Vector2> CollisionVectors = Enumerable.Range(0, 360)
             .Where(x => x % 10 == 0)
             .Select(x => x * Math.PI / 180)
@@ -38,12 +52,13 @@ internal class StickyGrenades : GrenadesPowerupBase
 
         private readonly IObjectGrenadeThrown _grenade;
         private readonly IGame _game;
-        
+
         private IObjectWeldJoint? _objectWeldJoint;
         private Events.UpdateCallback? _collisionCheckCallback;
         private Events.PlayerDamageCallback? _playerDamageCallback;
-        
-        public StickyGrenade(IObjectGrenadeThrown grenade, IGame game, IExtendedEvents extendedEvents) : base(grenade, extendedEvents)
+
+        public StickyGrenade(IObjectGrenadeThrown grenade, IGame game, IExtendedEvents extendedEvents) : base(grenade,
+            extendedEvents)
         {
             _grenade = grenade;
             _game = game;
@@ -53,7 +68,7 @@ internal class StickyGrenades : GrenadesPowerupBase
         {
             _collisionCheckCallback = Events.UpdateCallback.Start(OnCollisionCheckCallback);
             _playerDamageCallback = Events.PlayerDamageCallback.Start(OnPlayerDamaged);
-            
+
             base.Initialize();
         }
 
@@ -105,7 +120,7 @@ internal class StickyGrenades : GrenadesPowerupBase
             _playerDamageCallback?.Stop();
             _collisionCheckCallback?.Stop();
             _objectWeldJoint?.RemoveDelayed();
-            
+
             base.Dispose();
         }
     }

@@ -42,21 +42,21 @@ internal class Respawner : IRespawner
         {
             var position = existingPlayer.GetWorldPosition();
             var direction = existingPlayer.GetFaceDirection();
-            existingPlayer.RemoveDelayed();
-            
+            RemovePlayer(existingPlayer);
+
             return CreatePlayer(user, profile, position, direction);
         }
 
         return RespawnUserAtRandomSpawnPoint(user);
     }
-    
+
     public IPlayer RespawnPlayer(IUser user, IProfile profile, Vector2 position, int direction)
     {
         if (user.GetPlayer() is { } existingPlayer)
         {
-            existingPlayer.RemoveDelayed();
+            RemovePlayer(existingPlayer);
         }
-        
+
         return CreatePlayer(user, profile, position, direction);
     }
 
@@ -77,8 +77,17 @@ internal class Respawner : IRespawner
             var player = _identityService.GetPlayerByInstance(playerInstance);
             player.InvalidateWeaponsDataOwner();
         }
-        
+
         return playerInstance;
+    }
+
+    private void RemovePlayer(IPlayer existingPlayer)
+    {
+        var modifiers = existingPlayer.GetModifiers();
+        modifiers.ItemDropMode = 2;
+        existingPlayer.SetModifiers(modifiers);
+
+        existingPlayer.RemoveDelayed();
     }
 
     private void SetBotSoul(IPlayer player, IUser user)

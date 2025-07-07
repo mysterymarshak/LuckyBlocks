@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using LuckyBlocks.Data;
+using LuckyBlocks.Data.Weapons;
 using LuckyBlocks.Loot.WeaponPowerups;
 using LuckyBlocks.Loot.WeaponPowerups.Bullets;
 using SFDGameScriptInterface;
@@ -15,8 +16,9 @@ internal class BowWithPushingAndInfiniteBouncing : WeaponWithInfiniteBouncingBas
     protected override WeaponItemType WeaponItemType => WeaponItemType.Rifle;
 
     private readonly IPowerupFactory _powerupFactory;
-    
-    public BowWithPushingAndInfiniteBouncing(Vector2 spawnPosition, LootConstructorArgs lootConstructorArgs) : base(spawnPosition, lootConstructorArgs)
+
+    public BowWithPushingAndInfiniteBouncing(Vector2 spawnPosition, LootConstructorArgs lootConstructorArgs) : base(
+        spawnPosition, lootConstructorArgs)
     {
         _powerupFactory = lootConstructorArgs.PowerupFactory;
     }
@@ -24,7 +26,7 @@ internal class BowWithPushingAndInfiniteBouncing : WeaponWithInfiniteBouncingBas
     protected override IEnumerable<IWeaponPowerup<Weapon>> GetPowerups(Weapon weapon)
     {
         yield return _powerupFactory.CreatePowerup(weapon, typeof(PushBullets));
-        
+
         foreach (var powerup in base.GetPowerups(weapon))
         {
             yield return powerup;

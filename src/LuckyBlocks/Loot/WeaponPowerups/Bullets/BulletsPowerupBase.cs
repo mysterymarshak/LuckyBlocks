@@ -3,10 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using Autofac;
 using LuckyBlocks.Data;
+using LuckyBlocks.Data.Weapons;
 using LuckyBlocks.Exceptions;
 using LuckyBlocks.Notifications;
+using LuckyBlocks.Reflection;
 using LuckyBlocks.Utils;
 using Mediator;
+using Serilog;
 using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Loot.WeaponPowerups.Bullets;
@@ -16,7 +19,12 @@ internal abstract class BulletsPowerupBase : IUsablePowerup<Firearm>
     public abstract string Name { get; }
     public virtual int UsesCount => Math.Min(Math.Max(Weapon.MagSize, 3), Weapon.MaxTotalAmmo / 2);
     public Firearm Weapon { get; private set; }
-    public int UsesLeft => _usesLeft ??= Math.Min(UsesCount, Weapon.MaxTotalAmmo);
+
+    public int UsesLeft
+    {
+        get => _usesLeft ??= Math.Min(UsesCount, Weapon.MaxTotalAmmo);
+        protected init => _usesLeft = value;
+    }
 
     protected abstract IEnumerable<Type> IncompatiblePowerups { get; }
     protected IExtendedEvents ExtendedEvents { get; }
@@ -38,6 +46,8 @@ internal abstract class BulletsPowerupBase : IUsablePowerup<Firearm>
         ExtendedEvents = _lifetimeScope.Resolve<IExtendedEvents>();
     }
 
+    public abstract IWeaponPowerup<Firearm> Clone(Weapon weapon);
+
     public void Run()
     {
         Weapon.Fire += OnFired;
@@ -58,8 +68,7 @@ internal abstract class BulletsPowerupBase : IUsablePowerup<Firearm>
 
     public void MoveToWeapon(Weapon otherWeapon)
     {
-        var firearm = otherWeapon as Firearm;
-        if (firearm is null)
+        if (otherWeapon is not Firearm firearm)
         {
             throw new InvalidCastException("cannot cast weapon to firearm");
         }
@@ -119,7 +128,10 @@ internal abstract class BulletsPowerupBase : IUsablePowerup<Firearm>
 
         ArgumentWasNullException.ThrowIfNull(player);
 
-        _notificationService.CreateChatNotification($"{UsesLeft} {Name.ToLower()} left for {Weapon.WeaponItem}",
-            Color.Grey, player.UserIdentifier);
+        var message = Weapon.IsDrawn
+            ? $"{UsesLeft} {Name.ToLower()} left"
+            : $"You picked up {UsesLeft} {Name.ToLower()} for {Weapon.WeaponItem}!";
+
+        _notificationService.CreateChatNotification(message, Color.Grey, player.UserIdentifier);
     }
 }

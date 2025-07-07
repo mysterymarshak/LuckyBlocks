@@ -1,12 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
-using LuckyBlocks.Data;
+using LuckyBlocks.Data.Weapons;
 using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Extensions;
 
 internal static class WeaponsDataExtensions
 {
+    public static void SetCopied(this WeaponsData weaponsData)
+    {
+        foreach (var weapon in weaponsData)
+        {
+            weapon.SetCopied();
+        }
+    }
+
     public static bool HasAnyWeapon(this WeaponsData weaponsData)
     {
         return !(weaponsData.MeleeWeapon.IsInvalid && weaponsData.MeleeWeaponTemp.IsInvalid &&

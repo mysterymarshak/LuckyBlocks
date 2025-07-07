@@ -1,6 +1,7 @@
 using System;
 using Autofac;
 using LuckyBlocks.Data;
+using LuckyBlocks.Data.Weapons;
 using LuckyBlocks.Exceptions;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Mathematics;
@@ -22,8 +23,8 @@ internal class FlamyKatana : IWeaponPowerup<Melee>
 
     private readonly IEffectsPlayer _effectsPlayer;
     private readonly IGame _game;
-    private readonly ILogger _logger;
     private readonly IExtendedEvents _extendedEvents;
+    private readonly PowerupConstructorArgs _args;
 
     private TimerBase _drawnTimer = null!;
     private TimerBase _durabilityTimer = null!;
@@ -33,10 +34,17 @@ internal class FlamyKatana : IWeaponPowerup<Melee>
     {
         Weapon = melee;
         _effectsPlayer = args.EffectsPlayer;
-        _logger = args.Logger;
         _game = args.Game;
         var thisScope = args.LifetimeScope.BeginLifetimeScope();
         _extendedEvents = thisScope.Resolve<IExtendedEvents>();
+        _args = args;
+    }
+
+    public IWeaponPowerup<Melee> Clone(Weapon weapon)
+    {
+        var melee = weapon as Melee;
+        ArgumentWasNullException.ThrowIfNull(melee);
+        return new FlamyKatana(melee, _args);
     }
 
     public void Run()

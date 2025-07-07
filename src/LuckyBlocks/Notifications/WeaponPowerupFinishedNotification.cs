@@ -1,13 +1,15 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 using LuckyBlocks.Data;
+using LuckyBlocks.Data.Weapons;
 using LuckyBlocks.Features.WeaponPowerups;
 using LuckyBlocks.Loot.WeaponPowerups;
 using Mediator;
 
 namespace LuckyBlocks.Notifications;
 
-internal readonly record struct WeaponPowerupFinishedNotification(IWeaponPowerup<Weapon> Powerup, Weapon Weapon) : INotification;
+internal readonly record struct WeaponPowerupFinishedNotification(IWeaponPowerup<Weapon> Powerup, Weapon Weapon)
+    : INotification;
 
 internal class WeaponPowerupFinishedNotificationHandler : INotificationHandler<WeaponPowerupFinishedNotification>
 {

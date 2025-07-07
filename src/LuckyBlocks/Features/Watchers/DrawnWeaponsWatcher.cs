@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Autofac;
 using LuckyBlocks.Data;
+using LuckyBlocks.Data.Weapons;
 using LuckyBlocks.Entities;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Reflection;
@@ -48,20 +49,22 @@ internal class DrawnWeaponsWatcher : IDrawnWeaponsWatcher
             var weaponsData = player.WeaponsData;
             var currentDrawn = weaponsData.CurrentWeaponDrawn;
             var realCurrentDrawn = playerInstance.CurrentWeaponDrawn;
-            
+
             if (!_previouslyDrawnWeapons.TryGetValue(player, out var previouslyDrawnWeapon))
             {
                 previouslyDrawnWeapon = currentDrawn;
                 _previouslyDrawnWeapons.Add(player, previouslyDrawnWeapon);
             }
 
-            if (currentDrawn.WeaponItemType != realCurrentDrawn)
+            if (currentDrawn.WeaponItemType != realCurrentDrawn ||
+                (playerInstance.CurrentMeleeMakeshiftWeapon.WeaponItem != WeaponItem.NONE &&
+                 weaponsData.CurrentWeaponDrawn is not MeleeTemp))
             {
                 if (realCurrentDrawn == WeaponItemType.NONE)
                 {
                     currentDrawn.RaiseEvent(WeaponEvent.Hidden);
                     weaponsData.UpdateDrawn();
-                    
+
                     Logger.Debug("Hidden {WeaponItem} for player {Player}", currentDrawn.WeaponItem, player.Name);
                 }
                 else
@@ -71,12 +74,12 @@ internal class DrawnWeaponsWatcher : IDrawnWeaponsWatcher
                         currentDrawn.RaiseEvent(WeaponEvent.Hidden);
                         Logger.Debug("Hidden {WeaponItem} for player {Player}", currentDrawn.WeaponItem, player.Name);
                     }
-                    
+
                     weaponsData.UpdateDrawn();
 
                     var newDrawn = weaponsData.CurrentWeaponDrawn;
                     newDrawn.RaiseEvent(WeaponEvent.Drawn);
-                    
+
                     Logger.Debug("Drawn {WeaponItem} for player {Player}", newDrawn.WeaponItem, player.Name);
                 }
             }

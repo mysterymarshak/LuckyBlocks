@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using LuckyBlocks.Data;
+using LuckyBlocks.Data.Weapons;
+using LuckyBlocks.Exceptions;
 using LuckyBlocks.Features.Buffs;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Loot.Buffs.Durable;
@@ -27,6 +29,7 @@ internal class PoisonBullets : BulletsPowerupBase
     private readonly IEffectsPlayer _effectsPlayer;
     private readonly BuffConstructorArgs _buffArgs;
     private readonly IGame _game;
+    private readonly PowerupConstructorArgs _args;
 
     public PoisonBullets(Firearm firearm, PowerupConstructorArgs args) : base(firearm, args)
     {
@@ -35,6 +38,14 @@ internal class PoisonBullets : BulletsPowerupBase
         _effectsPlayer = args.EffectsPlayer;
         _buffArgs = args.BuffConstructorArgs;
         _game = args.Game;
+        _args = args;
+    }
+
+    public override IWeaponPowerup<Firearm> Clone(Weapon weapon)
+    {
+        var firearm = weapon as Firearm;
+        ArgumentWasNullException.ThrowIfNull(firearm);
+        return new PoisonBullets(firearm, _args) { UsesLeft = UsesLeft };
     }
 
     protected override void OnFired(IPlayer player, IProjectile projectile)

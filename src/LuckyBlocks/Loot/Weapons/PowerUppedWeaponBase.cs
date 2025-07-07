@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Autofac;
 using LuckyBlocks.Data;
+using LuckyBlocks.Data.Weapons;
 using LuckyBlocks.Features.Watchers;
 using LuckyBlocks.Features.WeaponPowerups;
 using LuckyBlocks.Loot.WeaponPowerups;
@@ -29,7 +30,7 @@ internal abstract class PowerUppedWeaponBase : ILoot
         _weaponPowerupsService = args.WeaponsPowerupsService;
         _game = args.Game;
         _weaponsDataWatcher = args.WeaponsDataWatcher;
-        var thisScope =  args.LifetimeScope.BeginLifetimeScope();
+        var thisScope = args.LifetimeScope.BeginLifetimeScope();
         ExtendedEvents = thisScope.Resolve<IExtendedEvents>();
     }
 
@@ -43,7 +44,7 @@ internal abstract class PowerUppedWeaponBase : ILoot
     }
 
     protected abstract IEnumerable<IWeaponPowerup<Weapon>> GetPowerups(Weapon weapon);
-    
+
     private void AddPowerups(Weapon weapon)
     {
         var powerups = GetPowerups(weapon);

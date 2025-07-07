@@ -7,6 +7,7 @@ using LuckyBlocks.Features.PlayerModifiers;
 using LuckyBlocks.Features.ShockedObjects;
 using LuckyBlocks.Features.Time;
 using LuckyBlocks.Features.Watchers;
+using LuckyBlocks.Features.WeaponPowerups;
 using LuckyBlocks.Loot;
 using LuckyBlocks.Utils;
 using Mediator;
@@ -15,8 +16,20 @@ using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Data;
 
-internal record BuffConstructorArgs(INotificationService NotificationService,
-    IPlayerModifiersService PlayerModifiersService, IEffectsPlayer EffectsPlayer, IBuffsService BuffsService,
-    IMediator Mediator, IMagicService MagicService, IMagicFactory MagicFactory,
-    IShockedObjectsService ShockedObjectsService, IIdentityService IdentityService, IDialoguesService DialoguesService,
-    IObjectsWatcher ObjectsWatcher, ITimeStopService TimeStopService, IGame Game, ILogger Logger, ILifetimeScope LifetimeScope);
+internal record BuffConstructorArgs(
+    INotificationService NotificationService,
+    IPlayerModifiersService PlayerModifiersService,
+    IEffectsPlayer EffectsPlayer,
+    IBuffsService BuffsService,
+    IMediator Mediator,
+    IMagicService MagicService,
+    IMagicFactory MagicFactory,
+    IShockedObjectsService ShockedObjectsService,
+    IIdentityService IdentityService,
+    IDialoguesService DialoguesService,
+    IObjectsWatcher ObjectsWatcher,
+    ITimeStopService TimeStopService,
+    IWeaponPowerupsService WeaponPowerupsService,
+    IGame Game,
+    ILogger Logger,
+    ILifetimeScope LifetimeScope);

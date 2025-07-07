@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Autofac;
 using LuckyBlocks.Data;
+using LuckyBlocks.Data.Weapons;
 using LuckyBlocks.Entities;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
@@ -26,7 +27,7 @@ internal class ThrowableWeaponsWatcher : IThrowableWeaponsWatcher
     private readonly IExtendedEvents _extendedEvents;
     private readonly List<Player> _playersWithThrowable = [];
     private readonly List<Grenade> _thrownGrenades = [];
-    
+
     private IEventSubscription? _updateEventSubscription;
 
     public ThrowableWeaponsWatcher(ILogger logger, IGame game, ILifetimeScope lifetimeScope)
@@ -36,7 +37,7 @@ internal class ThrowableWeaponsWatcher : IThrowableWeaponsWatcher
         var thisScope = lifetimeScope.BeginLifetimeScope();
         _extendedEvents = thisScope.Resolve<IExtendedEvents>();
     }
-    
+
     public void OnThrowablePickedUp(Player player)
     {
         if (!_playersWithThrowable.Contains(player))
@@ -56,7 +57,7 @@ internal class ThrowableWeaponsWatcher : IThrowableWeaponsWatcher
     {
         _thrownGrenades.Add(grenade);
     }
-    
+
     private void OnUpdate(Event<float> @event)
     {
         try
@@ -77,7 +78,7 @@ internal class ThrowableWeaponsWatcher : IThrowableWeaponsWatcher
             _logger.Error("Error while processing throwables update event: {Message}", exception);
         }
     }
-    
+
     private void UpdateThrownGrenades()
     {
         for (var i = _thrownGrenades.Count - 1; i >= 0; i--)

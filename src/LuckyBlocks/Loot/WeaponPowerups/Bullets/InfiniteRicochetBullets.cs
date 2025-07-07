@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using LuckyBlocks.Data;
+using LuckyBlocks.Data.Weapons;
+using LuckyBlocks.Exceptions;
 using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Loot.WeaponPowerups.Bullets;
@@ -12,10 +14,21 @@ internal class InfiniteRicochetBullets : BulletsPowerupBase
 
     protected override IEnumerable<Type> IncompatiblePowerups => _incompatiblePowerups;
 
-    private static readonly List<Type> _incompatiblePowerups = [typeof(ExplosiveBullets), typeof(TripleRicochetBullets)];
-    
+    private static readonly List<Type> _incompatiblePowerups =
+        [typeof(ExplosiveBullets), typeof(TripleRicochetBullets)];
+
+    private readonly PowerupConstructorArgs _args;
+
     public InfiniteRicochetBullets(Firearm firearm, PowerupConstructorArgs args) : base(firearm, args)
     {
+        _args = args;
+    }
+
+    public override IWeaponPowerup<Firearm> Clone(Weapon weapon)
+    {
+        var firearm = weapon as Firearm;
+        ArgumentWasNullException.ThrowIfNull(firearm);
+        return new InfiniteRicochetBullets(firearm, _args) { UsesLeft = UsesLeft };
     }
 
     protected override void OnFired(IPlayer player, IProjectile projectile)

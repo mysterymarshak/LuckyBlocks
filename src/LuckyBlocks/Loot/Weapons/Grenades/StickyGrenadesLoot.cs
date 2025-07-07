@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using LuckyBlocks.Data;
+using LuckyBlocks.Data.Weapons;
 using LuckyBlocks.Loot.WeaponPowerups;
 using LuckyBlocks.Loot.WeaponPowerups.ThrownItems;
 using SFDGameScriptInterface;
@@ -15,7 +16,7 @@ internal class StickyGrenadesLoot : PowerUppedWeaponBase
     protected override WeaponItemType WeaponItemType => WeaponItemType.Thrown;
 
     private readonly IPowerupFactory _powerupFactory;
-    
+
     public StickyGrenadesLoot(Vector2 spawnPosition, LootConstructorArgs args) : base(spawnPosition, args)
     {
         _powerupFactory = args.PowerupFactory;

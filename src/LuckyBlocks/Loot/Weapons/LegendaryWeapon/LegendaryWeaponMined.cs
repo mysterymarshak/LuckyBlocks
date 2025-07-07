@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using LuckyBlocks.Data;
+using LuckyBlocks.Data.Weapons;
 using LuckyBlocks.Loot.WeaponPowerups;
 using LuckyBlocks.Loot.WeaponPowerups.Mined;
 using SFDGameScriptInterface;

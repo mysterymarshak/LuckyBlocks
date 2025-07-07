@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using LuckyBlocks.Data;
+using LuckyBlocks.Data.Weapons;
+using LuckyBlocks.Exceptions;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Mathematics;
 using SFDGameScriptInterface;
@@ -13,18 +15,33 @@ internal class TripleRicochetBullets : BulletsPowerupBase
 
     protected override IEnumerable<Type> IncompatiblePowerups => _incompatiblePowerups;
 
-    private static readonly List<Type> _incompatiblePowerups = [typeof(ExplosiveBullets), typeof(FreezeBullets), typeof(InfiniteRicochetBullets), typeof(AimBullets), typeof(PushBullets)];
-    
+    private static readonly List<Type> _incompatiblePowerups =
+    [
+        typeof(ExplosiveBullets), typeof(FreezeBullets), typeof(InfiniteRicochetBullets),
+        typeof(AimBullets), typeof(PushBullets)
+    ];
+
     private readonly IGame _game;
+    private readonly PowerupConstructorArgs _args;
 
     public TripleRicochetBullets(Firearm firearm, PowerupConstructorArgs args) : base(firearm, args)
-        => (_game) = (args.Game);
+    {
+        _game = args.Game;
+        _args = args;
+    }
+
+    public override IWeaponPowerup<Firearm> Clone(Weapon weapon)
+    {
+        var firearm = weapon as Firearm;
+        ArgumentWasNullException.ThrowIfNull(firearm);
+        return new TripleRicochetBullets(firearm, _args) { UsesLeft = UsesLeft };
+    }
 
     protected override void OnFired(IPlayer player, IProjectile projectile)
     {
         var explosiveBullet = new Bullet(projectile, ExtendedEvents);
         explosiveBullet.Hit += OnBulletHit;
-        
+
         projectile.PowerupBounceActive = true;
         projectile.BounceCount = 0;
     }

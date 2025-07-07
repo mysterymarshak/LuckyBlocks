@@ -1,4 +1,5 @@
 ﻿using System;
+using LuckyBlocks.Data.Weapons;
 using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Data.Mappers;

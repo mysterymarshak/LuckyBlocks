@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using LuckyBlocks.Data;
+using LuckyBlocks.Data.Weapons;
+using LuckyBlocks.Exceptions;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Mathematics;
 using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
@@ -18,12 +20,23 @@ internal class AimBullets : BulletsPowerupBase
 
     private static readonly List<Type> _incompatiblePowerups = [typeof(TripleRicochetBullets)];
     private const int FindTargetRadius = 100;
-    private const double FindTargetFov = 2 * Math.PI / 3; 
-    
+    private const double FindTargetFov = 2 * Math.PI / 3;
+
     private readonly IGame _game;
+    private readonly PowerupConstructorArgs _args;
 
     public AimBullets(Firearm firearm, PowerupConstructorArgs args) : base(firearm, args)
-        => (_game) = (args.Game);
+    {
+        _game = args.Game;
+        _args = args;
+    }
+
+    public override IWeaponPowerup<Firearm> Clone(Weapon weapon)
+    {
+        var firearm = weapon as Firearm;
+        ArgumentWasNullException.ThrowIfNull(firearm);
+        return new AimBullets(firearm, _args) { UsesLeft = UsesLeft };
+    }
 
     protected override void OnFired(IPlayer player, IProjectile projectile)
     {
@@ -40,15 +53,16 @@ internal class AimBullets : BulletsPowerupBase
     private class AimBullet : BulletBase
     {
         protected override float ProjectileSpeedDivider => 3;
-        
+
         private static Vector2 PlayerPositionOffset => new(0, 5);
 
         private readonly IGame _game;
         private readonly IEventSubscription _updateEventSubscription;
-        
+
         private IPlayer? _target;
-        
-        public AimBullet(IProjectile projectile, IGame game, IExtendedEvents extendedEvents) : base(projectile, extendedEvents)
+
+        public AimBullet(IProjectile projectile, IGame game, IExtendedEvents extendedEvents) : base(projectile,
+            extendedEvents)
         {
             _game = game;
             projectile.Velocity = GetNewProjectileVelocity();
@@ -70,14 +84,14 @@ internal class AimBullets : BulletsPowerupBase
             }
 
             const float minDistanceToPlayer = 14f;
-            
+
             var playerPosition = _target.GetWorldPosition() + PlayerPositionOffset;
             var bulletPosition = Projectile.Position;
             var vectorToBullet = playerPosition - bulletPosition;
-            
+
             if (vectorToBullet.Length() < minDistanceToPlayer)
                 return;
-            
+
             vectorToBullet.Normalize();
             Projectile.Direction = vectorToBullet;
         }
@@ -86,7 +100,7 @@ internal class AimBullets : BulletsPowerupBase
         {
             var position = Projectile.Position;
             var direction = Projectile.Direction;
-            
+
             var a = (direction * FindTargetRadius).Rotate(FindTargetFov / 2);
             var b = (direction * FindTargetRadius).Rotate(-(FindTargetFov / 2));
 
@@ -95,7 +109,7 @@ internal class AimBullets : BulletsPowerupBase
                 .Where(x => x.IsValid() && !x.IsDead);
 
             List<IPlayer>? candidates = default;
-            
+
             foreach (var player in players)
             {
                 var playerPosition = player.GetWorldPosition() + PlayerPositionOffset;
@@ -105,7 +119,7 @@ internal class AimBullets : BulletsPowerupBase
                 candidates ??= new();
                 candidates.Add(player);
             }
-            
+
             if (candidates is null)
                 return;
 

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using LuckyBlocks.Data;
+using LuckyBlocks.Data.Weapons;
+using LuckyBlocks.Exceptions;
 using LuckyBlocks.Features.Buffs;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Loot.Buffs.Durable;
@@ -26,8 +28,20 @@ internal class FreezeBullets : BulletsPowerupBase
     private readonly PowerupConstructorArgs _args;
 
     public FreezeBullets(Firearm firearm, PowerupConstructorArgs args) : base(firearm, args)
-        => (_buffsService, _identityService, _effectsPlayer, _game, _args) =
-            (args.BuffsService, args.IdentityService, args.EffectsPlayer, args.Game, args);
+    {
+        _buffsService = args.BuffsService;
+        _identityService = args.IdentityService;
+        _effectsPlayer = args.EffectsPlayer;
+        _game = args.Game;
+        _args = args;
+    }
+
+    public override IWeaponPowerup<Firearm> Clone(Weapon weapon)
+    {
+        var firearm = weapon as Firearm;
+        ArgumentWasNullException.ThrowIfNull(firearm);
+        return new FreezeBullets(firearm, _args) { UsesLeft = UsesLeft };
+    }
 
     protected override void OnFired(IPlayer player, IProjectile projectile)
     {
@@ -47,13 +61,13 @@ internal class FreezeBullets : BulletsPowerupBase
     {
         if (!args.IsPlayer)
             return;
-        
+
         var playerInstance = _game.GetPlayer(args.HitObjectID);
         if (playerInstance.IsDead)
             return;
-        
+
         playerInstance.SetHealth(playerInstance.GetHealth() + args.Damage);
-        
+
         var player = _identityService.GetPlayerByInstance(playerInstance);
         var freeze = new Freeze(player, _args.BuffConstructorArgs, FreezeTime);
         _buffsService.TryAddBuff(freeze, player);
@@ -66,11 +80,13 @@ internal class FreezeBullets : BulletsPowerupBase
         private readonly IEffectsPlayer _effectsPlayer;
         private readonly PeriodicTimer<IProjectile> _periodicTimer;
 
-        public FreezeBullet(IProjectile projectile, IEffectsPlayer effectsPlayer, IExtendedEvents extendedEvents) : base(projectile, extendedEvents)
+        public FreezeBullet(IProjectile projectile, IEffectsPlayer effectsPlayer, IExtendedEvents extendedEvents) :
+            base(projectile, extendedEvents)
         {
             _effectsPlayer = effectsPlayer;
             projectile.Velocity = GetNewProjectileVelocity();
-            _periodicTimer = new PeriodicTimer<IProjectile>(TimeSpan.FromMilliseconds(50), TimeBehavior.TimeModifier, PlayFreezeEffect,
+            _periodicTimer = new PeriodicTimer<IProjectile>(TimeSpan.FromMilliseconds(50), TimeBehavior.TimeModifier,
+                PlayFreezeEffect,
                 projectile => projectile.IsRemoved, default, projectile, ExtendedEvents);
             _periodicTimer.Start();
         }

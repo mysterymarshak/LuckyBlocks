@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using LuckyBlocks.Data;
+using LuckyBlocks.Data.Weapons;
 using LuckyBlocks.Exceptions;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Immunity;
@@ -20,21 +21,21 @@ internal class Player
     public IUser User { get; }
     public PlayerModifiers ModifiedModifiers { get; set; }
     public WeaponsData WeaponsData { get; private set; }
-    
+
     private readonly List<IFinishableBuff> _buffs;
     private readonly List<IImmunity> _immunities;
 
     public Player(IUser user)
     {
         User = user;
-        
+
         ArgumentWasNullException.ThrowIfNull(Instance);
-        
+
         Profile = Instance.GetProfile();
         ModifiedModifiers = new PlayerModifiers();
         _buffs = [];
         _immunities = [];
-        WeaponsData = Instance.GetWeaponsData();
+        WeaponsData = Instance.CreateWeaponsData();
     }
 
     public void AddBuff(IBuff buff)
@@ -88,7 +89,7 @@ internal class Player
         WeaponsData = weaponsData;
         InvalidateWeaponsDataOwner();
     }
-    
+
     public void InvalidateWeaponsDataOwner()
     {
         WeaponsData.Owner = Instance!;

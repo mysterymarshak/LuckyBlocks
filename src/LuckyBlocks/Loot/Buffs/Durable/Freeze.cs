@@ -15,14 +15,14 @@ internal class Freeze : DurableBuffBase, IRepressibleByImmunityFlagsBuff
     public override string Name => "Freeze";
     public override TimeSpan Duration => TimeSpan.FromSeconds(5);
     public ImmunityFlag ImmunityFlags => ImmunityFlag.ImmunityToFreeze;
-    
+
     protected override Color BuffColor => ExtendedColors.Electric;
 
     private const string FREEZE_COLOR_NAME = "ClothingBlue";
-    
+
     private readonly INotificationService _notificationService;
     private readonly BuffConstructorArgs _args;
-    
+
     private bool _isBurning;
     private CancellationTokenSource? _burningEventCts;
 
@@ -31,7 +31,7 @@ internal class Freeze : DurableBuffBase, IRepressibleByImmunityFlagsBuff
 
     public override IDurableBuff Clone()
     {
-        return new Freeze(Player, _args, TimeLeft) { _isBurning = _isBurning };
+        return new Freeze(Player, _args, TimeLeft);
     }
 
     protected override void OnAppliedAgain()
@@ -44,13 +44,13 @@ internal class Freeze : DurableBuffBase, IRepressibleByImmunityFlagsBuff
     protected override void OnFinished()
     {
         DisableBuff();
-        
-        _burningEventCts?.Cancel();        
-        _burningEventCts?.Dispose();        
-        
+
+        _burningEventCts?.Cancel();
+        _burningEventCts?.Dispose();
+
         ExtendedEvents.Clear();
     }
-    
+
     protected override void OnRan()
     {
         EnableBuff();
@@ -84,7 +84,7 @@ internal class Freeze : DurableBuffBase, IRepressibleByImmunityFlagsBuff
         var isBurnDamage = @event.Args.DamageType == PlayerDamageEventType.Fire;
         if (!isBurnDamage)
             return;
-            
+
         if (_isBurning)
             return;
 

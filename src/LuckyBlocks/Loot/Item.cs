@@ -153,5 +153,9 @@ internal enum Item
     [Weight(0.5f / 2)]
     [AnyPlayerHaveAnyWeapon]
     [AlivePlayersMoreThanOne]
-    RemoveWeapons
+    RemoveWeapons,
+
+    [OnlyPlayer]
+    [PlayerIsNotOtherWizard(SourceWizard = typeof(RestoreWizard))]
+    RestoreWizard
 }

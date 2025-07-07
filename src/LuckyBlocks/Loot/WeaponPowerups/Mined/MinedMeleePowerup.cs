@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using LuckyBlocks.Data;
+using LuckyBlocks.Data.Weapons;
 using LuckyBlocks.Exceptions;
 using LuckyBlocks.Utils;
 using SFDGameScriptInterface;
@@ -16,9 +17,22 @@ internal class MinedMeleePowerup : IWeaponPowerup<Melee>
 
     private readonly INotificationService _notificationService;
     private readonly IGame _game;
+    private readonly PowerupConstructorArgs _args;
 
     public MinedMeleePowerup(Melee melee, PowerupConstructorArgs args)
-        => (Weapon, _notificationService, _game) = (melee, args.NotificationService, args.Game);
+    {
+        Weapon = melee;
+        _notificationService = args.NotificationService;
+        _game = args.Game;
+        _args = args;
+    }
+
+    public IWeaponPowerup<Melee> Clone(Weapon weapon)
+    {
+        var melee = weapon as Melee;
+        ArgumentWasNullException.ThrowIfNull(melee);
+        return new MinedMeleePowerup(melee, _args);
+    }
 
     public void Run()
     {
@@ -33,11 +47,11 @@ internal class MinedMeleePowerup : IWeaponPowerup<Melee>
         {
             throw new InvalidCastException("cannot cast otherWeapon to melee");
         }
-        
+
         Weapon = melee;
         Run();
     }
-    
+
     public void Dispose()
     {
         Weapon.Draw -= OnDrawn;

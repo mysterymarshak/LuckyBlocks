@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Autofac;
 using LuckyBlocks.Data;
+using LuckyBlocks.Data.Weapons;
 using LuckyBlocks.Exceptions;
 using LuckyBlocks.Notifications;
 using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
@@ -18,8 +19,13 @@ internal abstract class GrenadesPowerupBase : IUsablePowerup<Grenade>
     public abstract string Name { get; }
     public abstract int UsesCount { get; }
     public Grenade Weapon { get; private set; }
-    public int UsesLeft  => _usesLeft ??= Math.Min(UsesCount, Weapon.MaxAmmo);
-    
+
+    public int UsesLeft
+    {
+        get => _usesLeft ??= Math.Min(UsesCount, Weapon.MaxAmmo);
+        protected init => _usesLeft = value;
+    }
+
     protected abstract IEnumerable<Type> IncompatiblePowerups { get; }
 
     private IPlayer? Player => Weapon.Owner;
@@ -41,6 +47,8 @@ internal abstract class GrenadesPowerupBase : IUsablePowerup<Grenade>
         _extendedEvents = thisScope.Resolve<IExtendedEvents>();
     }
 
+    public abstract IWeaponPowerup<Grenade> Clone(Weapon weapon);
+
     public void Run()
     {
         Weapon.PickUp += ShowGrenadesCount;
@@ -48,7 +56,7 @@ internal abstract class GrenadesPowerupBase : IUsablePowerup<Grenade>
         Weapon.Throw += OnWeaponDropped;
         Weapon.Drop += OnWeaponDropped;
         Weapon.GrenadeThrow += OnThrown;
-        
+
         ShowGrenadesCount(ignoreIfDropped: true);
 
         if (Weapon.IsDropped)
@@ -56,7 +64,7 @@ internal abstract class GrenadesPowerupBase : IUsablePowerup<Grenade>
             CreatePaint(Weapon.ObjectId, _extendedEvents);
         }
     }
-    
+
     public bool IsCompatibleWith(Type otherPowerupType) => !IncompatiblePowerups.Contains(otherPowerupType);
 
     public void AddUses(int usesCount)
@@ -72,11 +80,11 @@ internal abstract class GrenadesPowerupBase : IUsablePowerup<Grenade>
         {
             throw new InvalidCastException("cannot cast otherWeapon to grenade");
         }
-        
+
         Weapon = grenade;
         Run();
     }
-    
+
     public void Dispose()
     {
         Weapon.PickUp -= ShowGrenadesCount;
@@ -85,7 +93,7 @@ internal abstract class GrenadesPowerupBase : IUsablePowerup<Grenade>
         Weapon.Drop -= OnWeaponDropped;
         Weapon.GrenadeThrow -= OnThrown;
     }
-    
+
     private void ShowGrenadesCount(Weapon weapon)
     {
         ShowGrenadesCount();

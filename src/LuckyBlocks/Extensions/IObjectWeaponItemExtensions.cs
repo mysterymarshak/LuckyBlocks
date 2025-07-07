@@ -1,6 +1,7 @@
 using System;
 using LuckyBlocks.Data;
 using LuckyBlocks.Data.Mappers;
+using LuckyBlocks.Data.Weapons;
 using LuckyBlocks.Reflection;
 using SFDGameScriptInterface;
 
@@ -27,12 +28,13 @@ internal static class IObjectWeaponItemExtensions
             { WeaponItemType: WeaponItemType.Powerup }
                 => WeaponsMapper.Map<PowerupWeaponItem, PowerupItem>(objectWeaponItem.PowerupItem, null),
             { WeaponItemType: WeaponItemType.InstantPickup }
-                => WeaponsMapper.Map<InstantPickupWeaponItem, InstantPickupItem>(objectWeaponItem.InstantPickupItem, null),
+                => WeaponsMapper.Map<InstantPickupWeaponItem, InstantPickupItem>(objectWeaponItem.InstantPickupItem,
+                    null),
             _ => throw new ArgumentOutOfRangeException(nameof(objectWeaponItem), "Unsupported weapon item type.")
         });
 
         weapon.SetObject(objectWeaponItem.UniqueId);
-        
+
         return weapon;
     }
 }

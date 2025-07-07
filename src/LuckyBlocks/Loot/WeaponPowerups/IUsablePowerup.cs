@@ -1,4 +1,5 @@
 ﻿using LuckyBlocks.Data;
+using LuckyBlocks.Data.Weapons;
 
 namespace LuckyBlocks.Loot.WeaponPowerups;
 
