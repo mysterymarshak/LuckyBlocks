@@ -20,6 +20,12 @@ internal class AlwaysAttribute : ItemAttribute
 
 internal class AnyPlayerHaveAnyWeaponAttribute : ItemAttribute
 {
+    public bool ExceptActivator { get; private set; }
+
+    public AnyPlayerHaveAnyWeaponAttribute(bool exceptActivator = false)
+    {
+        exceptActivator = exceptActivator;
+    }
 }
 
 internal class BarrelExistsAttribute : ItemAttribute

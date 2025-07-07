@@ -64,7 +64,10 @@ internal class AttributesChecker : IAttributesChecker
 
         bool AnyPlayerHaveAnyWeaponAttributeCheck(ItemAttribute attribute, OneOf<Player, Unknown> player)
         {
+            var typedAttribute = (attribute as AnyPlayerHaveAnyWeaponAttribute)!;
+            
             return identityService.GetAlivePlayers(false)
+                .Where(x => !typedAttribute.ExceptActivator || x != player.AsT0)
                 .Any(x => x.HasAnyWeapon());
         }
 

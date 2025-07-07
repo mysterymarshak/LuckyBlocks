@@ -146,7 +146,7 @@ internal enum Item
 
     [OnlyPlayer]
     [Weight(0.5f / 2)]
-    [AnyPlayerHaveAnyWeapon]
+    [AnyPlayerHaveAnyWeapon(true)]
     [AlivePlayersMoreThanOne]
     RemoveWeaponsExceptPlayer,
 
