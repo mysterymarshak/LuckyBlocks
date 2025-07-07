@@ -22,6 +22,8 @@ internal abstract class WizardBase : FinishableBuffBase, IWizard
     public abstract int CastsCount { get; }
     public int CastsLeft { get; private set; }
 
+    protected virtual Color ChatColor => BuffColor;
+
     private readonly INotificationService _notificationService;
     private readonly IEffectsPlayer _effectsPlayer;
     private readonly WizardFinishCondition _wizardFinishCondition;
@@ -41,10 +43,10 @@ internal abstract class WizardBase : FinishableBuffBase, IWizard
 
         ExtendedEvents.HookOnPlayerMeleeAction(playerInstance, OnMeleeAction, EventHookMode.Default);
 
-        _notificationService.CreateChatNotification($"{Player.Name} is {Name.ToUpper()}", BuffColor);
+        _notificationService.CreateChatNotification($"{Player.Name} is {Name.ToUpper()}", ChatColor);
         ShowDialogue(Name.ToUpper(), BuffColor, TimeSpan.FromSeconds(3), default, default, true);
 
-        _notificationService.CreateChatNotification("[ALT + A] TO USE MAGIC", BuffColor, Player.UserIdentifier);
+        _notificationService.CreateChatNotification("[ALT + A] TO USE MAGIC", ChatColor, Player.UserIdentifier);
         ShowCastsCount();
     }
 
@@ -66,6 +68,10 @@ internal abstract class WizardBase : FinishableBuffBase, IWizard
     protected virtual bool CanUseMagic() => true;
     protected virtual bool ShouldPlayUseSound() => true;
     protected abstract void OnUseMagic();
+
+    protected virtual void OnFinish()
+    {
+    }
 
     private void OnMeleeAction(Event<PlayerMeleeHitArg[]> @event)
     {
@@ -116,11 +122,12 @@ internal abstract class WizardBase : FinishableBuffBase, IWizard
     {
         if (_disposed)
             return;
-
+        
+        _disposed = true;
+        
         ExtendedEvents.Clear();
         LifetimeScope.Dispose();
         SendFinishNotification();
-
-        _disposed = true;
+        OnFinish();
     }
 }

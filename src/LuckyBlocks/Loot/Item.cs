@@ -158,5 +158,10 @@ internal enum Item
     [OnlyPlayer]
     [CantBeAppliedIfAlreadyExists(typeof(RestoreWizard))]
     [PlayerIsNotOtherWizard(SourceWizard = typeof(RestoreWizard))]
-    RestoreWizard
+    RestoreWizard,
+    
+    [OnlyPlayer]
+    [CantBeAppliedIfAlreadyExists(typeof(StealWizard))]
+    [PlayerIsNotOtherWizard(SourceWizard = typeof(StealWizard))]
+    StealWizard
 }

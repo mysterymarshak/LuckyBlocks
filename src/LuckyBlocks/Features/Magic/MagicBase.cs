@@ -24,11 +24,11 @@ internal abstract class MagicBase : IMagic
         if (_isFinished)
             return;
 
+        _isFinished = true;
+        
         OnFinishedInternal();
         OnFinished();
         SendFinishNotification();
-
-        _isFinished = true;
     }
 
     protected virtual void OnFinished()
