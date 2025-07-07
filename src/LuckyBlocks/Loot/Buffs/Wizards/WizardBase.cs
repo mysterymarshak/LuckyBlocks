@@ -43,7 +43,6 @@ internal abstract class WizardBase : FinishableBuffBase, IWizard
 
         ExtendedEvents.HookOnPlayerMeleeAction(playerInstance, OnMeleeAction, EventHookMode.Default);
 
-        _notificationService.CreateChatNotification($"{Player.Name} is {Name.ToUpper()}", ChatColor);
         ShowDialogue(Name.ToUpper(), BuffColor, TimeSpan.FromSeconds(3), default, default, true);
 
         _notificationService.CreateChatNotification("[ALT + A] TO USE MAGIC", ChatColor, Player.UserIdentifier);
