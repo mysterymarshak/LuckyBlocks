@@ -96,14 +96,9 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
     {
         foreach (var playerInstance in @event.Args)
         {
-            var getPlayerResult = _identityService.GetPlayerById(playerInstance.UniqueId);
-            if (!getPlayerResult.TryPickT0(out var player, out _))
-            {
-                Logger.Warning("Cannot give Player for playerInstance id '{PlayerId}'", playerInstance.UniqueId);
-                return;
-            }
-
+            var player = _identityService.GetPlayerByInstance(playerInstance);
             player.SetWeaponsData(playerInstance.CreateWeaponsData());
+            
             Logger.Debug("Initialized weapon data for {Player}", player.Name);
         }
     }
