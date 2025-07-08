@@ -1,14 +1,12 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Autofac;
-using LuckyBlocks.Data;
 using LuckyBlocks.Data.Weapons;
 using LuckyBlocks.Entities;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Reflection;
+using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
 using LuckyBlocks.Utils;
-using LuckyBlocks.Utils.Timers;
 using Serilog;
 using SFDGameScriptInterface;
 
@@ -16,6 +14,7 @@ namespace LuckyBlocks.Features.Watchers;
 
 internal interface IReloadWeaponsWatcher
 {
+    void Initialize();
     void StartReloadTracking(Player player, WeaponItemType weaponItemType);
 }
 
@@ -25,7 +24,7 @@ internal class ReloadWeaponsWatcher : IReloadWeaponsWatcher
     [InjectLogger]
     private static ILogger Logger { get; set; }
 
-    private readonly Dictionary<int, List<ReloadAwaitingData>> _reloadWeaponTimers = new();
+    private readonly Dictionary<int, List<ReloadAwaitingData>> _reloadsData = new();
     private readonly IExtendedEvents _extendedEvents;
 
     public ReloadWeaponsWatcher(ILifetimeScope lifetimeScope)
@@ -34,13 +33,39 @@ internal class ReloadWeaponsWatcher : IReloadWeaponsWatcher
         _extendedEvents = thisScope.Resolve<IExtendedEvents>();
     }
 
+    public void Initialize()
+    {
+        _extendedEvents.HookOnUpdate(OnUpdate, EventHookMode.Default);
+    }
+
+    private void OnUpdate(Event<float> @event)
+    {
+        foreach (var entry in _reloadsData)
+        {
+            var data = entry.Value;
+
+            for (var i = data.Count - 1; i >= 0; i--)
+            {
+                var reloadData = data[i];
+
+                if (FinishCondition(reloadData.Args))
+                {
+                    data.RemoveAt(i);
+                    continue;
+                }
+
+                Callback(reloadData.Args);
+            }
+        }
+    }
+
     public void StartReloadTracking(Player player, WeaponItemType weaponItemType)
     {
         var playerInstance = player.Instance!;
         var weaponsData = player.WeaponsData;
         var savedWeapon = weaponsData.CurrentWeaponDrawn with { } as Firearm;
 
-        if (_reloadWeaponTimers.TryGetValue(playerInstance.UniqueId, out var awaitingReloads))
+        if (_reloadsData.TryGetValue(playerInstance.UniqueId, out var awaitingReloads))
         {
             if (awaitingReloads.Any(x => x.WeaponItemType == weaponItemType))
                 return;
@@ -48,52 +73,41 @@ internal class ReloadWeaponsWatcher : IReloadWeaponsWatcher
         else
         {
             awaitingReloads = [];
-            _reloadWeaponTimers.Add(playerInstance.UniqueId, awaitingReloads);
+            _reloadsData.Add(playerInstance.UniqueId, awaitingReloads);
         }
 
         Logger.Debug("Start watching reloading for player: {Player}, waiting for changing {WeaponItemType}",
             player.Name, weaponItemType);
 
-        var args = new AwaitingWeaponChangeTimerArgs(player, weaponItemType, savedWeapon!, awaitingReloads);
-        var timer = new PeriodicTimer<AwaitingWeaponChangeTimerArgs>(TimeSpan.Zero, TimeBehavior.TimeModifier, Callback,
-            FinishCondition, FinishCallback, args, _extendedEvents);
-        timer.Start();
+        var args = new AwaitingWeaponChangeTimerArgs(player, weaponItemType, savedWeapon!);
+        awaitingReloads.Add(new ReloadAwaitingData(args, weaponItemType));
+    }
 
-        awaitingReloads.Add(new ReloadAwaitingData(timer, weaponItemType));
+    private static void Callback(AwaitingWeaponChangeTimerArgs args)
+    {
+        var player = args.Player;
+        player.UpdateWeaponData(args.WeaponItemType);
 
-        static void Callback(AwaitingWeaponChangeTimerArgs args)
-        {
-            var player = args.Player;
-            player.UpdateWeaponData(args.WeaponItemType);
+        Logger.Debug("Updated weapon for player: {Player}, waiting for changing {WeaponItemType}", player.Name,
+            args.WeaponItemType);
+    }
 
-            Logger.Debug("Updated weapon for player: {Player}, waiting for changing {WeaponItemType}", player.Name,
-                args.WeaponItemType);
-        }
+    private static bool FinishCondition(AwaitingWeaponChangeTimerArgs args)
+    {
+        var player = args.Player;
+        var playerInstance = player.Instance;
+        var weaponsData = player.WeaponsData;
 
-        static bool FinishCondition(AwaitingWeaponChangeTimerArgs args)
-        {
-            var player = args.Player;
-            var playerInstance = player.Instance;
-            var weaponsData = player.WeaponsData;
-
-            return playerInstance?.IsValid() != true || playerInstance.IsDead ||
-                   weaponsData.CurrentWeaponDrawn.WeaponItemType != args.WeaponItemType ||
-                   (weaponsData.GetWeaponByType(args.WeaponItemType, false) as Firearm)!.CurrentSpareMags !=
-                   args.SavedWeapon.CurrentSpareMags;
-        }
-
-        static void FinishCallback(AwaitingWeaponChangeTimerArgs args)
-        {
-            var reloadsData = args.ReloadsData;
-            reloadsData.RemoveAll(x => x.WeaponItemType == args.WeaponItemType);
-        }
+        return playerInstance?.IsValid() != true || playerInstance.IsDead ||
+               weaponsData.CurrentWeaponDrawn.WeaponItemType != args.WeaponItemType ||
+               (weaponsData.GetWeaponByType(args.WeaponItemType, false) as Firearm)!.CurrentSpareMags !=
+               args.SavedWeapon.CurrentSpareMags;
     }
 
     private record AwaitingWeaponChangeTimerArgs(
         Player Player,
         WeaponItemType WeaponItemType,
-        Firearm SavedWeapon,
-        List<ReloadAwaitingData> ReloadsData);
+        Firearm SavedWeapon);
 
-    private record ReloadAwaitingData(TimerBase Timer, WeaponItemType WeaponItemType);
+    private record ReloadAwaitingData(AwaitingWeaponChangeTimerArgs Args, WeaponItemType WeaponItemType);
 }

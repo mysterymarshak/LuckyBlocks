@@ -1,12 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Autofac;
 using LuckyBlocks.Extensions;
-using LuckyBlocks.Notifications;
 using LuckyBlocks.Utils;
-using LuckyBlocks.Utils.Timers;
-using Mediator;
 using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Entities;
@@ -17,6 +13,7 @@ internal class ShockedObject
 
     public double Charge => TimeLeft.TotalMilliseconds;
     public int ObjectId => _object.UniqueId;
+    public string Name => _object.Name;
     public TimeSpan TimeLeft { get; set; }
 
     private bool IsShocked { get; set; }
@@ -25,25 +22,16 @@ internal class ShockedObject
     private readonly TimeSpan _shockDuration;
     private readonly IEffectsPlayer _effectsPlayer;
     private readonly IGame _game;
-    private readonly IMediator _mediator;
-    private readonly PeriodicTimer<ShockedObject> _periodicTimer;
-    private readonly PeriodicTimer<ShockedObject> _effectsTimer;
     private readonly IReadOnlyList<Vector2> _collisionVectors;
 
-    public ShockedObject(IObject @object, TimeSpan shockDuration, IEffectsPlayer effectsPlayer, IGame game,
-        IMediator mediator, IExtendedEvents extendedEvents)
+    private float _elapsedFromPreviousEffect;
+
+    public ShockedObject(IObject @object, TimeSpan shockDuration, IEffectsPlayer effectsPlayer, IGame game)
     {
         _object = @object;
         _shockDuration = shockDuration;
         _effectsPlayer = effectsPlayer;
         _game = game;
-        _mediator = mediator;
-        _periodicTimer = new PeriodicTimer<ShockedObject>(TimeSpan.Zero, TimeBehavior.TimeModifier, x => x.OnUpdate(),
-            x => x.Charge <= ELEMENTARY_CHARGE, x => x.Dispose(), this, extendedEvents);
-        _effectsTimer = new PeriodicTimer<ShockedObject>(TimeSpan.FromMilliseconds(300),
-            TimeBehavior.TimeModifier | TimeBehavior.IgnoreTimeStop,
-            x => x._effectsPlayer.PlayEffect(EffectName.Electric, _object.GetWorldPosition()),
-            shockedObject => !shockedObject.IsShocked, null, this, extendedEvents);
         _collisionVectors = Enumerable.Range(0, 8)
             .Select(x => x * 45)
             .Select(x => x * Math.PI / 180)
@@ -57,45 +45,49 @@ internal class ShockedObject
     {
         IsShocked = true;
         TimeLeft = _shockDuration;
-
-        _periodicTimer.Start();
-        _effectsTimer.Start();
     }
 
-    private void OnUpdate()
+    public IEnumerable<IObject> Update(float elapsed, bool isTimeStopped)
     {
-        TimeLeft = TimeSpan.FromMilliseconds(Math.Max(0,
-            TimeLeft.TotalMilliseconds - _periodicTimer.ElapsedFromPreviousTick));
+        var touchedObjects = Enumerable.Empty<IObject>();
 
-        var position = _object.GetWorldPosition();
-        var touchedObjects = _collisionVectors
-            .Select(x => _game.RayCast(position, position + x, default))
-            .SelectMany(x => x)
-            .Where(x => x.Hit && x.HitObject.GetBodyType() != BodyType.Static &&
-                        x.HitObject.GetPhysicsLayer() == PhysicsLayer.Active)
-            .Select(x => x.HitObject)
-            .ToList();
-
-        foreach (var collisionVector in _collisionVectors)
+        if (!isTimeStopped)
         {
-            _game.DrawLine(position, position + collisionVector, Color.Red);
+            TimeLeft = TimeSpan.FromMilliseconds(Math.Max(0, TimeLeft.TotalMilliseconds - elapsed));
+
+            var position = _object.GetWorldPosition();
+            touchedObjects = _collisionVectors
+                .Select(x => _game.RayCast(position, position + x, default))
+                .SelectMany(x => x)
+                .Where(x => x.Hit && x.HitObject.GetBodyType() != BodyType.Static &&
+                            x.HitObject.GetPhysicsLayer() == PhysicsLayer.Active)
+                .Select(x => x.HitObject)
+                .ToList();
+
+#if DEBUG
+            if (_game.IsEditorTest)
+            {
+                foreach (var collisionVector in _collisionVectors)
+                {
+                    _game.DrawLine(position, position + collisionVector, Color.Red);
+                }
+            }
+#endif
         }
 
-        if (touchedObjects.Count == 0)
-            return;
+        _elapsedFromPreviousEffect += elapsed;
 
-        var notification = new ObjectsTouchedShockObjectNotification(this, touchedObjects);
-        _mediator.Publish(notification);
+        if (_elapsedFromPreviousEffect > 300f)
+        {
+            _effectsPlayer.PlayEffect(EffectName.Electric, _object.GetWorldPosition());
+            _elapsedFromPreviousEffect = 0;
+        }
+
+        return touchedObjects;
     }
 
-    private void Dispose()
+    public void Dispose()
     {
         IsShocked = false;
-
-        _periodicTimer.Stop();
-        _effectsTimer.Stop();
-
-        var notification = new ShockObjectEndedNotification(_object);
-        _mediator.Publish(notification);
     }
 }

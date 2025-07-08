@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Autofac;
-using LuckyBlocks.Data;
 using LuckyBlocks.Data.Weapons;
 using LuckyBlocks.Entities;
 using LuckyBlocks.Extensions;
@@ -73,6 +72,7 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
         _extendedEvents.HookOnPlayerCreated(OnPlayerCreated, EventHookMode.Default);
         _ammoTriggers.AddRange(_game.GetObjects<IObjectAmmoStashTrigger>());
         _drawnWeaponsWatcher.Initialize();
+        _reloadWeaponsWatcher.Initialize();
     }
 
     public Weapon RegisterWeapon(IObjectWeaponItem objectWeaponItem)
