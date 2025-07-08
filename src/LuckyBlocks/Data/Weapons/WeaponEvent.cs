@@ -18,7 +18,9 @@ internal enum WeaponEvent
 
     Fired,
 
+    Reloaded,
+
     MeleeHit,
 
-    Disposed
+    Disposed,
 }

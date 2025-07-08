@@ -84,16 +84,30 @@ internal class WeaponPowerupsService : IWeaponPowerupsService
         if (TryAddPowerupAgain(powerup, weapon))
             return;
 
+        var isFirstPowerup = !weapon.Powerups.Any();
+
         if (weapon.IsDropped)
         {
-            weapon.PickUp += EnsureWeaponHasEnoughAmmoForPowerups;
+            if (isFirstPowerup)
+            {
+                weapon.PickUp += EnsureWeaponHasEnoughAmmoForPowerups;
+            }
         }
         else
         {
             EnsureWeaponHasEnoughAmmoForPowerups(weapon);
         }
 
-        weapon.Dispose += OnWeaponDisposed;
+        if (isFirstPowerup)
+        {
+            weapon.Dispose += OnWeaponDisposed;
+
+            if (weapon is Firearm firearm)
+            {
+                firearm.Reload += EnsureWeaponHasEnoughAmmoForPowerups;
+            }
+        }
+
         weapon.AddPowerup(powerup);
 
         if (run)
@@ -109,9 +123,21 @@ internal class WeaponPowerupsService : IWeaponPowerupsService
 
     public void RemovePowerup(IWeaponPowerup<Weapon> powerup, Weapon weapon)
     {
+        var isLastPowerup = weapon.Powerups.Count() == 1;
+
         weapon.RemovePowerup(powerup);
-        weapon.PickUp -= EnsureWeaponHasEnoughAmmoForPowerups;
-        weapon.Dispose -= OnWeaponDisposed;
+
+        if (isLastPowerup)
+        {
+            weapon.PickUp -= EnsureWeaponHasEnoughAmmoForPowerups;
+            weapon.Dispose -= OnWeaponDisposed;
+
+            if (weapon is Firearm firearm)
+            {
+                firearm.Reload -= EnsureWeaponHasEnoughAmmoForPowerups;
+            }
+        }
+
         powerup.Dispose();
 
         _logger.Debug("Powerup {PowerupName} removed from {WeaponItem} (owner {Player})", powerup.Name,

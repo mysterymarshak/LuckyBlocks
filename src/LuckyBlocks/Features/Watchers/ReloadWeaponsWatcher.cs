@@ -47,14 +47,21 @@ internal class ReloadWeaponsWatcher : IReloadWeaponsWatcher
             for (var i = data.Count - 1; i >= 0; i--)
             {
                 var reloadData = data[i];
+                var args = reloadData.Args;
 
-                if (FinishCondition(reloadData.Args))
+                if (FinishCondition(args))
                 {
+                    var player = args.Player;
+                    var weaponsData = player.WeaponsData;
+                    var firearm = (Firearm)weaponsData.GetWeaponByType(reloadData.WeaponItemType, false);
+
+                    firearm.RaiseEvent(WeaponEvent.Reloaded);
                     data.RemoveAt(i);
+
                     continue;
                 }
 
-                Callback(reloadData.Args);
+                Callback(args);
             }
         }
     }

@@ -19,6 +19,7 @@ internal record Firearm(
     : Weapon(WeaponItem, WeaponItemType)
 {
     public event Action<IPlayer?, IEnumerable<IProjectile>?>? Fire;
+    public event Action<Weapon>? Reload;
 
     public int CurrentAmmo { get; protected set; } = CurrentAmmo;
     public int CurrentSpareMags { get; protected set; } = CurrentSpareMags;
@@ -38,9 +39,14 @@ internal record Firearm(
     {
         base.RaiseEvent(@event, args);
 
-        if (@event == WeaponEvent.Fired)
+        switch (@event)
         {
-            Fire?.Invoke(args[0] as IPlayer, args[1] as IEnumerable<IProjectile>);
+            case WeaponEvent.Fired:
+                Fire?.Invoke(args[0] as IPlayer, args[1] as IEnumerable<IProjectile>);
+                break;
+            case WeaponEvent.Reloaded:
+                Reload?.Invoke(this);
+                break;
         }
     }
 }
