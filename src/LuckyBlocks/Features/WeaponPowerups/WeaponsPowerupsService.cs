@@ -236,7 +236,11 @@ internal class WeaponPowerupsService : IWeaponPowerupsService
             return;
 
         var owner = weapon.Owner;
-        ArgumentWasNullException.ThrowIfNull(owner);
+        if (owner is null)
+        {
+            _logger.Warning("calling EnsureWeaponHasEnoughAmmoForPowerups when weapon's owner is null, skip. Weapon: {Weapon}", weapon);
+            return;
+        }
 
         switch (weapon)
         {
