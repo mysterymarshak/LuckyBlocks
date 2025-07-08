@@ -101,6 +101,7 @@ internal class Shock : DurableBuffBase, IDelayedImmunityRemovalBuff, IRepressibl
         playerInstance.SetLinearVelocity(Vector2.Zero);
         playerInstance.SetAngularVelocity(0f);
         playerInstance.SetNametagVisible(false);
+        playerInstance.SetCameraSecondaryFocusMode(CameraFocusMode.Ignore);
     }
 
     private void DisableBuff()
@@ -124,6 +125,7 @@ internal class Shock : DurableBuffBase, IDelayedImmunityRemovalBuff, IRepressibl
         playerInstance.SetWorldPosition(position);
         playerInstance.SetInputMode(PlayerInputMode.Enabled);
         playerInstance.SetNametagVisible(true);
+        playerInstance.SetCameraSecondaryFocusMode(CameraFocusMode.Focus);
     }
 
     private void OnDamage(Event<PlayerDamageArgs> @event)
