@@ -18,7 +18,19 @@ internal record ImmunityToShock : IDelayedRemoveImmunity
 {
     public string Name => "Immunity to shock";
     public ImmunityFlag Flag => ImmunityFlag.ImmunityToShock;
-    public TimeSpan RemovalDelay => TimeSpan.FromSeconds(2);
+    
+    // 'init' cause security exception
+    public TimeSpan RemovalDelay { get; }
+
+    public ImmunityToShock()
+    {
+        RemovalDelay = TimeSpan.FromSeconds(2);
+    }
+    
+    public ImmunityToShock(TimeSpan removalDelay)
+    {
+        RemovalDelay = removalDelay;
+    }
 }
 
 internal record ImmunityToWind : IImmunity

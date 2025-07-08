@@ -1,7 +1,10 @@
-﻿using LuckyBlocks.Data;
+﻿using System;
+using System.Collections.Generic;
+using LuckyBlocks.Data;
 using LuckyBlocks.Entities;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Immunity;
+using LuckyBlocks.Features.Time;
 using LuckyBlocks.Loot.Buffs;
 using LuckyBlocks.Utils;
 using OneOf;
@@ -19,12 +22,21 @@ internal interface IBuffsService
 
 internal class BuffsService : IBuffsService
 {
+    private static TimeSpan ImmunityMessagesCooldown => TimeSpan.FromMilliseconds(500);
+
     private readonly IImmunityService _immunityService;
     private readonly IEffectsPlayer _effectsPlayer;
+    private readonly IGame _game;
     private readonly ILogger _logger;
+    private readonly Dictionary<IPlayer, float> _lastImmunityMessages = new();
 
-    public BuffsService(IImmunityService immunityService, IEffectsPlayer effectsPlayer, ILogger logger) =>
-        (_immunityService, _effectsPlayer, _logger) = (immunityService, effectsPlayer, logger);
+    public BuffsService(IImmunityService immunityService, IEffectsPlayer effectsPlayer, IGame game, ILogger logger)
+    {
+        _immunityService = immunityService;
+        _effectsPlayer = effectsPlayer;
+        _game = game;
+        _logger = logger;
+    }
 
     public OneOf<Success, PlayerIsDeadResult, ImmunityFlag> TryAddBuff(IBuff buff, Player player)
     {
@@ -50,9 +62,9 @@ internal class BuffsService : IBuffsService
             .WhenFinish
             .Invoke(x => RemoveBuff(x, player));
 
-        if (buff is IImmunityFlagsIndicatorBuff immunityFlagsBuff)
+        if (buff is IImmunityFlagsIndicatorBuff)
         {
-            GiveImmunityBuffs(finishableBuff, immunityFlagsBuff, player);
+            GiveBuffImmunities(finishableBuff, player);
         }
 
         return new Success();
@@ -79,18 +91,30 @@ internal class BuffsService : IBuffsService
         var canBeApplied = incompatibleFlags == 0;
 
         if (canBeApplied)
+        {
             return new Success();
+        }
 
+        if (_lastImmunityMessages.TryGetValue(playerInstance, out var lastMessageTime))
+        {
+            if (_game.TotalElapsedRealTime - lastMessageTime < ImmunityMessagesCooldown.TotalMilliseconds)
+            {
+                return incompatibleFlags;
+            }
+        }
+
+        _lastImmunityMessages[playerInstance] = _game.TotalElapsedRealTime;
         _effectsPlayer.PlayEffect(EffectName.CustomFloatText, playerInstance.GetWorldPosition(), "Immunity");
+
         return incompatibleFlags;
     }
 
-    private void GiveImmunityBuffs(IFinishableBuff parentBuff, IImmunityFlagsIndicatorBuff buff, Player player)
+    private void GiveBuffImmunities(IFinishableBuff buff, Player player)
     {
-        var immunities = _immunityService.GiveImmunities(player, buff.ImmunityFlags);
+        var immunities = _immunityService.GiveImmunitiesFromBuff(player, (buff as IImmunityFlagsIndicatorBuff)!);
         foreach (var immunity in immunities)
         {
-            parentBuff
+            buff
                 .WhenFinish
                 .Invoke(_ => _immunityService.RemoveImmunity(player, immunity));
         }

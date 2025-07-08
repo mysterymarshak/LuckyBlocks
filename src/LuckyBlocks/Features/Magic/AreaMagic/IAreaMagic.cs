@@ -11,6 +11,6 @@ internal interface IAreaMagic : IMagic
     int IterationsCount { get; }
     int Direction { get; }
     void Reflect();
-    void Cast(Area area);
+    void Cast(Area fullArea, Area iterationArea);
     void PlayEffects(Area area);
 }

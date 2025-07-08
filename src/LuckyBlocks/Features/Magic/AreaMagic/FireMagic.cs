@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using LuckyBlocks.Data;
 using LuckyBlocks.Entities;
+using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Buffs;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Loot.Buffs.Instant;
@@ -14,7 +15,7 @@ internal class FireMagic : AreaMagicBase
 {
     public override AreaMagicType Type => AreaMagicType.Fire;
     public override string Name => "Fire magic";
-    
+
     private readonly IBuffsService _buffsService;
     private readonly IIdentityService _identityService;
     private readonly IGame _game;
@@ -30,23 +31,27 @@ internal class FireMagic : AreaMagicBase
         ScheduleEndFireNodes(fireNodes);
     }
 
-    protected override void CastInternal(Area area)
+    protected override void CastInternal(Area fullArea, Area iterationArea)
     {
-        var objects = GetObjectsByArea(area);
+        var objects = GetAffectedObjectsByArea(fullArea, iterationArea);
 
-        foreach (var obj in objects)
+        foreach (var @object in objects)
         {
-            BurnObject(obj);
+            BurnObject(@object);
         }
-        
-        PlayEffects(area);
+
+        PlayEffects(iterationArea);
     }
-    
-    private void BurnObject(IObject obj)
+
+    private void BurnObject(IObject @object)
     {
-        if (obj is not IPlayer player)
+        if (@object is not IPlayer player)
         {
-            obj.SetMaxFire();
+            if (!@object.IsBurning)
+            {
+                @object.SetMaxFire();
+            }
+
             return;
         }
 
@@ -56,11 +61,11 @@ internal class FireMagic : AreaMagicBase
     private void BurnPlayer(IPlayer playerInstance)
     {
         var wizardInstance = Wizard.Instance;
-        
-        if (playerInstance.IsDead)
+
+        if (!playerInstance.IsValid() || playerInstance.IsDead)
             return;
-        
-        if (playerInstance.UniqueId == wizardInstance?.UniqueId)
+
+        if (playerInstance == wizardInstance)
             return;
 
         if (_ignitedPlayers?.Contains(playerInstance.UniqueId) == true)
@@ -73,7 +78,7 @@ internal class FireMagic : AreaMagicBase
         if (!result.IsT0)
             return;
 
-        _ignitedPlayers ??= new();
+        _ignitedPlayers ??= [];
         _ignitedPlayers.Add(playerInstance.UniqueID);
     }
 

@@ -13,7 +13,7 @@ namespace LuckyBlocks.Entities;
 
 internal class ShockedObject
 {
-    public const double MinCharge = 100;
+    public const double ELEMENTARY_CHARGE = 50;
 
     public double Charge => TimeLeft.TotalMilliseconds;
     public int ObjectId => _object.UniqueId;
@@ -41,10 +41,10 @@ internal class ShockedObject
         _game = game;
         _mediator = mediator;
         _extendedEvents = lifetimeScope.Resolve<IExtendedEvents>();
-        _periodicTimer = new(TimeSpan.Zero, TimeBehavior.TimeModifier,
-            _ => OnUpdate(), _ => Charge <= MinCharge, _ => Dispose(), this, _extendedEvents);
-        _collisionVectors = Enumerable.Range(0, 360)
-            .Where(x => x % 45 == 0)
+        _periodicTimer = new PeriodicTimer<ShockedObject>(TimeSpan.Zero, TimeBehavior.TimeModifier,
+            _ => OnUpdate(), _ => Charge <= ELEMENTARY_CHARGE, _ => Dispose(), this, _extendedEvents);
+        _collisionVectors = Enumerable.Range(0, 8)
+            .Select(x => x * 45)
             .Select(x => x * Math.PI / 180)
             .Select(x =>
                 new Vector2((float)Math.Cos(x), (float)Math.Sin(x)) *
@@ -64,7 +64,8 @@ internal class ShockedObject
 
     private void OnUpdate()
     {
-        TimeLeft = TimeSpan.FromMilliseconds(TimeLeft.TotalMilliseconds - _periodicTimer.ElapsedFromPreviousTick);
+        TimeLeft = TimeSpan.FromMilliseconds(Math.Max(0,
+            TimeLeft.TotalMilliseconds - _periodicTimer.ElapsedFromPreviousTick));
 
         var position = _object.GetWorldPosition();
         var raycastResults =
@@ -96,6 +97,7 @@ internal class ShockedObject
     private void Dispose()
     {
         IsShocked = false;
+
         _lifetimeScope.Dispose();
         _extendedEvents.Clear();
 

@@ -17,7 +17,7 @@ internal class ElectricMagic : AreaMagicBase
 
     private static TimeSpan ObjectShockTime => TimeSpan.FromSeconds(7);
     private static TimeSpan PlayerShockTime => TimeSpan.FromMilliseconds(3500);
-    
+
     private readonly IBuffsService _buffsService;
     private readonly IIdentityService _identityService;
     private readonly IShockedObjectsService _shockedObjectsService;
@@ -32,20 +32,21 @@ internal class ElectricMagic : AreaMagicBase
         PlayEffects(EffectName.Electric, area, Direction);
     }
 
-    protected override void CastInternal(Area area)
+    protected override void CastInternal(Area fullArea, Area iterationArea)
     {
-        var objects = GetObjectsByArea(area);
+        var objects = GetAffectedObjectsByArea(fullArea, iterationArea);
         foreach (var @object in objects)
         {
             ShockObject(@object);
         }
 
-        PlayEffects(area);
+        PlayEffects(iterationArea);
     }
 
     private void ShockObject(IObject @object)
     {
-        @object.ClearFire();
+        if (_shockedObjectsService.IsShocked(@object))
+            return;
 
         if (@object is IPlayer player)
         {
@@ -56,23 +57,17 @@ internal class ElectricMagic : AreaMagicBase
         if (@object.GetBodyType() == BodyType.Static || @object.GetPhysicsLayer() != PhysicsLayer.Active)
             return;
 
-        if (_shockedObjectsService.IsShocked(@object))
-            return;
-
         _shockedObjectsService.Shock(@object, ObjectShockTime);
     }
 
     private void ShockPlayer(IPlayer playerInstance)
     {
         var wizardInstance = Wizard.Instance;
-        
-        if (playerInstance.IsDead)
-            return;
-        
-        if (playerInstance.UniqueId == wizardInstance?.UniqueId)
+
+        if (!playerInstance.IsValidUser() || playerInstance.IsDead)
             return;
 
-        if (playerInstance.UserIdentifier == 0)
+        if (playerInstance == wizardInstance)
             return;
 
         var player = _identityService.GetPlayerByInstance(playerInstance);

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using LuckyBlocks.Data;
@@ -13,7 +14,8 @@ using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Notifications;
 
-internal readonly record struct ObjectsTouchedShockObjectNotification(ShockedObject ShockedObject,
+internal readonly record struct ObjectsTouchedShockObjectNotification(
+    ShockedObject ShockedObject,
     IEnumerable<IObject> Objects) : INotification;
 
 internal class
@@ -23,7 +25,7 @@ internal class
     private readonly BuffConstructorArgs _buffConstructorArgs;
     private readonly IBuffsService _buffsService;
     private readonly IIdentityService _identityService;
-    
+
     public ObjectsTouchedShockObjectNotificationHandler(IShockedObjectsService shockedObjectsService,
         BuffConstructorArgs buffConstructorArgs, IBuffsService buffsService, IIdentityService identityService) =>
         (_shockedObjectsService, _buffConstructorArgs, _buffsService, _identityService) =
@@ -38,26 +40,29 @@ internal class
         {
             if (_shockedObjectsService.IsShocked(@object))
                 continue;
-            
-            if (shockedObject.Charge <= ShockedObject.MinCharge)
+
+            if (shockedObject.Charge / 2 <= ShockedObject.ELEMENTARY_CHARGE)
                 break;
-            
+
             var shockTime = shockedObject.TimeLeft.Divide(2);
-            shockedObject.TimeLeft = shockTime;
-            
-            if (@object is IPlayer { IsUser: true } playerInstance)
+
+            if (@object is IPlayer playerInstance && playerInstance.IsValidUser())
             {
                 var player = _identityService.GetPlayerByInstance(playerInstance);
                 if (player.HasBuff(typeof(Shock)))
                     continue;
-                
+
                 var shock = new Shock(player, _buffConstructorArgs, shockTime);
-                _buffsService.TryAddBuff(shock, player);
+                var addResult = _buffsService.TryAddBuff(shock, player);
+                if (addResult.IsT2)
+                    continue;
             }
             else
             {
                 _shockedObjectsService.Shock(@object, shockTime);
             }
+
+            shockedObject.TimeLeft = shockTime;
         }
 
         return new ValueTask();

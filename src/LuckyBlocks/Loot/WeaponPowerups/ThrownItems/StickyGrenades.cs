@@ -44,8 +44,8 @@ internal class StickyGrenades : GrenadesPowerupBase
     {
         private const int CollisionVectorLength = 2;
 
-        private static readonly IReadOnlyList<Vector2> CollisionVectors = Enumerable.Range(0, 360)
-            .Where(x => x % 10 == 0)
+        private static readonly IReadOnlyList<Vector2> CollisionVectors = Enumerable.Range(0, 36)
+            .Select(x => x * 10)
             .Select(x => x * Math.PI / 180)
             .Select(x => new Vector2((float)Math.Cos(x), (float)Math.Sin(x)) * CollisionVectorLength)
             .ToList();

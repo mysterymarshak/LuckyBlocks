@@ -11,18 +11,18 @@ using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Loot.Buffs.Durable;
 
-internal class Shock : DurableBuffBase, IRepressibleByImmunityFlagsBuff
+internal class Shock : DurableBuffBase, IDelayedImmunityRemovalBuff, IRepressibleByImmunityFlagsBuff
 {
     public override string Name => "Shock";
     public override TimeSpan Duration => TimeSpan.FromSeconds(5);
+
     public ImmunityFlag ImmunityFlags => ImmunityFlag.ImmunityToShock;
+    public TimeSpan ImmunityRemovalDelay => TimeSpan.FromMilliseconds(500);
 
     protected override Color BuffColor => ExtendedColors.Electric;
 
     private static TimeSpan ShockDamagePeriod => TimeSpan.FromMilliseconds(300);
-
-    private const float SHOCK_DAMAGE = 3f;
-
+    private const float ShockDamage = 3f;
     private static IObject? _invisibleBlock;
 
     private readonly INotificationService _notificationService;
@@ -56,7 +56,7 @@ internal class Shock : DurableBuffBase, IRepressibleByImmunityFlagsBuff
         UpdateDialogue(_fakePlayer, true);
 
         var playerInstance = Player.Instance!;
-        
+
         ExtendedEvents.HookOnDamage(_fakePlayer, OnDamage, EventHookMode.Default);
         ExtendedEvents.HookOnDestroyed(_fakePlayer, OnFakePlayerRemovedOrParentDead, EventHookMode.Default);
         ExtendedEvents.HookOnDead(playerInstance, OnFakePlayerRemovedOrParentDead, EventHookMode.Default);
@@ -110,17 +110,17 @@ internal class Shock : DurableBuffBase, IRepressibleByImmunityFlagsBuff
         {
             position = _oldPosition;
         }
-        
+
         var playerInstance = Player.Instance;
-        
+
         if (_fakePlayer?.IsValid() == true && playerInstance?.IsValid() == true && !playerInstance.IsDead)
         {
             _fakePlayer?.RemoveDelayed();
         }
-        
+
         if (playerInstance?.IsDead != false)
             return;
-        
+
         playerInstance.SetWorldPosition(position);
         playerInstance.SetInputMode(PlayerInputMode.Enabled);
         playerInstance.SetNametagVisible(true);
@@ -129,7 +129,7 @@ internal class Shock : DurableBuffBase, IRepressibleByImmunityFlagsBuff
     private void OnDamage(Event<PlayerDamageArgs> @event)
     {
         var args = @event.Args;
-        
+
         var playerInstance = Player.Instance;
         if (!Player.IsValid())
             return;
@@ -140,10 +140,10 @@ internal class Shock : DurableBuffBase, IRepressibleByImmunityFlagsBuff
             Awaiter.Start(playerInstance.Kill, TimeSpan.Zero);
             return;
         }
-        
+
         playerInstance.SetHealth(playerInstance.GetHealth() - args.Damage);
     }
-    
+
     private void CreateAndStartShockDamageTimer()
     {
         _shockDamageTimer?.Stop();
@@ -162,24 +162,24 @@ internal class Shock : DurableBuffBase, IRepressibleByImmunityFlagsBuff
         if (_fakePlayer is null || !_fakePlayer.IsValid())
             return;
 
-        playerInstance.SetHealth(playerInstance.GetHealth() - SHOCK_DAMAGE);
+        playerInstance.SetHealth(playerInstance.GetHealth() - ShockDamage);
 
-        _notificationService.CreateTextNotification($"-{SHOCK_DAMAGE}", ExtendedColors.Electric,
+        _notificationService.CreateTextNotification($"-{ShockDamage}", ExtendedColors.Electric,
             TimeSpan.FromMilliseconds(1000), _fakePlayer);
     }
-    
+
     private void OnFakePlayerRemovedOrParentDead(Event @event)
     {
         RemovePlayer();
         ExternalFinish();
     }
-    
+
     private void RemovePlayer()
     {
         var playerInstance = Player.Instance;
         playerInstance?.RemoveDelayed();
-    } 
-    
+    }
+
     private void UpdateDialogue(IPlayer player, bool ignoreDeath)
     {
         ShowDialogue("SHOCKED", BuffColor, TimeLeft, player, ignoreDeath);

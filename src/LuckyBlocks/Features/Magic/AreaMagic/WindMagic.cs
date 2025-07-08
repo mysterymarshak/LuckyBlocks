@@ -9,6 +9,7 @@ using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.Immunity;
 using LuckyBlocks.Loot.Buffs.Instant;
 using LuckyBlocks.Utils;
+using Serilog;
 using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Features.Magic.AreaMagic;
@@ -20,46 +21,42 @@ internal class WindMagic : AreaMagicBase
     public override string Name => "Wind magic";
 
     private static Vector2 PushSpeed => new(20, 0);
+    private const float PlayerPushSpeedModifier = 1f;
 
     private readonly IBuffsService _buffsService;
     private readonly IIdentityService _identityService;
     private readonly IGame _game;
 
-    private List<IObject>? _pushedObjects;
     private List<IProjectile>? _reflectedProjectiles;
 
     public WindMagic(Player wizard, BuffConstructorArgs args, int direction = default) : base(wizard, args, direction)
-        => (_buffsService, _identityService, _game) = (args.BuffsService, args.IdentityService, args.Game);
+    {
+        _buffsService = args.BuffsService;
+        _identityService = args.IdentityService;
+        _game = args.Game;
+    }
 
     public override void PlayEffects(Area area)
     {
         PlayEffects(EffectName.Steam, area, Direction);
     }
 
-    protected override void CastInternal(Area area)
+    protected override void CastInternal(Area fullArea, Area iterationArea)
     {
-        var objects = GetObjectsByArea(area)
-            .Where(x => _pushedObjects?.Contains(x) == false)
-            .ToList();
+        var objects = GetAffectedObjectsByArea(fullArea, iterationArea).ToList();
 
-        ClearFire(objects, area);
+        ClearFire(objects, fullArea);
 
         var wizardInstance = Wizard.Instance;
 
         var objectsToPush = objects
-            .Where(x => x.GetBodyType() != BodyType.Static)
-            .Where(x => x.UniqueId != wizardInstance?.UniqueId)
+            .Where(x => x.GetBodyType() != BodyType.Static && x.UniqueId != wizardInstance?.UniqueId)
             .ToList();
-
-        _pushedObjects ??= new();
-        _pushedObjects.AddRange(objectsToPush);
 
         foreach (var objectToPush in objectsToPush)
         {
             if (objectToPush is not IPlayer playerInstance || !playerInstance.IsValid())
                 continue;
-
-            // decoys cant be disarmed
 
             var hasImmunity = HasPlayerImmunity(playerInstance);
             if (hasImmunity)
@@ -69,12 +66,15 @@ internal class WindMagic : AreaMagicBase
             var disarm = new Disarm(player);
             _buffsService.TryAddBuff(disarm, player);
 
-            objectToPush.SetLinearVelocity(new Vector2(0, 3));
+            if (playerInstance.IsOnGround || playerInstance.IsLayingOnGround)
+            {
+                playerInstance.SetWorldPosition(playerInstance.GetWorldPosition() + new Vector2(0, 3));
+            }
         }
 
         ScheduleWind(objects, Direction);
-        ReflectProjectiles(area);
-        PlayEffects(area);
+        ReflectProjectiles(iterationArea);
+        PlayEffects(iterationArea);
     }
 
     private void ClearFire(IEnumerable<IObject> objects, Area area)
@@ -93,14 +93,15 @@ internal class WindMagic : AreaMagicBase
 
     private void ScheduleWind(IReadOnlyList<IObject> objects, int direction)
     {
-        Awaiter.Start(delegate()
+        Awaiter.Start(delegate
         {
-            foreach (var obj in objects)
+            foreach (var @object in objects)
             {
-                if (obj is IPlayer playerInstance && playerInstance.IsValid() && HasPlayerImmunity(playerInstance))
+                if (@object is IPlayer playerInstance && playerInstance.IsValid() && HasPlayerImmunity(playerInstance))
                     continue;
 
-                obj.SetLinearVelocity(new Vector2(0, obj.GetLinearVelocity().Y) + PushSpeed * direction);
+                @object.SetLinearVelocity(new Vector2(0, @object.GetLinearVelocity().Y) +
+                                          PushSpeed * direction * (@object is IPlayer ? PlayerPushSpeedModifier : 1f));
             }
         }, TimeSpan.Zero);
     }
@@ -119,7 +120,7 @@ internal class WindMagic : AreaMagicBase
             if (_reflectedProjectiles?.Contains(projectile) == true)
                 continue;
 
-            _reflectedProjectiles ??= new();
+            _reflectedProjectiles ??= [];
             _reflectedProjectiles.Add(projectile);
 
             projectile.Velocity = -projectile.Velocity;

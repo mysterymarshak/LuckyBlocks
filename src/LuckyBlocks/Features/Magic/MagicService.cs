@@ -62,6 +62,20 @@ internal class MagicService : IMagicService
         _castingMagics.Add(magicId, castingMagic);
         timer.Start();
 
+#if DEBUG
+        if (_game.IsEditorTest)
+        {
+            var debugMagicDrawTimer = new PeriodicTimer<CastingMagic>(TimeSpan.Zero,
+                TimeBehavior.TimeModifier | TimeBehavior.IgnoreTimeStop,
+                magic =>
+                {
+                    _game.DrawArea(magic.GetCurrentIteration());
+                    _game.DrawArea(magic.GetFullArea(), Color.Red);
+                }, x => x.IsFinished, null, castingMagic, _extendedEvents);
+            debugMagicDrawTimer.Start();
+        }
+#endif
+
         return castingMagic;
     }
 
@@ -76,8 +90,8 @@ internal class MagicService : IMagicService
             return;
         }
 
-        var area = castingMagic.Iterate();
-        magic.Cast(area);
+        var iterationArea = castingMagic.Iterate();
+        magic.Cast(castingMagic.GetFullArea(), iterationArea);
 
         CheckCollisions();
     }
@@ -216,17 +230,16 @@ internal class MagicService : IMagicService
         public Area GetCurrentIteration()
         {
             var direction = Magic.Direction;
-            var startOffset = new Vector2(16, 0);
-            var zone = GetAllZone();
+            var fullArea = GetFullArea();
 
-            var minX = _startPosition.X + (zone.Width / Magic.IterationsCount * _iterationIndex * direction) +
-                       (startOffset.X * direction);
-            var minY = zone.BottomLeft.Y + startOffset.Y;
+            var minX = (direction == 1 ? fullArea.Min.X : fullArea.Max.X) +
+                       (fullArea.Width / Magic.IterationsCount * (_iterationIndex + 1) * direction);
+            var minY = fullArea.Min.Y;
             var min = new Vector2(minX, minY);
 
-            var maxX = _startPosition.X + (zone.Width / Magic.IterationsCount * (_iterationIndex + 1) * direction) +
-                       (startOffset.X * direction);
-            var maxY = zone.TopRight.Y + startOffset.Y;
+            var maxX = (direction == 1 ? fullArea.Min.X : fullArea.Max.X) +
+                       (fullArea.Width / Magic.IterationsCount * (_iterationIndex) * direction);
+            var maxY = fullArea.Max.Y;
             var max = new Vector2(maxX, maxY);
 
             return new Area(min, max);
@@ -243,14 +256,15 @@ internal class MagicService : IMagicService
             _timer.Stop();
         }
 
-        private Area GetAllZone()
+        public Area GetFullArea()
         {
             var zoneSize = Magic.AreaSize;
+            var startOffset = new Vector2(8, -5);
 
             return Magic.Direction == 1
-                ? new Area(new Vector2(_startPosition.X, _startPosition.Y), _startPosition + zoneSize)
-                : new Area(new Vector2(_startPosition.X - zoneSize.X, _startPosition.Y),
-                    new Vector2(_startPosition.X, _startPosition.Y + zoneSize.Y));
+                ? new Area(_startPosition + startOffset, _startPosition + zoneSize + startOffset)
+                : new Area(_startPosition + new Vector2(-startOffset.X, startOffset.Y) - new Vector2(zoneSize.X, 0),
+                    _startPosition + new Vector2(-startOffset.X, startOffset.Y) + new Vector2(0, zoneSize.Y));
         }
     }
 }

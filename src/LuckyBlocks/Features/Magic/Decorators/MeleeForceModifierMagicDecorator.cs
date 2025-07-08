@@ -26,7 +26,7 @@ internal class MeleeForceModifierMagicDecorator : IAreaMagic
 
     public void ExternalFinish() => _magic.ExternalFinish();
     public void Reflect() => _magic.Reflect();
-    public void Cast(Area area) => _magic.Cast(area);
+    public void Cast(Area fullArea, Area iterationArea) => _magic.Cast(fullArea, iterationArea);
     public void PlayEffects(Area area) => _magic.PlayEffects(area);
 
     private double GetStrengthModifier()
