@@ -32,7 +32,7 @@ internal class Hulk : DurableBuffBase
 
     protected override Color BuffColor => ExtendedColors.Emerald;
 
-    private const string HULK_COLOR_NAME = "ClothingGreen";
+    private const string HulkColorName = "ClothingGreen";
     
     private readonly IPlayerModifiersService _playerModifiersService;
     private readonly INotificationService _notificationService;
@@ -78,7 +78,7 @@ internal class Hulk : DurableBuffBase
     {
         var playerInstance = Player.Instance!;
         var profile = Player.Profile;
-        var hulkProfile = profile.ToSingleColor(HULK_COLOR_NAME);
+        var hulkProfile = profile.ToSingleColor(HulkColorName);
         
         playerInstance.SetProfile(hulkProfile);
         playerInstance.SetStrengthBoostTime((float)TimeLeft.TotalMilliseconds);
