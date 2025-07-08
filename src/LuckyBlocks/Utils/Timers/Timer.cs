@@ -13,7 +13,8 @@ internal class Timer : TimerBase
 
     private readonly Action _callback;
 
-    public Timer(TimeSpan interval, TimeBehavior timeBehavior, Action callback, IExtendedEvents extendedEvents) : base(interval, timeBehavior, extendedEvents)
+    public Timer(TimeSpan interval, TimeBehavior timeBehavior, Action callback, IExtendedEvents extendedEvents) : base(
+        interval, timeBehavior, extendedEvents)
         => (_callback, TickCallback) = (callback, OnTicked);
 
     public override void Start()
@@ -47,14 +48,16 @@ internal abstract class TimerBase
         _isFinished ? TimeSpan.Zero : TimeSpan.FromMilliseconds(Interval.TotalMilliseconds - _elapsed);
 
     protected abstract Action TickCallback { get; }
-    
+
     [InjectTimeProvider]
     protected static ITimeProvider TimeProvider { get; set; }
 
     [InjectLogger]
     private static ILogger Logger { get; set; }
 
-    private readonly TimeBehavior _timeBehavior;
+    private readonly bool _isRealTime;
+    private readonly bool _isTimeModifierAffects;
+    private readonly bool _shouldIgnoreTimeStop;
     private readonly IExtendedEvents _extendedEvents;
     private readonly Action<Event<float>> _cachedUpdateCallback;
 
@@ -63,8 +66,14 @@ internal abstract class TimerBase
     private float _elapsed;
 
     public TimerBase(TimeSpan interval, TimeBehavior timeBehavior, IExtendedEvents extendedEvents)
-        => (Interval, _timeBehavior, _extendedEvents, _cachedUpdateCallback) =
-            (interval, timeBehavior, extendedEvents, OnUpdate);
+    {
+        Interval = interval;
+        _extendedEvents = extendedEvents;
+        _cachedUpdateCallback = OnUpdate;
+        _isRealTime = timeBehavior.HasFlag<TimeBehavior>(TimeBehavior.RealTime);
+        _isTimeModifierAffects = timeBehavior.HasFlag<TimeBehavior>(TimeBehavior.TimeModifier);
+        _shouldIgnoreTimeStop = timeBehavior.HasFlag<TimeBehavior>(TimeBehavior.IgnoreTimeStop);
+    }
 
     public abstract void Start();
     public abstract void Stop();
@@ -129,18 +138,18 @@ internal abstract class TimerBase
 
     private float GetElapsed(float realElapsed)
     {
-        if (_timeBehavior.HasFlag<TimeBehavior>(TimeBehavior.RealTime))
+        if (_isRealTime)
         {
             return realElapsed;
         }
 
-        if (_timeBehavior.HasFlag<TimeBehavior>(TimeBehavior.TimeModifier))
+        if (_isTimeModifierAffects)
         {
-            if (_timeBehavior.HasFlag<TimeBehavior>(TimeBehavior.IgnoreTimeStop))
+            if (_shouldIgnoreTimeStop)
             {
                 return TimeProvider.GameSlowMoModifier * realElapsed;
             }
-            
+
             return TimeProvider.TimeModifier * realElapsed;
         }
 

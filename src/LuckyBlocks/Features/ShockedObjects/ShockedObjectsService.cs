@@ -23,17 +23,24 @@ internal class ShockedObjectsService : IShockedObjectsService
     private readonly IGame _game;
     private readonly IMediator _mediator;
     private readonly ILogger _logger;
-    private readonly ILifetimeScope _lifetimeScope;
+    private readonly IExtendedEvents _extendedEvents;
 
     public ShockedObjectsService(IShockedObjectsRepository shockedObjectsRepository, IEffectsPlayer effectsPlayer,
-        IGame game, IMediator mediator, ILogger logger, ILifetimeScope lifetimeScope) =>
-        (_shockedObjectsRepository, _effectsPlayer, _game, _mediator, _lifetimeScope, _logger) = (
-            shockedObjectsRepository, effectsPlayer, game, mediator, lifetimeScope.BeginLifetimeScope(), logger);
+        IGame game, IMediator mediator, ILogger logger, ILifetimeScope lifetimeScope)
+    {
+        _shockedObjectsRepository = shockedObjectsRepository;
+        _effectsPlayer = effectsPlayer;
+        _game = game;
+        _mediator = mediator;
+        _logger = logger;
+        var thisScope = lifetimeScope.BeginLifetimeScope();
+        _extendedEvents = thisScope.Resolve<IExtendedEvents>();
+    }
 
     public ShockedObject Shock(IObject @object, TimeSpan shockDuration)
     {
-        var shockedObject = new ShockedObject(@object, shockDuration, _effectsPlayer, _game, _mediator,
-            _lifetimeScope.BeginLifetimeScope());
+        var shockedObject =
+            new ShockedObject(@object, shockDuration, _effectsPlayer, _game, _mediator, _extendedEvents);
         shockedObject.Initialize();
 
         _shockedObjectsRepository.AddShockedObject(shockedObject);

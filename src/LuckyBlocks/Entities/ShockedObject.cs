@@ -23,26 +23,27 @@ internal class ShockedObject
 
     private readonly IObject _object;
     private readonly TimeSpan _shockDuration;
-    private readonly ILifetimeScope _lifetimeScope;
     private readonly IEffectsPlayer _effectsPlayer;
     private readonly IGame _game;
     private readonly IMediator _mediator;
-    private readonly IExtendedEvents _extendedEvents;
     private readonly PeriodicTimer<ShockedObject> _periodicTimer;
+    private readonly PeriodicTimer<ShockedObject> _effectsTimer;
     private readonly IReadOnlyList<Vector2> _collisionVectors;
 
     public ShockedObject(IObject @object, TimeSpan shockDuration, IEffectsPlayer effectsPlayer, IGame game,
-        IMediator mediator, ILifetimeScope lifetimeScope)
+        IMediator mediator, IExtendedEvents extendedEvents)
     {
         _object = @object;
         _shockDuration = shockDuration;
-        _lifetimeScope = lifetimeScope;
         _effectsPlayer = effectsPlayer;
         _game = game;
         _mediator = mediator;
-        _extendedEvents = lifetimeScope.Resolve<IExtendedEvents>();
-        _periodicTimer = new PeriodicTimer<ShockedObject>(TimeSpan.Zero, TimeBehavior.TimeModifier,
-            _ => OnUpdate(), _ => Charge <= ELEMENTARY_CHARGE, _ => Dispose(), this, _extendedEvents);
+        _periodicTimer = new PeriodicTimer<ShockedObject>(TimeSpan.Zero, TimeBehavior.TimeModifier, x => x.OnUpdate(),
+            x => x.Charge <= ELEMENTARY_CHARGE, x => x.Dispose(), this, extendedEvents);
+        _effectsTimer = new PeriodicTimer<ShockedObject>(TimeSpan.FromMilliseconds(300),
+            TimeBehavior.TimeModifier | TimeBehavior.IgnoreTimeStop,
+            x => x._effectsPlayer.PlayEffect(EffectName.Electric, _object.GetWorldPosition()),
+            shockedObject => !shockedObject.IsShocked, null, this, extendedEvents);
         _collisionVectors = Enumerable.Range(0, 8)
             .Select(x => x * 45)
             .Select(x => x * Math.PI / 180)
@@ -58,8 +59,7 @@ internal class ShockedObject
         TimeLeft = _shockDuration;
 
         _periodicTimer.Start();
-
-        AddEffects();
+        _effectsTimer.Start();
     }
 
     private void OnUpdate()
@@ -68,38 +68,32 @@ internal class ShockedObject
             TimeLeft.TotalMilliseconds - _periodicTimer.ElapsedFromPreviousTick));
 
         var position = _object.GetWorldPosition();
-        var raycastResults =
-            _collisionVectors.Select(x => _game.RayCast(position, position + x, default));
-        var touchedObjects = raycastResults
+        var touchedObjects = _collisionVectors
+            .Select(x => _game.RayCast(position, position + x, default))
             .SelectMany(x => x)
-            .Where(x => x.Hit)
-            .Where(x => x.HitObject.GetBodyType() != BodyType.Static &&
+            .Where(x => x.Hit && x.HitObject.GetBodyType() != BodyType.Static &&
                         x.HitObject.GetPhysicsLayer() == PhysicsLayer.Active)
             .Select(x => x.HitObject)
             .ToList();
 
-        if (!touchedObjects.Any())
+        foreach (var collisionVector in _collisionVectors)
+        {
+            _game.DrawLine(position, position + collisionVector, Color.Red);
+        }
+
+        if (touchedObjects.Count == 0)
             return;
 
         var notification = new ObjectsTouchedShockObjectNotification(this, touchedObjects);
         _mediator.Publish(notification);
     }
 
-    private void AddEffects()
-    {
-        var period = TimeSpan.FromMilliseconds(300);
-        var timer = new PeriodicTimer<ShockedObject>(period, TimeBehavior.TimeModifier | TimeBehavior.IgnoreTimeStop,
-            _ => _effectsPlayer.PlayEffect(EffectName.Electric, _object.GetWorldPosition()),
-            shockedObject => !shockedObject.IsShocked, default, this, _extendedEvents);
-        timer.Start();
-    }
-
     private void Dispose()
     {
         IsShocked = false;
 
-        _lifetimeScope.Dispose();
-        _extendedEvents.Clear();
+        _periodicTimer.Stop();
+        _effectsTimer.Stop();
 
         var notification = new ShockObjectEndedNotification(_object);
         _mediator.Publish(notification);
