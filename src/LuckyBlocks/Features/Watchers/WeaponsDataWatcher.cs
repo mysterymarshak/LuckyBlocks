@@ -98,7 +98,7 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
         {
             var player = _identityService.GetPlayerByInstance(playerInstance);
             player.SetWeaponsData(playerInstance.CreateWeaponsData());
-            
+
             Logger.Debug("Initialized weapon data for {Player}", player.Name);
         }
     }

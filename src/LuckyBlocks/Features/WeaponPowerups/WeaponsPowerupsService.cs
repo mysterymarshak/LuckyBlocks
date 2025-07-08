@@ -238,7 +238,9 @@ internal class WeaponPowerupsService : IWeaponPowerupsService
         var owner = weapon.Owner;
         if (owner is null)
         {
-            _logger.Warning("calling EnsureWeaponHasEnoughAmmoForPowerups when weapon's owner is null, skip. Weapon: {Weapon}", weapon);
+            _logger.Warning(
+                "calling EnsureWeaponHasEnoughAmmoForPowerups when weapon's owner is null, skip. Weapon: {Weapon}",
+                weapon);
             return;
         }
 
