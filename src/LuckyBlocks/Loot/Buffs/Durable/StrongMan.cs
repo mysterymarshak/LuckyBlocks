@@ -15,7 +15,8 @@ internal class StrongMan : DurableBuffBase, IImmunityFlagsIndicatorBuff
         ProjectileDamageDealtModifier = 100,
         MeleeDamageDealtModifier = 100,
         MeleeForceModifier = 10,
-        MeleeStunImmunity = 1
+        MeleeStunImmunity = 1,
+        ThrowForce = 3f
     };
 
     public override string Name => "Strong man";
