@@ -43,7 +43,8 @@ internal class LuckyBlocksModule : Module
                 .MinimumLevel.Information()
 #endif
                 .WriteTo.Chat(x.Resolve<IGame>(), x.Resolve<IChat>())
-                .CreateLogger());
+                .CreateLogger())
+            .SingleInstance();
 
         builder.RegisterType<Chat>()
             .As<IChat>()
