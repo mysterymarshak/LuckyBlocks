@@ -8,6 +8,7 @@ using LuckyBlocks.Extensions;
 using LuckyBlocks.Loot.Attributes;
 using LuckyBlocks.Loot.WeaponPowerups;
 using LuckyBlocks.Loot.WeaponPowerups.Bullets;
+using LuckyBlocks.Loot.WeaponPowerups.Melees;
 using LuckyBlocks.Loot.WeaponPowerups.ThrownItems;
 using OneOf;
 using OneOf.Types;
@@ -21,7 +22,7 @@ internal class WeaponWithRandomPowerup : PowerUppedWeaponBase
     public override Item Item => Item.WeaponWithRandomPowerup;
 
     private static readonly List<WeaponItem> Exceptions = [WeaponItem.FLAMETHROWER];
-    private static readonly List<WeaponItem> Inclusions = [WeaponItem.GRENADES];
+    private static readonly List<WeaponItem> Inclusions = [WeaponItem.GRENADES, WeaponItem.KATANA];
 
     private static readonly List<WeaponItem> WeaponItems = Enum.GetValues(typeof(WeaponItem))
         .Cast<WeaponItem>()
@@ -75,6 +76,7 @@ internal class WeaponWithRandomPowerup : PowerUppedWeaponBase
             (powerupType, item) = _weaponItem switch
             {
                 WeaponItem.GRENADES => GrenadePowerups.GetRandomElement(),
+                WeaponItem.KATANA => (typeof(FlamyKatana), Item.FlamyKatana),
                 _ => FirearmPowerups.GetRandomElement()
             };
         }
