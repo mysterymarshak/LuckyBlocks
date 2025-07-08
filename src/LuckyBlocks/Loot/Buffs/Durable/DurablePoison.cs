@@ -2,6 +2,7 @@ using System;
 using LuckyBlocks.Data;
 using LuckyBlocks.Entities;
 using LuckyBlocks.Exceptions;
+using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Immunity;
 using LuckyBlocks.Utils;
 using LuckyBlocks.Utils.Timers;
@@ -17,6 +18,7 @@ internal class DurablePoison : DurableBuffBase, IRepressibleByImmunityFlagsBuff
 
     protected override Color BuffColor => ExtendedColors.SwampGreen;
 
+    private const string PoisonedColorName = "ClothingDarkGreen";
     private const float TotalDamage = 30f;
 
     private readonly INotificationService _notificationService;
@@ -38,12 +40,18 @@ internal class DurablePoison : DurableBuffBase, IRepressibleByImmunityFlagsBuff
 
     protected override void OnRan()
     {
-        ShowDialogue("Poisoned", BuffColor, TimeSpan.FromMilliseconds(Math.Min(3000, TimeLeft.TotalMilliseconds)));
+        ShowDialogue("POISONED", BuffColor, TimeLeft);
         ShowMessage();
 
         _timer = new PeriodicTimer(TimeSpan.FromSeconds(1), TimeBehavior.TimeModifier, OnTick, default, int.MaxValue,
             ExtendedEvents);
         _timer.Start();
+        OnTick();
+
+        var profile = Player.Profile;
+        var playerInstance = Player.Instance!;
+        var poisonedProfile = profile.ToSingleColor(PoisonedColorName);
+        playerInstance.SetProfile(poisonedProfile);
     }
 
     protected override void OnAppliedAgain()
@@ -54,6 +62,12 @@ internal class DurablePoison : DurableBuffBase, IRepressibleByImmunityFlagsBuff
     protected override void OnFinished()
     {
         _timer.Stop();
+
+        if (Player.Instance?.IsValid() == true)
+        {
+            var playerInstance = Player.Instance!;
+            playerInstance.SetProfile(Player.Profile);
+        }
     }
 
     private void OnTick()
@@ -63,6 +77,9 @@ internal class DurablePoison : DurableBuffBase, IRepressibleByImmunityFlagsBuff
 
         var damage = TotalDamage / Duration.TotalSeconds;
         playerInstance.SetHealth(playerInstance.GetHealth() - (float)damage);
+
+        _notificationService.CreateTextNotification($"-{damage}", ExtendedColors.SwampGreen,
+            TimeSpan.FromMilliseconds(1000), playerInstance);
     }
 
     private void ShowMessage()
