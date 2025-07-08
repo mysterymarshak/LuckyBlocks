@@ -12,18 +12,20 @@ internal enum ImmunityFlag
     ImmunityToFire = 2,
 
     ImmunityToFreeze = 4,
-    
+
     ImmunityToWind = 8,
-    
+
     ImmunityToShock = 16,
-    
+
     ImmunityToTimeStop = 32,
 
     ImmunityToMagic = ImmunityToFire | ImmunityToFreeze | ImmunityToWind | ImmunityToShock,
 
     ImmunityToFall = 64,
-    
+
     ImmunityToDeath = 128,
-        
-    FullDamageImmunity = ImmunityToPoison | ImmunityToMagic | ImmunityToFall
+
+    FullDamageImmunity = ImmunityToPoison | ImmunityToMagic | ImmunityToFall,
+
+    ImmunityToSteal = 256
 }

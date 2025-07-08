@@ -6,6 +6,7 @@ using LuckyBlocks.Data;
 using LuckyBlocks.Entities;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Identity;
+using LuckyBlocks.Features.Immunity;
 using LuckyBlocks.Features.Time;
 using LuckyBlocks.Features.WeaponPowerups;
 using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
@@ -18,6 +19,8 @@ namespace LuckyBlocks.Features.Magic.NonAreaMagic;
 internal class StealMagic : NonAreaMagicBase
 {
     public override string Name => "Steal magic";
+    public bool IsStole { get; private set; }
+    public bool NoOneHasWeapon { get; private set; }
 
     private readonly IIdentityService _identityService;
     private readonly IWeaponPowerupsService _weaponPowerupsService;
@@ -69,6 +72,7 @@ internal class StealMagic : NonAreaMagicBase
             var playerWeaponsData = _weaponPowerupsService.CreateWeaponsDataCopy(player);
             _weaponPowerupsService.RestoreWeaponsDataFromCopy(Wizard, playerWeaponsData);
             _selectedPlayer.RemoveAllWeapons();
+            IsStole = true;
         }
 
         ExternalFinish();
@@ -79,7 +83,7 @@ internal class StealMagic : NonAreaMagicBase
         var (playerInstance, args, _) = @event;
         if (playerInstance != Wizard.Instance)
             return;
-        
+
         if (_timeStopService.IsTimeStopped)
             return;
 
@@ -118,15 +122,12 @@ internal class StealMagic : NonAreaMagicBase
         return otherPlayers.First();
     }
 
-    private List<IPlayer> GetPlayers()
-    {
-        var otherPlayers = _identityService.GetAlivePlayers(false)
-            .Where(x => x.Instance != Wizard.Instance && x.WeaponsData.HasAnyWeapon())
-            .Select(x => x.Instance!)
-            .OrderBy(x => x.GetWorldPosition().X)
-            .ToList();
-        return otherPlayers;
-    }
+    private List<IPlayer> GetPlayers() => _identityService.GetAlivePlayers(false)
+        .Where(x => x.Instance != Wizard.Instance && x.WeaponsData.HasAnyWeapon() &&
+                    !x.GetImmunityFlags().HasFlag<ImmunityFlag>(ImmunityFlag.ImmunityToSteal))
+        .Select(x => x.Instance!)
+        .OrderBy(x => x.GetWorldPosition().X)
+        .ToList();
 
     private void OnTimerCallback()
     {
@@ -140,10 +141,11 @@ internal class StealMagic : NonAreaMagicBase
             !getPlayerResult.AsT0.HasAnyWeapon())
         {
             _selectedPlayer = PickAlivePlayer();
-            
+
             if (_selectedPlayer is null)
             {
-                Dispose();
+                NoOneHasWeapon = true;
+                ExternalFinish();
                 return;
             }
         }
