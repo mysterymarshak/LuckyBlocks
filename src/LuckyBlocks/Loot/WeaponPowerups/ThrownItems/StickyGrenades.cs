@@ -42,10 +42,10 @@ internal class StickyGrenades : GrenadesPowerupBase
 
     private class StickyGrenade : GrenadeBase
     {
-        private const int CollisionVectorLength = 2;
+        private const int CollisionVectorLength = 3;
 
-        private static readonly IReadOnlyList<Vector2> CollisionVectors = Enumerable.Range(0, 36)
-            .Select(x => x * 10)
+        private static readonly IReadOnlyList<Vector2> CollisionVectors = Enumerable.Range(0, 12)
+            .Select(x => x * 30)
             .Select(x => x * Math.PI / 180)
             .Select(x => new Vector2((float)Math.Cos(x), (float)Math.Sin(x)) * CollisionVectorLength)
             .ToList();
@@ -66,15 +66,15 @@ internal class StickyGrenades : GrenadesPowerupBase
 
         public override void Initialize()
         {
-            _collisionCheckCallback = Events.UpdateCallback.Start(OnCollisionCheckCallback);
+            _collisionCheckCallback = Events.UpdateCallback.Start(OnUpdate);
             _playerDamageCallback = Events.PlayerDamageCallback.Start(OnPlayerDamaged);
 
             base.Initialize();
         }
 
-        private void OnCollisionCheckCallback(float e)
+        private void OnUpdate(float e)
         {
-            var position = _grenade.GetWorldPosition();
+            var position = _grenade.GetAABB().Center;
             var raycastInput = new RayCastInput
             {
                 ClosestHitOnly = true,
@@ -83,12 +83,25 @@ internal class StickyGrenades : GrenadesPowerupBase
                 MaskBits = ushort.MaxValue ^ 0b100
             };
 
-            var raycastResults =
-                CollisionVectors.Select(x => _game.RayCast(position, position + x, raycastInput).First());
-            var result = raycastResults
-                .Where(x => x.Hit)
-                .OrderBy(x => (x.Position - position).Length())
-                .FirstOrDefault();
+            var result = CollisionVectors
+                .Select(x => _game.RayCast(position, position + x, raycastInput)[0])
+                .FirstOrDefault(x => x.Hit);
+
+            // var result = CollisionVectors
+            //     .Select(x => _game.RayCast(position, position + x, raycastInput).First())
+            //     .Where(x => x.Hit)
+            //     .OrderBy(x => (x.Position - position).Length())
+            //     .FirstOrDefault();
+
+#if DEBUG
+            if (_game.IsEditorTest)
+            {
+                foreach (var collisionVector in CollisionVectors)
+                {
+                    _game.DrawLine(position, position + collisionVector, Color.Red);
+                }
+            }
+#endif
 
             if (!result.Hit)
                 return;
