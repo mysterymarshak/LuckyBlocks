@@ -198,11 +198,9 @@ internal class Vampirism : DurableBuffBase
 
     private void OnRestoreEnergyModifier()
     {
-        var playerInstance = Player.Instance;
-        if (playerInstance?.IsValidUser() != true)
-            return;
-
+        var playerInstance = Player.Instance!;
         var modifiers = playerInstance.GetModifiers();
+
         modifiers.EnergyRechargeModifier = EnergyRechargeModifier;
         modifiers.EnergyConsumptionModifier = EnergyConsumptionModifier;
         playerInstance.SetModifiers(modifiers);
