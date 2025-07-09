@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using LuckyBlocks.Data;
 using LuckyBlocks.Data.Weapons;
 using LuckyBlocks.Exceptions;

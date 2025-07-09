@@ -1,5 +1,4 @@
 using System;
-using LuckyBlocks.Data;
 using LuckyBlocks.Data.Mappers;
 using LuckyBlocks.Data.Weapons;
 using LuckyBlocks.Reflection;

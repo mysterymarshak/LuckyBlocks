@@ -1,8 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using LuckyBlocks.Data;
 using LuckyBlocks.Data.Weapons;
-using LuckyBlocks.Exceptions;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Immunity;
 using LuckyBlocks.Loot.Buffs;

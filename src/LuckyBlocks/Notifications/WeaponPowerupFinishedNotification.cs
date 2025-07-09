@@ -1,6 +1,5 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
-using LuckyBlocks.Data;
 using LuckyBlocks.Data.Weapons;
 using LuckyBlocks.Features.WeaponPowerups;
 using LuckyBlocks.Loot.WeaponPowerups;

@@ -9,7 +9,6 @@ using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.Immunity;
 using LuckyBlocks.Loot.Buffs.Instant;
 using LuckyBlocks.Utils;
-using Serilog;
 using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Features.Magic.AreaMagic;

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Autofac;
-using LuckyBlocks.Data;
 using LuckyBlocks.Data.Weapons;
 using LuckyBlocks.Entities;
 using LuckyBlocks.Exceptions;

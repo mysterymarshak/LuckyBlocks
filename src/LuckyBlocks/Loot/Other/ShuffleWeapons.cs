@@ -7,7 +7,6 @@ using LuckyBlocks.Entities;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.WeaponPowerups;
-using LuckyBlocks.Utils;
 
 namespace LuckyBlocks.Loot.Other;
 

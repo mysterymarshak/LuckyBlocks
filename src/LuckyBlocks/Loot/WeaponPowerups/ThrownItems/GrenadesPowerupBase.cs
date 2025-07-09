@@ -1,14 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using Autofac;
 using LuckyBlocks.Data;
 using LuckyBlocks.Data.Weapons;
 using LuckyBlocks.Exceptions;
-using LuckyBlocks.Notifications;
 using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
 using LuckyBlocks.Utils;
-using Mediator;
 using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Loot.WeaponPowerups.ThrownItems;
