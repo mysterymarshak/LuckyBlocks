@@ -17,7 +17,10 @@ internal class Vampirism : DurableBuffBase
     public static readonly PlayerModifiers ModifiedModifiers = new()
     {
         RunSpeedModifier = 1.2f,
-        SprintSpeedModifier = 1.2f
+        SprintSpeedModifier = 1.2f,
+        ClimbingSpeed = 1.2f,
+        EnergyRechargeModifier = EnergyRechargeModifier,
+        EnergyConsumptionModifier = EnergyConsumptionModifier
     };
 
     public override string Name => "Vampirism";
@@ -25,9 +28,15 @@ internal class Vampirism : DurableBuffBase
 
     protected override Color BuffColor => ExtendedColors.ImperialRed;
 
-    private const int POISON_AMOUNT = 25;
-    private const int MEDKIT_HEALTH_EFFECT = 50;
-    private const int PILLS_HEALTH_EFFECT = 25;
+    private const float BuffedEnergyRechargeModifier = 1.5f;
+    private const float BuffedEnergyConsumptionModifier = 0.75f;
+    private const float EnergyRechargeModifier = 1.01f;
+    private const float EnergyConsumptionModifier = 0.99f;
+    // needs to be != 1f because indicator for PlayerModifiersService
+
+    private const int PoisonAmount = 25;
+    private const int MedkitHealthEffect = 50;
+    private const int PillsHealthEffect = 25;
 
     private readonly IBuffsService _buffsService;
     private readonly INotificationService _notificationService;
@@ -36,6 +45,7 @@ internal class Vampirism : DurableBuffBase
     private readonly IGame _game;
     private readonly BuffConstructorArgs _args;
     private readonly RandomPeriodicTimer _bloodEffectTimer;
+    private readonly Timer _energyRechargeBuffTimer;
 
     private PlayerModifiers? _playerModifiers;
 
@@ -48,15 +58,17 @@ internal class Vampirism : DurableBuffBase
         _playerModifiersService = args.PlayerModifiersService;
         _game = args.Game;
         _args = args;
-        _bloodEffectTimer = new(TimeSpan.FromMilliseconds(600), TimeSpan.FromMilliseconds(1000),
+        _bloodEffectTimer = new RandomPeriodicTimer(TimeSpan.FromMilliseconds(600), TimeSpan.FromMilliseconds(1000),
             TimeBehavior.TimeModifier | TimeBehavior.IgnoreTimeStop, OnBloodEffectCallback, ExtendedEvents);
+        _energyRechargeBuffTimer = new Timer(TimeSpan.FromSeconds(1), TimeBehavior.TimeModifier,
+            OnRestoreEnergyModifier, ExtendedEvents);
     }
 
     public override IDurableBuff Clone()
     {
         return new Vampirism(Player, _args, TimeLeft);
     }
-    
+
     protected override void OnRan()
     {
         var playerInstance = Player.Instance!;
@@ -81,6 +93,7 @@ internal class Vampirism : DurableBuffBase
 
         ExtendedEvents.Clear();
         _bloodEffectTimer.Stop();
+        _energyRechargeBuffTimer.Stop();
     }
 
     private void EnableBuff()
@@ -102,10 +115,11 @@ internal class Vampirism : DurableBuffBase
     {
         var (attackedPlayer, args, _) = @event;
         var playerInstance = Player.Instance;
-        
-        if (attackedPlayer == playerInstance || playerInstance?.IsValidUser() != true || attackedPlayer?.IsValidUser() != true)
+
+        if (attackedPlayer == playerInstance ||
+            playerInstance?.IsValidUser() != true /*|| attackedPlayer?.IsValidUser() != true*/)
             return;
-        
+
         switch (args.DamageType)
         {
             case PlayerDamageEventType.Melee when args.SourceID != playerInstance.UniqueId:
@@ -115,7 +129,7 @@ internal class Vampirism : DurableBuffBase
                 var projectile = _game.GetProjectile(args.SourceID);
                 if (projectile.InitialOwnerPlayerID != playerInstance.UniqueId)
                     return;
-                
+
                 break;
             }
         }
@@ -135,9 +149,22 @@ internal class Vampirism : DurableBuffBase
             return;
 
         playerInstance.SetHealth(newHealth);
+        GiveEnergyBuff(playerInstance, difference);
 
         _notificationService.CreateTextNotification($"+{Math.Round(difference, 1)}", Color.Green,
             TimeSpan.FromMilliseconds(300), playerInstance);
+    }
+
+    private void GiveEnergyBuff(IPlayer playerInstance, float healAmount)
+    {
+        var modifiers = playerInstance.GetModifiers();
+        modifiers.EnergyRechargeModifier = BuffedEnergyRechargeModifier;
+        modifiers.EnergyConsumptionModifier = BuffedEnergyConsumptionModifier;
+        modifiers.CurrentEnergy += healAmount * 2;
+        playerInstance.SetModifiers(modifiers);
+
+        _energyRechargeBuffTimer.Reset();
+        _energyRechargeBuffTimer.Start();
     }
 
     private void OnWeaponAdded(Event<PlayerWeaponAddedArg> @event)
@@ -148,8 +175,8 @@ internal class Vampirism : DurableBuffBase
 
         var damage = args.WeaponItem switch
         {
-            WeaponItem.MEDKIT => MEDKIT_HEALTH_EFFECT + POISON_AMOUNT,
-            WeaponItem.PILLS => PILLS_HEALTH_EFFECT + POISON_AMOUNT,
+            WeaponItem.MEDKIT => MedkitHealthEffect + PoisonAmount,
+            WeaponItem.PILLS => PillsHealthEffect + PoisonAmount,
             _ => 0
         };
 
@@ -167,6 +194,18 @@ internal class Vampirism : DurableBuffBase
 
         var playerInstance = Player.Instance!;
         _effectsPlayer.PlayEffect(EffectName.Blood, playerInstance.GetWorldPosition());
+    }
+
+    private void OnRestoreEnergyModifier()
+    {
+        var playerInstance = Player.Instance;
+        if (playerInstance?.IsValidUser() != true)
+            return;
+
+        var modifiers = playerInstance.GetModifiers();
+        modifiers.EnergyRechargeModifier = EnergyRechargeModifier;
+        modifiers.EnergyConsumptionModifier = EnergyConsumptionModifier;
+        playerInstance.SetModifiers(modifiers);
     }
 
     private void UpdateDialogue()
