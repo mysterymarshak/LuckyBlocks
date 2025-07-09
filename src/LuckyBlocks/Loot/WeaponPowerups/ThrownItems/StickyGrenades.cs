@@ -5,6 +5,7 @@ using LuckyBlocks.Data;
 using LuckyBlocks.Data.Weapons;
 using LuckyBlocks.Exceptions;
 using LuckyBlocks.Extensions;
+using LuckyBlocks.Features.Watchers;
 using LuckyBlocks.Utils;
 using SFDGameScriptInterface;
 
@@ -52,16 +53,21 @@ internal class StickyGrenades : GrenadesPowerupBase
 
         private readonly IObjectGrenadeThrown _grenade;
         private readonly IGame _game;
+        private readonly IExtendedEvents _extendedEvents;
 
         private IObjectWeldJoint? _objectWeldJoint;
         private Events.UpdateCallback? _collisionCheckCallback;
         private Events.PlayerDamageCallback? _playerDamageCallback;
+        private PortalsWatcher? _portalsWatcher;
+        private bool _isAttached;
+        private Vector2 _attachOffset;
 
         public StickyGrenade(IObjectGrenadeThrown grenade, IGame game, IExtendedEvents extendedEvents) : base(grenade,
             extendedEvents)
         {
             _grenade = grenade;
             _game = game;
+            _extendedEvents = extendedEvents;
         }
 
         public override void Initialize()
@@ -72,8 +78,21 @@ internal class StickyGrenades : GrenadesPowerupBase
             base.Initialize();
         }
 
+        protected override void Dispose()
+        {
+            _playerDamageCallback?.Stop();
+            _collisionCheckCallback?.Stop();
+            _objectWeldJoint?.RemoveDelayed();
+            _portalsWatcher?.Dispose();
+
+            base.Dispose();
+        }
+
         private void OnUpdate(float e)
         {
+            if (_isAttached)
+                return;
+
             var position = _grenade.GetAABB().Center;
             var raycastInput = new RayCastInput
             {
@@ -84,7 +103,11 @@ internal class StickyGrenades : GrenadesPowerupBase
             };
 
             var result = CollisionVectors
-                .Select(x => _game.RayCast(position, position + x, raycastInput)[0])
+                .Select(x =>
+                {
+                    var result = _game.RayCast(position, position + x, raycastInput)[0];
+                    return result.HitObject?.UniqueId == _grenade.UniqueId ? new RayCastResult() : result;
+                })
                 .FirstOrDefault(x => x.Hit);
 
             // var result = CollisionVectors
@@ -126,15 +149,22 @@ internal class StickyGrenades : GrenadesPowerupBase
             _objectWeldJoint = (_game.CreateObject("WeldJoint", _grenade.GetWorldPosition()) as IObjectWeldJoint)!;
             _objectWeldJoint.AddTargetObject(@object);
             _objectWeldJoint.AddTargetObject(_grenade);
+
+            _isAttached = true;
+            _attachOffset = @object.GetWorldPosition() - _grenade.GetWorldPosition();
+
+            if (@object is IPlayer playerInstance)
+            {
+                _portalsWatcher = new PortalsWatcher(playerInstance, _game, _extendedEvents,
+                    portalExitedCallback: OnPortalExited);
+                _portalsWatcher.Initialize();
+            }
         }
 
-        protected override void Dispose()
+        private void OnPortalExited(IObjectPortal portal)
         {
-            _playerDamageCallback?.Stop();
-            _collisionCheckCallback?.Stop();
-            _objectWeldJoint?.RemoveDelayed();
-
-            base.Dispose();
+            var grenadePosition = _grenade.GetWorldPosition();
+            _grenade.SetWorldPosition(grenadePosition + _attachOffset);
         }
     }
 }
