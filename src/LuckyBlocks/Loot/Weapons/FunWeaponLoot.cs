@@ -23,7 +23,8 @@ internal class FunWeaponLoot : PowerUppedWeaponBase
     [
         new(WeaponItem.BOW, [typeof(PushBullets), typeof(InfiniteRicochetBullets)]),
         new(WeaponItem.BOW, [typeof(InfiniteRicochetBullets)]),
-        new(WeaponItem.GRENADE_LAUNCHER, [typeof(InfiniteRicochetBullets)])
+        new(WeaponItem.GRENADE_LAUNCHER, [typeof(InfiniteRicochetBullets)]),
+        new(WeaponItem.BAZOOKA, [typeof(InfiniteRicochetBullets)])
     ];
 
     private readonly IPowerupFactory _powerupFactory;
