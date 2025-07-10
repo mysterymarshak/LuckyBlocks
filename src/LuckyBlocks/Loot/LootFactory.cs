@@ -13,8 +13,6 @@ using LuckyBlocks.Loot.WeaponPowerups;
 using LuckyBlocks.Loot.WeaponPowerups.Bullets;
 using LuckyBlocks.Loot.Weapons;
 using LuckyBlocks.Loot.Weapons.Grenades;
-using LuckyBlocks.Loot.Weapons.InfiniteBouncing;
-using LuckyBlocks.Loot.Weapons.LegendaryWeapon;
 using LuckyBlocks.Utils;
 using OneOf;
 using OneOf.Types;
@@ -104,7 +102,7 @@ internal class LootFactory : ILootFactory
 
     private OneOf<ILoot, ArgumentOutOfRangeException> GetNonPlayerLoot(Vector2 position, Item item) => item switch
     {
-        Item.LegendaryWeapon => new LegendaryWeaponWrapper(position, _lootConstructorArgs),
+        Item.LegendaryWeapon => new LegendaryWeaponLoot(position, _lootConstructorArgs),
         Item.ShuffleWeapons => new ShuffleWeapons(_lootConstructorArgs),
         Item.ShufflePositions => new ShufflePositions(_lootConstructorArgs),
         Item.RespawnRandomPlayer => new RespawnRandomPlayer(_lootConstructorArgs),
@@ -117,12 +115,10 @@ internal class LootFactory : ILootFactory
         Item.MedkitPoisoned => new MedkitPoisoned(position, _lootConstructorArgs),
         Item.StickyGrenades => new StickyGrenadesLoot(position, _lootConstructorArgs),
         Item.BananaGrenades => new BananaGrenadesLoot(position, _lootConstructorArgs),
-        Item.BowWithPushingAndInfiniteBouncing => new BowWithPushingAndInfiniteBouncing(position, _lootConstructorArgs),
-        Item.GrenadeLauncherWithInfiniteBouncing => new GrenadeLauncherWithInfiniteBouncing(position,
-            _lootConstructorArgs),
-        Item.WeaponWithRandomPowerup => new WeaponWithRandomPowerup(position, _lootConstructorArgs),
+        Item.WeaponWithRandomPowerup => new WeaponWithRandomPowerupLoot(position, _lootConstructorArgs),
         Item.FlamyKatana => new FlamyKatanaLoot(position, _lootConstructorArgs),
         Item.RemoveWeapons => new RemoveWeapons(_lootConstructorArgs),
+        Item.FunWeapon => new FunWeaponLoot(position, _lootConstructorArgs),
         _ => new ArgumentOutOfRangeException(nameof(item))
     };
 }

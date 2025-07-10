@@ -7,7 +7,7 @@ using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Loot.WeaponPowerups.Mined;
 
-internal class MinedMeleePowerup : IStackablePowerup<Melee>
+internal class MinedMelee : IStackablePowerup<Melee>
 {
     public string Name => "Mined melee";
     public Melee Weapon { get; private set; }
@@ -18,7 +18,7 @@ internal class MinedMeleePowerup : IStackablePowerup<Melee>
     private readonly IGame _game;
     private readonly PowerupConstructorArgs _args;
 
-    public MinedMeleePowerup(Melee melee, PowerupConstructorArgs args)
+    public MinedMelee(Melee melee, PowerupConstructorArgs args)
     {
         Weapon = melee;
         _notificationService = args.NotificationService;
@@ -30,7 +30,7 @@ internal class MinedMeleePowerup : IStackablePowerup<Melee>
     {
         var melee = weapon as Melee;
         ArgumentWasNullException.ThrowIfNull(melee);
-        return new MinedMeleePowerup(melee, _args);
+        return new MinedMelee(melee, _args);
     }
 
     public void Run()

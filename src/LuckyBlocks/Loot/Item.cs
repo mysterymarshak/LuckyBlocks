@@ -78,10 +78,6 @@ internal enum Item
     [Weight(0.5f)]
     BloodyBath,
 
-    BowWithPushingAndInfiniteBouncing,
-
-    GrenadeLauncherWithInfiniteBouncing,
-
     [OnlyPlayer]
     [PlayerIsNotOtherWizard(SourceWizard = typeof(FireWizard))]
     FireWizard,
@@ -159,9 +155,12 @@ internal enum Item
     [CantBeAppliedIfAlreadyExists(typeof(RestoreWizard))]
     [PlayerIsNotOtherWizard(SourceWizard = typeof(RestoreWizard))]
     RestoreWizard,
-    
+
     [OnlyPlayer]
     [CantBeAppliedIfAlreadyExists(typeof(StealWizard))]
     [PlayerIsNotOtherWizard(SourceWizard = typeof(StealWizard))]
-    StealWizard
+    StealWizard,
+
+    [Always]
+    FunWeapon
 }

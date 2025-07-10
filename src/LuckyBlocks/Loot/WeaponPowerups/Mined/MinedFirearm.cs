@@ -8,7 +8,7 @@ using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Loot.WeaponPowerups.Mined;
 
-internal class MinedFirearmPowerup : IStackablePowerup<Firearm>
+internal class MinedFirearm : IStackablePowerup<Firearm>
 {
     public string Name => "Mined weapon";
     public Firearm Weapon { get; private set; }
@@ -17,7 +17,7 @@ internal class MinedFirearmPowerup : IStackablePowerup<Firearm>
     private readonly IGame _game;
     private readonly PowerupConstructorArgs _args;
 
-    public MinedFirearmPowerup(Firearm firearm, PowerupConstructorArgs args)
+    public MinedFirearm(Firearm firearm, PowerupConstructorArgs args)
     {
         Weapon = firearm;
         _notificationService = args.NotificationService;
@@ -29,7 +29,7 @@ internal class MinedFirearmPowerup : IStackablePowerup<Firearm>
     {
         var firearm = weapon as Firearm;
         ArgumentWasNullException.ThrowIfNull(firearm);
-        return new MinedFirearmPowerup(firearm, _args);
+        return new MinedFirearm(firearm, _args);
     }
 
     public void Run()

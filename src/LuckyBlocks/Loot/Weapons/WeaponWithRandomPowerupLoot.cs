@@ -16,7 +16,7 @@ using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Loot.Weapons;
 
-internal class WeaponWithRandomPowerup : PowerUppedWeaponBase
+internal class WeaponWithRandomPowerupLoot : PowerUppedWeaponBase
 {
     public override string Name => $"{_weaponItem} with {_powerupType.Name}";
     public override Item Item => Item.WeaponWithRandomPowerup;
@@ -52,7 +52,7 @@ internal class WeaponWithRandomPowerup : PowerUppedWeaponBase
     private readonly IPowerupFactory _powerupFactory;
     private readonly IAttributesChecker _attributesChecker;
 
-    public WeaponWithRandomPowerup(Vector2 spawnPosition, LootConstructorArgs args) : base(spawnPosition, args)
+    public WeaponWithRandomPowerupLoot(Vector2 spawnPosition, LootConstructorArgs args) : base(spawnPosition, args)
     {
         _weaponItem = WeaponItems.GetRandomElement();
         _powerupFactory = args.PowerupFactory;
