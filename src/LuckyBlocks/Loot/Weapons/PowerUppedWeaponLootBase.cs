@@ -44,7 +44,12 @@ internal abstract class PowerUppedWeaponBase : ILoot
         var weaponObject = _game.SpawnWeaponItem(weaponItem, _spawnPosition, true, 20_000f);
         var weapon = _weaponsDataWatcher.RegisterWeapon(weaponObject);
 
+        OnWeaponRegistered(weapon);
         AddPowerups(weapon);
+    }
+
+    protected virtual void OnWeaponRegistered(Weapon weapon)
+    {
     }
 
     protected abstract IEnumerable<IWeaponPowerup<Weapon>> GetPowerups(Weapon weapon);

@@ -122,13 +122,15 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
                     !IsPickedUpWeaponCompatible(existingWeapon, droppedWeapon, player, out powerupsToConcat))
                     return;
 
-                if ((!existingWeaponIsValid || existingWeapon.WeaponItem != args.WeaponItem) &&
-                    args.WeaponItemType != WeaponItemType.InstantPickup)
+                if (!existingWeaponIsValid || existingWeapon.WeaponItem != args.WeaponItem)
                 {
-                    weaponsData.AddWeapon(droppedWeapon);
-                    droppedWeapon.SetOwner(playerInstance);
+                    if (args.WeaponItemType != WeaponItemType.InstantPickup)
+                    {
+                        weaponsData.AddWeapon(droppedWeapon);
+                        droppedWeapon.SetOwner(playerInstance);
+                    }
 
-                    droppedWeapon.RaiseEvent(WeaponEvent.PickedUp);
+                    droppedWeapon.RaiseEvent(WeaponEvent.PickedUp, playerInstance);
                 }
 
                 if (existingWeaponIsValid && existingWeapon.WeaponItem == args.WeaponItem)

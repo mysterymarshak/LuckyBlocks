@@ -151,9 +151,9 @@ internal abstract class UsablePowerupBase<T> : IUsablePowerup<T> where T : Weapo
         ShowUsesLeft(PowerupEvent.Draw);
     }
 
-    private void OnPickUp(Weapon weapon)
+    private void OnPickUp(Weapon weapon, IPlayer playerInstance)
     {
-        ShowUsesLeft(PowerupEvent.PickUp);
+        ShowUsesLeft(PowerupEvent.PickUp, playerInstance);
     }
 
     private void OnUseThrowable(IPlayer? playerInstance, IObject? objectThrown, Throwable? throwable)

@@ -55,7 +55,11 @@ internal class ReloadWeaponsWatcher : IReloadWeaponsWatcher
                     var weaponsData = player.WeaponsData;
                     var firearm = (Firearm)weaponsData.GetWeaponByType(reloadData.WeaponItemType, false);
 
-                    firearm.RaiseEvent(WeaponEvent.Reloaded);
+                    if (player.IsValid())
+                    {
+                        firearm.RaiseEvent(WeaponEvent.Reloaded, player.Instance);
+                    }
+
                     data.RemoveAt(i);
 
                     continue;

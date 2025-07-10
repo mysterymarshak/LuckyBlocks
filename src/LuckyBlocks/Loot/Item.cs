@@ -33,8 +33,6 @@ internal enum Item
 
     Medkit,
 
-    MedkitPoisoned,
-
     [LuckyBlockDropChanceCanBeIncreased]
     IncreaseSpawnChance,
 

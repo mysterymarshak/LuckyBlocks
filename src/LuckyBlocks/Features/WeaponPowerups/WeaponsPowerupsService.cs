@@ -93,7 +93,7 @@ internal class WeaponPowerupsService : IWeaponPowerupsService
         }
         else
         {
-            EnsureWeaponHasEnoughAmmoForPowerups(weapon);
+            EnsureWeaponHasEnoughAmmoForPowerups(weapon, weapon.Owner);
         }
 
         if (isFirstPowerup)
@@ -214,10 +214,14 @@ internal class WeaponPowerupsService : IWeaponPowerupsService
 
             if (existingPowerup is IUsablePowerup<Weapon>)
             {
-                EnsureWeaponHasEnoughAmmoForPowerups(weapon);
+                var playerInstance = weapon.Owner;
+                if (playerInstance?.IsValid() == true)
+                {
+                    EnsureWeaponHasEnoughAmmoForPowerups(weapon, playerInstance);
+                }
 
                 _logger.Debug("Powerup {PowerupName} uses increased for {WeaponItem} (owner {Player})", powerup.Name,
-                    weapon.WeaponItem, weapon.Owner?.Name);
+                    weapon.WeaponItem, playerInstance?.Name);
             }
 
             _logger.Debug("Powerup {PowerupName} stacked on {WeaponItem} (owner {Player})", powerup.Name,
@@ -247,7 +251,7 @@ internal class WeaponPowerupsService : IWeaponPowerupsService
         }
     }
 
-    private void EnsureWeaponHasEnoughAmmoForPowerups(Weapon weapon)
+    private void EnsureWeaponHasEnoughAmmoForPowerups(Weapon weapon, IPlayer playerInstance)
     {
         var minAmmo = weapon.Powerups
             .Where(x => x is IUsablePowerup<Weapon>)
@@ -259,22 +263,13 @@ internal class WeaponPowerupsService : IWeaponPowerupsService
         if (minAmmo == 0)
             return;
 
-        var owner = weapon.Owner;
-        if (owner is null)
-        {
-            _logger.Warning(
-                "calling EnsureWeaponHasEnoughAmmoForPowerups when weapon's owner is null, skip. Weapon: {Weapon}",
-                weapon);
-            return;
-        }
-
         switch (weapon)
         {
             case Firearm firearm when firearm.TotalAmmo < minAmmo:
-                owner.SetAmmo(firearm, minAmmo);
+                playerInstance.SetAmmo(firearm, minAmmo);
                 break;
             case Throwable throwableItem when throwableItem.CurrentAmmo < minAmmo:
-                owner.SetAmmo(throwableItem, minAmmo);
+                playerInstance.SetAmmo(throwableItem, minAmmo);
                 break;
         }
     }

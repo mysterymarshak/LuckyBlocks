@@ -19,7 +19,7 @@ internal record Weapon(WeaponItem WeaponItem, WeaponItemType WeaponItemType)
 
     public static readonly Weapon Empty = new(WeaponItem.NONE, WeaponItemType.NONE);
 
-    public event Action<Weapon>? PickUp;
+    public event Action<Weapon, IPlayer>? PickUp;
     public event Action<IObjectWeaponItem?, Weapon>? Drop;
     public event Action<IObjectWeaponItem?, Weapon>? Throw;
     public event Action<Weapon>? Draw;
@@ -91,7 +91,7 @@ internal record Weapon(WeaponItem WeaponItem, WeaponItemType WeaponItemType)
         switch (@event)
         {
             case WeaponEvent.PickedUp:
-                PickUp?.Invoke(this);
+                PickUp?.Invoke(this, (args[0] as IPlayer)!);
                 break;
             case WeaponEvent.Dropped:
                 Drop?.Invoke(args[0] as IObjectWeaponItem, this);
