@@ -161,6 +161,5 @@ internal enum Item
     [PlayerIsNotOtherWizard(SourceWizard = typeof(StealWizard))]
     StealWizard,
 
-    [Always]
     FunWeapon
 }
