@@ -85,9 +85,11 @@ internal abstract class UsablePowerupBase<T> : IUsablePowerup<T> where T : Weapo
                 _ => throw new InvalidOperationException()
             };
 
+        var oldUsesLeft = UsesLeft;
         UsesLeft = Math.Min(maxAmmo, UsesLeft + usesCount);
 
-        ShowUsesLeft(PowerupEvent.AddUses, ignoreIfDropped: true);
+        ShowUsesLeft(UsesLeft > oldUsesLeft ? PowerupEvent.AddUses : PowerupEvent.PickUpWhenMaxAmmo,
+            ignoreIfDropped: true);
     }
 
     public void MoveToWeapon(Weapon otherWeapon)
@@ -136,6 +138,8 @@ internal abstract class UsablePowerupBase<T> : IUsablePowerup<T> where T : Weapo
             PowerupEvent.Draw or PowerupEvent.FirearmUse or PowerupEvent.GrenadeUse =>
                 $"{UsesLeft} {Name.ToLower()} left",
             PowerupEvent.AddUses => $"{Name} count was increased to {UsesLeft} for {Weapon.WeaponItem}",
+            PowerupEvent.PickUpWhenMaxAmmo =>
+                $"You already have maximum {UsesLeft} {Name.ToLower()} for {Weapon.WeaponItem}",
             _ => throw new ArgumentOutOfRangeException(nameof(powerupEvent), powerupEvent, null)
         };
 
@@ -198,6 +202,8 @@ internal abstract class UsablePowerupBase<T> : IUsablePowerup<T> where T : Weapo
 
         GrenadeUse,
 
-        AddUses
+        AddUses,
+
+        PickUpWhenMaxAmmo
     }
 }
