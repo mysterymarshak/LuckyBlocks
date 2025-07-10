@@ -78,6 +78,38 @@ internal class ThrowableWeaponsWatcher : IThrowableWeaponsWatcher
         }
     }
 
+    private void UpdatePlayersThrowable()
+    {
+        var playersWithHoldingGrenades = _playersWithThrowable.Where(x =>
+            x is { Instance.IsHoldingActiveThrowable: true, WeaponsData.CurrentWeaponDrawn: Throwable } or
+                { Instance.IsHoldingActiveThrowable: false, WeaponsData.ThrowableItem.IsActive: true });
+
+        foreach (var player in playersWithHoldingGrenades)
+        {
+            var throwable = player.WeaponsData.ThrowableItem;
+            var playerInstance = player.Instance!;
+            var oldIsActive = throwable.IsActive;
+            var newIsActive = playerInstance.IsHoldingActiveThrowable;
+
+            if (throwable is Grenade grenade)
+            {
+                grenade.Update(newIsActive, playerInstance.GetActiveThrowableTimer());
+            }
+            else if (throwable.IsActive != newIsActive)
+            {
+                player.UpdateWeaponData(WeaponItemType.Thrown);
+            }
+
+            if (newIsActive && !oldIsActive)
+            {
+                throwable.RaiseEvent(WeaponEvent.Activated);
+            }
+
+            _logger.Verbose("Throwable update: {WeaponItem}, player: {Player}, isHolding: {IsHolding}",
+                throwable.WeaponItem, player.Name, playerInstance.IsHoldingActiveThrowable);
+        }
+    }
+
     private void UpdateThrownGrenades()
     {
         for (var i = _thrownGrenades.Count - 1; i >= 0; i--)
@@ -94,31 +126,6 @@ internal class ThrowableWeaponsWatcher : IThrowableWeaponsWatcher
 
             _logger.Verbose("Grenade update: {WeaponItem}, id: {ObjectId}, timer: {TimeLeft}", grenade.WeaponItem,
                 grenadeObject.UniqueId, grenade.TimeToExplosion);
-        }
-    }
-
-    private void UpdatePlayersThrowable()
-    {
-        var playersWithHoldingGrenades = _playersWithThrowable.Where(x =>
-            x is { Instance.IsHoldingActiveThrowable: true, WeaponsData.CurrentWeaponDrawn: Throwable } or
-                { Instance.IsHoldingActiveThrowable: false, WeaponsData.ThrowableItem.IsActive: true });
-
-        foreach (var player in playersWithHoldingGrenades)
-        {
-            var throwable = player.WeaponsData.ThrowableItem;
-            var playerInstance = player.Instance!;
-
-            if (throwable is Grenade grenade)
-            {
-                grenade.Update(playerInstance.IsHoldingActiveThrowable, playerInstance.GetActiveThrowableTimer());
-            }
-            else if (throwable.IsActive != playerInstance.IsHoldingActiveThrowable)
-            {
-                player.UpdateWeaponData(WeaponItemType.Thrown);
-            }
-
-            _logger.Verbose("Throwable update: {WeaponItem}, player: {Player}, isHolding: {IsHolding}",
-                throwable.WeaponItem, player.Name, playerInstance.IsHoldingActiveThrowable);
         }
     }
 }

@@ -14,6 +14,8 @@ internal enum WeaponEvent
 
     Drawn,
 
+    Activated,
+
     Hidden,
 
     Fired,
@@ -22,5 +24,5 @@ internal enum WeaponEvent
 
     MeleeHit,
 
-    Disposed,
+    Disposed
 }
