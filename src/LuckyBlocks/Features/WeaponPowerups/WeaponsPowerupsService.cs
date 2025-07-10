@@ -199,7 +199,7 @@ internal class WeaponPowerupsService : IWeaponPowerupsService
                     _logger.Debug("Run restored powerup {PowerupName}", powerup.Name);
                 }
             }
-        }, TimeSpan.Zero);
+        }, 2);
     }
 
     private bool TryAddPowerupAgain(IWeaponPowerup<Weapon> powerup, Weapon weapon)

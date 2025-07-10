@@ -26,6 +26,26 @@ internal static class Awaiter
             }
         }, (uint)interval.TotalMilliseconds, 1);
     }
+    
+    public static void Start(Action callback, int ticksCount)
+    {
+        var ticks = 0;
+        
+        Events.UpdateCallback.Start(delegate
+        {
+            try
+            {
+                if (++ticks == ticksCount)
+                {
+                    callback();
+                }
+            }
+            catch (Exception exception)
+            {
+                Logger.Error(exception, "unexpected exception in lucky blocks awaiter callback");
+            }
+        }, 0, 2);
+    }
 
     public static void Start(Action callback, TimeSpan interval, CancellationToken ct)
     {
