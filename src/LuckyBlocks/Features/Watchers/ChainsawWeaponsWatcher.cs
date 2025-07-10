@@ -44,9 +44,7 @@ internal class ChainsawWeaponsWatcher : IChainsawWeaponsWatcher
     public void StartTrackingChainsaw(Player player)
     {
         if (_playersWithChainsaw.Contains(player))
-        {
-            throw new InvalidOperationException();
-        }
+            return;
 
         var weaponsData = player.WeaponsData;
         var chainsaw = weaponsData.MeleeWeapon;
