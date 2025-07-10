@@ -5,12 +5,18 @@ using System.Linq;
 using System.Text;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Loot.WeaponPowerups;
+using LuckyBlocks.Reflection;
+using Serilog;
 using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Data.Weapons;
 
+[Inject]
 internal record Weapon(WeaponItem WeaponItem, WeaponItemType WeaponItemType)
 {
+    [InjectLogger]
+    private static ILogger Logger { get; set; }
+
     public static readonly Weapon Empty = new(WeaponItem.NONE, WeaponItemType.NONE);
 
     public event Action<Weapon>? PickUp;
@@ -79,6 +85,8 @@ internal record Weapon(WeaponItem WeaponItem, WeaponItemType WeaponItemType)
         {
             throw new InvalidOperationException("trying to raise event when weapon is copied");
         }
+
+        Logger.Debug("Raised event {Event} for {WeaponItem} (owner: {Owner})", @event, WeaponItem, Owner?.Name);
 
         switch (@event)
         {
