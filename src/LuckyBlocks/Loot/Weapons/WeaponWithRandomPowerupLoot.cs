@@ -45,7 +45,6 @@ internal class WeaponWithRandomPowerupLoot : PowerUppedWeaponBase
     };
 
     protected override WeaponItem WeaponItem => _weaponItem;
-    protected override WeaponItemType WeaponItemType => WeaponItem.GetWeaponItemType();
 
     private readonly WeaponItem _weaponItem;
     private readonly Type _powerupType;

@@ -13,7 +13,6 @@ internal class StickyGrenadesLoot : PowerUppedWeaponBase
     public override string Name => "Sticky grenades";
 
     protected override WeaponItem WeaponItem => WeaponItem.GRENADES;
-    protected override WeaponItemType WeaponItemType => WeaponItemType.Thrown;
 
     private readonly IPowerupFactory _powerupFactory;
 

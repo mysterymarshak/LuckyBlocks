@@ -13,7 +13,6 @@ internal class BananaGrenadesLoot : PowerUppedWeaponBase
     public override string Name => "Banana grenades";
 
     protected override WeaponItem WeaponItem => WeaponItem.GRENADES;
-    protected override WeaponItemType WeaponItemType => WeaponItemType.Thrown;
 
     private readonly IPowerupFactory _powerupFactory;
 

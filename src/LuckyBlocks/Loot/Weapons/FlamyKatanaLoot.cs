@@ -13,7 +13,6 @@ internal class FlamyKatanaLoot : PowerUppedWeaponBase
     public override string Name => "Flamy katana";
 
     protected override WeaponItem WeaponItem => WeaponItem.KATANA;
-    protected override WeaponItemType WeaponItemType => WeaponItemType.Melee;
 
     private readonly IPowerupFactory _powerupFactory;
 

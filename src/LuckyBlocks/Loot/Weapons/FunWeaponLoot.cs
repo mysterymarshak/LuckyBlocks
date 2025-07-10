@@ -18,7 +18,6 @@ internal class FunWeaponLoot : PowerUppedWeaponBase
     public override Item Item => Item.FunWeapon;
 
     protected override WeaponItem WeaponItem => _funWeapon.WeaponItem;
-    protected override WeaponItemType WeaponItemType => WeaponItem.GetWeaponItemType();
 
     private static readonly List<FunWeapon> FunWeapons =
     [
