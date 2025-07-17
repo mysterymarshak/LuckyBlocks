@@ -46,6 +46,7 @@ internal class CommandsHandler : ICommandsHandler
     private readonly IEntitiesService _entitiesService;
     private readonly ISnapshotCreator _snapshotCreator;
     private readonly ISpawnChanceService _spawnChanceService;
+    private readonly IEffectsPlayer _effectsPlayer;
     private readonly IExtendedEvents _extendedEvents;
 
     public CommandsHandler(ILuckyBlocksService luckyBlocksService, IIdentityService identityService,
@@ -53,7 +54,7 @@ internal class CommandsHandler : ICommandsHandler
         LootConstructorArgs lootArgs, IGame game, ILogger logger, IWeaponPowerupsService weaponPowerupsService,
         ILifetimeScope lifetimeScope, IWeaponsDataWatcher weaponsDataWatcher, ITimeRevertService timeRevertService,
         IMappedObjectsService mappedObjectsService, IEntitiesService entitiesService, ISnapshotCreator snapshotCreator,
-        ISpawnChanceService spawnChanceService)
+        ISpawnChanceService spawnChanceService, IEffectsPlayer effectsPlayer)
     {
         _luckyBlocksService = luckyBlocksService;
         _identityService = identityService;
@@ -71,6 +72,7 @@ internal class CommandsHandler : ICommandsHandler
         _entitiesService = entitiesService;
         _snapshotCreator = snapshotCreator;
         _spawnChanceService = spawnChanceService;
+        _effectsPlayer = effectsPlayer;
         _extendedEvents = lifetimeScope.BeginLifetimeScope().Resolve<IExtendedEvents>();
     }
 
@@ -303,6 +305,16 @@ internal class CommandsHandler : ICommandsHandler
                 case "chance":
                 {
                     _spawnChanceService.Increase();
+                    break;
+                }
+                case "effect":
+                {
+                    _effectsPlayer.PlayEffect(commandArgs, position);
+                    break;
+                }
+                case "sound":
+                {
+                    _effectsPlayer.PlaySoundEffect(commandArgs, position);
                     break;
                 }
 #endif
