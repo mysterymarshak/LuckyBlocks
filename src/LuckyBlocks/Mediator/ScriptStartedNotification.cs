@@ -4,7 +4,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Autofac.Util;
-using LuckyBlocks.Data.Mappers;
+using LuckyBlocks.Data.Weapons;
 using LuckyBlocks.Features.Commands;
 using LuckyBlocks.Features.Elevators;
 using LuckyBlocks.Features.Identity;

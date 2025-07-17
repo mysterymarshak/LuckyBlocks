@@ -2,6 +2,7 @@
 using Autofac;
 using LuckyBlocks.Data;
 using LuckyBlocks.Data.Args;
+using LuckyBlocks.Features.Buffs;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Utils;
 using SFDGameScriptInterface;

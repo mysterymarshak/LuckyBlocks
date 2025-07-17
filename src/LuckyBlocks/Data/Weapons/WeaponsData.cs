@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
-using LuckyBlocks.Data.Mappers;
 using LuckyBlocks.Data.Weapons.Unsafe;
 using SFDGameScriptInterface;
 

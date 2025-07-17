@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LuckyBlocks.Data;
+namespace LuckyBlocks.Features.Buffs;
 
 internal interface IFinishCondition<out T>
 {

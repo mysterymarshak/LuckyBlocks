@@ -1,5 +1,3 @@
 ﻿namespace LuckyBlocks.Data;
 
-internal readonly struct PlayerIsDeadResult
-{
-}
+internal readonly struct PlayerIsDeadResult;

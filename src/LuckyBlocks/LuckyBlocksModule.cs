@@ -2,7 +2,7 @@
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using LuckyBlocks.Data.Args;
-using LuckyBlocks.Data.Mappers;
+using LuckyBlocks.Data.Weapons;
 using LuckyBlocks.Features.Buffs;
 using LuckyBlocks.Features.Commands;
 using LuckyBlocks.Features.Dialogues;

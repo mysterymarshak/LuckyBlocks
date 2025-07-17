@@ -2,6 +2,7 @@
 using LuckyBlocks.Data;
 using LuckyBlocks.Exceptions;
 using LuckyBlocks.Extensions;
+using LuckyBlocks.Features.Buffs;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.Magic.AreaMagic;
 using SFDGameScriptInterface;

@@ -3,7 +3,7 @@ using LuckyBlocks.Features.Entities;
 using LuckyBlocks.Features.Magic;
 using LuckyBlocks.Features.Time.TimeRevert.Objects;
 
-namespace LuckyBlocks.Data;
+namespace LuckyBlocks.Features.Time.TimeRevert;
 
 internal record RealitySnapshot(
     int Id,

@@ -1,8 +1,7 @@
 ﻿using System;
-using LuckyBlocks.Data.Weapons;
 using SFDGameScriptInterface;
 
-namespace LuckyBlocks.Data.Mappers;
+namespace LuckyBlocks.Data.Weapons;
 
 internal interface IWeaponsMapper
 {

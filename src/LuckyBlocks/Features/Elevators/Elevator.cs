@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using SFDGameScriptInterface;
 
-namespace LuckyBlocks.Data.Elevators;
+namespace LuckyBlocks.Features.Elevators;
 
 internal record Elevator(
     IObject ElevatorObject,
