@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using LuckyBlocks.Data;
+using LuckyBlocks.Data.Args;
 using LuckyBlocks.Data.Weapons;
-using LuckyBlocks.Exceptions;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Buffs;
+using LuckyBlocks.Features.Buffs.Instant;
 using LuckyBlocks.Features.Identity;
-using LuckyBlocks.Loot.Buffs.Instant;
-using LuckyBlocks.Loot.WeaponPowerups;
+using LuckyBlocks.Features.Notifications;
+using LuckyBlocks.Features.WeaponPowerups;
 using LuckyBlocks.Loot.Weapons;
 using LuckyBlocks.Utils;
 using SFDGameScriptInterface;

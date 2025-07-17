@@ -1,36 +1,49 @@
 ﻿using System;
 using System.Collections.Generic;
-using LuckyBlocks.Utils;
+using Serilog;
 
 namespace LuckyBlocks.Features.LuckyBlocks;
 
 internal interface ISpawnChanceService
 {
     bool ChanceCanBeIncreased { get; }
+    int ChanceId { get; }
     double Chance { get; }
-    bool Randomize();
     void Increase();
+    void SetChance(int chanceId);
 }
 
 internal class SpawnChanceService : ISpawnChanceService
 {
-    public bool ChanceCanBeIncreased => Chances.Count > _chanceId + 1;
-    public double Chance => Chances[_chanceId];
+    public bool ChanceCanBeIncreased => Chances.Count > ChanceId + 1;
+    public int ChanceId { get; private set; }
+    public double Chance => Chances[ChanceId];
 
     private static readonly IReadOnlyList<double> Chances = new List<double> { 0.3, 0.45, 0.6 };
 
-    private int _chanceId;
+    private readonly ILogger _logger;
 
-    public bool Randomize()
+    public SpawnChanceService(ILogger logger)
     {
-        return SharedRandom.Instance.NextDouble() <= Chance;
+        _logger = logger;
     }
 
     public void Increase()
     {
-        if (_chanceId >= Chances.Count)
+        if (ChanceId >= Chances.Count)
+        {
             throw new InvalidOperationException("can't increase chance");
+        }
 
-        _chanceId++;
+        ChanceId++;
+    }
+
+    public void SetChance(int chanceId)
+    {
+        if (ChanceId != chanceId)
+        {
+            ChanceId = chanceId;
+            _logger.Information("LUCKY BLOCKS DROP CHANCE SET TO {Chance}%", Chance * 100);
+        }
     }
 }

@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
-using LuckyBlocks.Data;
+using LuckyBlocks.Data.Args;
 using LuckyBlocks.Data.Weapons;
 using LuckyBlocks.Extensions;
-using LuckyBlocks.Loot.WeaponPowerups;
+using LuckyBlocks.Features.WeaponPowerups;
 using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Loot.Weapons;
@@ -24,7 +24,7 @@ internal class LegendaryWeaponLoot : PowerUppedWeaponBase
         WeaponItem.MAGNUM,
         WeaponItem.FLAREGUN
     ];
-    
+
     public LegendaryWeaponLoot(Vector2 spawnPosition, LootConstructorArgs args) : base(spawnPosition, args)
     {
         WeaponItem = LegendaryWeapons.GetRandomElement();

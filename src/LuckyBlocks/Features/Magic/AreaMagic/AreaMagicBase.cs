@@ -1,16 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using LuckyBlocks.Data;
-using LuckyBlocks.Entities;
+using LuckyBlocks.Data.Args;
 using LuckyBlocks.Exceptions;
+using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Utils;
+using LuckyBlocks.Utils.Timers;
 using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Features.Magic.AreaMagic;
 
 internal abstract class AreaMagicBase : MagicBase, IAreaMagic
 {
+    public event Action<IAreaMagic>? Iterate;
+
     public abstract override string Name { get; }
     public abstract AreaMagicType Type { get; }
 
@@ -35,23 +38,82 @@ internal abstract class AreaMagicBase : MagicBase, IAreaMagic
         private set;
     }
 
-    protected Player Wizard { get; }
-
     private readonly IEffectsPlayer _effectsPlayer;
     private readonly IGame _game;
     private readonly Dictionary<Area, List<IObject>> _objectsByArea = new();
 
-    protected AreaMagicBase(Player wizard, BuffConstructorArgs args, int direction = default) : base(args)
-        => (Wizard, _effectsPlayer, Direction, _game) = (wizard, args.EffectsPlayer, direction, args.Game);
+    private Vector2 _startPosition;
+    private PeriodicTimer? _timer;
+    private int _iterationIndex;
+    private int _iterationsPassed;
+
+    protected AreaMagicBase(Player wizard, MagicConstructorArgs args, int direction = default) : base(wizard, args)
+    {
+        _effectsPlayer = args.EffectsPlayer;
+        _game = args.Game;
+        Direction = direction;
+    }
+
+    public sealed override IMagic Clone()
+    {
+        var areaMagic = (AreaMagicBase)base.Clone();
+        areaMagic._iterationIndex = _iterationIndex;
+        areaMagic._iterationsPassed = _iterationsPassed;
+        areaMagic._startPosition = _startPosition;
+        areaMagic.Direction = Direction;
+
+        return areaMagic;
+    }
 
     public void Reflect()
     {
+        _iterationIndex = -_iterationIndex;
         Direction = -Direction;
+    }
+
+    public override void Cast()
+    {
+        _startPosition = _startPosition == Vector2.Zero ? WizardInstance!.GetWorldPosition() : _startPosition;
+        _timer = new PeriodicTimer(TimeSpan.FromMilliseconds(PropagationTime.TotalMilliseconds / IterationsCount),
+            TimeBehavior.TimeModifier | TimeBehavior.IgnoreTimeStop |
+            TimeBehavior.TicksInTimeStopDoesntAffectToIterationsCount, OnIterate, ExternalFinish,
+            IterationsCount - _iterationsPassed,
+            ExtendedEvents);
+        _timer.Start();
     }
 
     public void Cast(Area fullArea, Area iterationArea)
     {
         CastInternal(fullArea, iterationArea);
+
+        _iterationIndex++;
+        _iterationsPassed++;
+    }
+
+    public Area GetCurrentIteration()
+    {
+        var fullArea = GetFullArea();
+
+        var minX = (Direction == 1 ? fullArea.Min.X : fullArea.Max.X) +
+                   (fullArea.Width / IterationsCount * (_iterationIndex + 1) * Direction);
+        var minY = fullArea.Min.Y;
+        var min = new Vector2(minX, minY);
+
+        var maxX = (Direction == 1 ? fullArea.Min.X : fullArea.Max.X) +
+                   (fullArea.Width / IterationsCount * (_iterationIndex) * Direction);
+        var maxY = fullArea.Max.Y;
+        var max = new Vector2(maxX, maxY);
+
+        return new Area(min, max);
+    }
+
+    public Area GetFullArea()
+    {
+        var startOffset = new Vector2(8, -5);
+        return Direction == 1
+            ? new Area(_startPosition + startOffset, _startPosition + AreaSize + startOffset)
+            : new Area(_startPosition + new Vector2(-startOffset.X, startOffset.Y) - new Vector2(AreaSize.X, 0),
+                _startPosition + new Vector2(-startOffset.X, startOffset.Y) + new Vector2(0, AreaSize.Y));
     }
 
     public abstract void PlayEffects(Area area);
@@ -96,5 +158,15 @@ internal abstract class AreaMagicBase : MagicBase, IAreaMagic
             direction == 1 ? ((area.BottomRight + area.TopRight) / 2) : ((area.BottomLeft + area.TopLeft) / 2));
         _effectsPlayer.PlayEffect(effectName,
             direction == 1 ? area.BottomRight : area.BottomLeft + new Vector2(0, area.Height / 4));
+    }
+
+    protected sealed override void OnFinishInternal()
+    {
+        _timer?.Stop();
+    }
+
+    private void OnIterate()
+    {
+        Iterate?.Invoke(this);
     }
 }

@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using LuckyBlocks.Data;
-using LuckyBlocks.Entities;
+using LuckyBlocks.Data.Args;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Buffs;
+using LuckyBlocks.Features.Buffs.Instant;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.Immunity;
-using LuckyBlocks.Loot.Buffs.Instant;
 using LuckyBlocks.Utils;
 using SFDGameScriptInterface;
 
@@ -25,19 +24,26 @@ internal class WindMagic : AreaMagicBase
     private readonly IBuffsService _buffsService;
     private readonly IIdentityService _identityService;
     private readonly IGame _game;
+    private readonly MagicConstructorArgs _args;
 
     private List<IProjectile>? _reflectedProjectiles;
 
-    public WindMagic(Player wizard, BuffConstructorArgs args, int direction = default) : base(wizard, args, direction)
+    public WindMagic(Player wizard, MagicConstructorArgs args, int direction = default) : base(wizard, args, direction)
     {
         _buffsService = args.BuffsService;
         _identityService = args.IdentityService;
         _game = args.Game;
+        _args = args;
     }
 
     public override void PlayEffects(Area area)
     {
         PlayEffects(EffectName.Steam, area, Direction);
+    }
+
+    protected override MagicBase CloneInternal()
+    {
+        return new WindMagic(Wizard, _args) { _reflectedProjectiles = _reflectedProjectiles };
     }
 
     protected override void CastInternal(Area fullArea, Area iterationArea)
@@ -62,7 +68,7 @@ internal class WindMagic : AreaMagicBase
                 continue;
 
             var player = _identityService.GetPlayerByInstance(playerInstance);
-            var disarm = new Disarm(player);
+            var disarm = new WindDisarm(player);
             _buffsService.TryAddBuff(disarm, player);
 
             if (playerInstance.IsOnGround || playerInstance.IsLayingOnGround)

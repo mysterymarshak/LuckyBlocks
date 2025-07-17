@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using LuckyBlocks.Entities;
 using LuckyBlocks.Extensions;
+using LuckyBlocks.Features.Buffs.Wizards;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.LuckyBlocks;
 using LuckyBlocks.Features.PlayerModifiers;
 using LuckyBlocks.Features.WeaponPowerups;
-using LuckyBlocks.Loot.Buffs.Wizards;
 using LuckyBlocks.Utils;
 using OneOf;
 using OneOf.Types;

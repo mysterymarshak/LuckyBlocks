@@ -1,16 +1,14 @@
 ﻿using System;
-using LuckyBlocks.Data;
-using LuckyBlocks.Entities;
+using LuckyBlocks.Data.Args;
+using LuckyBlocks.Features.Buffs;
+using LuckyBlocks.Features.Buffs.Durable;
+using LuckyBlocks.Features.Buffs.Instant;
+using LuckyBlocks.Features.Buffs.Wizards;
 using LuckyBlocks.Features.Identity;
+using LuckyBlocks.Features.WeaponPowerups.Bullets;
 using LuckyBlocks.Loot.Attributes;
-using LuckyBlocks.Loot.Buffs;
-using LuckyBlocks.Loot.Buffs.Durable;
-using LuckyBlocks.Loot.Buffs.Instant;
-using LuckyBlocks.Loot.Buffs.Wizards;
+using LuckyBlocks.Loot.Events;
 using LuckyBlocks.Loot.Items;
-using LuckyBlocks.Loot.Other;
-using LuckyBlocks.Loot.WeaponPowerups;
-using LuckyBlocks.Loot.WeaponPowerups.Bullets;
 using LuckyBlocks.Loot.Weapons;
 using LuckyBlocks.Loot.Weapons.Grenades;
 using LuckyBlocks.Utils;
@@ -90,6 +88,7 @@ internal class LootFactory : ILootFactory
         Item.RemoveWeaponsExceptPlayer => new RemoveWeaponsExceptPlayer(player.Instance, _lootConstructorArgs),
         Item.RestoreWizard => CreateWrappedBuff<RestoreWizard>(player, Item.RestoreWizard),
         Item.StealWizard => CreateWrappedBuff<StealWizard>(player, Item.StealWizard),
+        Item.TimeRevertWizard => CreateWrappedBuff<TimeRevertWizard>(player, Item.TimeRevertWizard),
         _ => new ArgumentOutOfRangeException(nameof(item))
     };
 

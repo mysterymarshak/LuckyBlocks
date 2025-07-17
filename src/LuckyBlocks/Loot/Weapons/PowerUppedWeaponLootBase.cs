@@ -1,12 +1,11 @@
 ﻿using System.Collections.Generic;
 using Autofac;
-using LuckyBlocks.Data;
+using LuckyBlocks.Data.Args;
 using LuckyBlocks.Data.Weapons;
 using LuckyBlocks.Extensions;
-using LuckyBlocks.Features.Watchers;
 using LuckyBlocks.Features.WeaponPowerups;
-using LuckyBlocks.Loot.WeaponPowerups;
 using LuckyBlocks.Utils;
+using LuckyBlocks.Utils.Watchers;
 using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Loot.Weapons;

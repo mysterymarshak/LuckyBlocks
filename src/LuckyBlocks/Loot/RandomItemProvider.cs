@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Linq;
-using LuckyBlocks.Data;
+using LuckyBlocks.Data.Args;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Loot.Attributes;
@@ -44,7 +44,8 @@ internal class RandomItemProvider : IRandomItemProvider
             .GetWeightedRandomElement(GetItemWeight);
     }
 
-    private static double GetItemWeight(Item item) => EnumUtils.AttributeExist<WeightAttribute, Item>(item, out var attribute)
-        ? attribute.Weight
-        : 1;
+    private static double GetItemWeight(Item item) =>
+        EnumUtils.AttributeExist<WeightAttribute, Item>(item, out var attribute)
+            ? attribute.Weight
+            : 1;
 }

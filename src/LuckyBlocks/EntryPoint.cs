@@ -1,21 +1,27 @@
 ﻿using System;
 using Autofac;
 using LuckyBlocks;
-using LuckyBlocks.Features.Chat;
-using LuckyBlocks.Notifications;
+using LuckyBlocks.Features.Notifications;
+using LuckyBlocks.Features.Triggers;
+using LuckyBlocks.Mediator;
 using LuckyBlocks.Utils;
 using Mediator;
 using SFDGameScriptInterface;
 
+// ReSharper disable once CheckNamespace
 namespace ㅤ;
 
 public static class ㅤ
 {
-    public static void ㅤㅤ(IGame game)
+    public static Action<TriggerArgs> ㅤㅤ(IGame game)
     {
+        Action<TriggerArgs>? triggerCallbackAction = null!;
         try
         {
             var container = BuildContainer(game);
+
+            var triggersService = container.Resolve<ITriggersService>();
+            triggerCallbackAction = triggersService.OnTriggerCallback;
 
             var mediator = container.Resolve<IMediator>();
             var notification = new ScriptStartedNotification();
@@ -26,6 +32,8 @@ public static class ㅤ
             var chat = new Chat(game);
             chat.ShowMessage($"Exception in lucky blocks entry point: {exception}", ExtendedColors.LightRed);
         }
+
+        return triggerCallbackAction ?? (_ => { });
     }
 
     private static IContainer BuildContainer(IGame game)

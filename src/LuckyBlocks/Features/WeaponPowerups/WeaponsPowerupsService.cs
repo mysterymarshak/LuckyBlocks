@@ -2,10 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using LuckyBlocks.Data.Weapons;
-using LuckyBlocks.Entities;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Identity;
-using LuckyBlocks.Loot.WeaponPowerups;
 using LuckyBlocks.Utils;
 using OneOf;
 using OneOf.Types;
@@ -22,7 +20,8 @@ internal interface IWeaponPowerupsService
     void RemovePowerup(IWeaponPowerup<Weapon> powerup, Weapon weapon);
     void ConcatPowerups(Weapon existingWeapon, IEnumerable<IWeaponPowerup<Weapon>> powerupsToConcat);
     WeaponsData CreateWeaponsDataCopy(Player player);
-    void RestoreWeaponsDataFromCopy(Player player, WeaponsData copiedWeaponsData);
+    void RestoreWeaponsDataFromCopy(Player player, WeaponsData copiedWeaponsData, bool restorePowerups = true);
+    IEnumerable<IWeaponPowerup<Weapon>> CreateWeaponPowerupsCopy(Weapon weapon);
 }
 
 internal class WeaponPowerupsService : IWeaponPowerupsService
@@ -176,7 +175,16 @@ internal class WeaponPowerupsService : IWeaponPowerupsService
         return weaponsDataCopy;
     }
 
-    public void RestoreWeaponsDataFromCopy(Player player, WeaponsData copiedWeaponsData)
+    public IEnumerable<IWeaponPowerup<Weapon>> CreateWeaponPowerupsCopy(Weapon weapon)
+    {
+        foreach (var powerup in weapon.Powerups)
+        {
+            var copiedPowerup = powerup.Clone(weapon);
+            yield return copiedPowerup;
+        }
+    }
+
+    public void RestoreWeaponsDataFromCopy(Player player, WeaponsData copiedWeaponsData, bool restorePowerups = true)
     {
         var playerInstance = player.Instance!;
         var weaponsData = player.WeaponsData;
@@ -194,12 +202,32 @@ internal class WeaponPowerupsService : IWeaponPowerupsService
 
                 foreach (var powerup in weapon.Powerups)
                 {
-                    powerup.Run();
-
-                    _logger.Debug("Run restored powerup {PowerupName}", powerup.Name);
+                    if (restorePowerups)
+                    {
+                        powerup.Run();
+                        _logger.Debug("Run restored powerup {PowerupName}", powerup.Name);
+                    }
+                    else
+                    {
+                        RemovePowerup(powerup, weapon);
+                        _logger.Debug("Remove restored powerup {PowerupName}", powerup.Name);
+                    }
                 }
             }
         }, 2);
+
+        // in sfd sometimes you cant determinate reason of weapon removal
+        // was it because its melee and its broken
+        // was it truncating ammo of thrown
+        // was it script removal
+        // was it because god dont like you
+        // so i decided to firstly remove all weapons
+        // wait when all events fired and then set new weapons
+        // so only i can restore weapons data copy only in 2 ticks
+        // => only in third tick i can guarantee that there's correct weapons data
+        // hope i wont shoot in my leg
+        // but i already delay magic restoring for 3 ticks
+        // funny isnt it? delay need for StealWizard
     }
 
     private bool TryAddPowerupAgain(IWeaponPowerup<Weapon> powerup, Weapon weapon)

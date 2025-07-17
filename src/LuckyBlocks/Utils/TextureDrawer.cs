@@ -21,7 +21,7 @@ internal class TextureDrawer
     public TextureDrawer(IObject @object, bool autoDisposeOnDestroy = false, IExtendedEvents? extendedEvents = null)
     {
         _object = @object;
-        _texts = new();
+        _texts = [];
         _drawingWeldJoint = (Game.CreateObject("WeldJoint", @object.GetWorldPosition()) as IObjectWeldJoint)!;
         _drawingWeldJoint.AddTargetObject(@object);
 

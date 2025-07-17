@@ -1,5 +1,5 @@
-﻿using LuckyBlocks.Entities;
-using LuckyBlocks.Extensions;
+﻿using LuckyBlocks.Extensions;
+using LuckyBlocks.Features.Identity;
 using SFDPlayerModifiers = SFDGameScriptInterface.PlayerModifiers;
 
 namespace LuckyBlocks.Features.PlayerModifiers;
@@ -20,7 +20,7 @@ internal class PlayerModifiersService : IPlayerModifiersService
     {
         var playerModifiers = player.ModifiedModifiers.Concat(addedModifiers);
         player.ModifiedModifiers = playerModifiers;
-      
+
         var playerInstance = player.Instance;
         playerInstance?.SetModifiers(playerModifiers);
     }
@@ -30,10 +30,10 @@ internal class PlayerModifiersService : IPlayerModifiersService
     {
         var playerModifiers = player.ModifiedModifiers;
         var revertedModifiers = modifiersToRevert.Revert(backedUpPlayerModifiers);
-        
+
         var playerInstance = player.Instance;
         playerInstance?.SetModifiers(revertedModifiers);
-        
+
         player.ModifiedModifiers = playerModifiers.Except(modifiersToRevert);
     }
 

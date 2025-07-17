@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using Autofac;
-using LuckyBlocks.Entities;
 using LuckyBlocks.Extensions;
+using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Utils;
 using LuckyBlocks.Utils.Timers;
 using Serilog;
@@ -27,8 +27,8 @@ internal class DialoguesAggregator
     private readonly Dictionary<int, Timer> _timers;
 
     private string? _playerName;
-    private int _lastDialogueId;
     private IDialogue? _dialogueObject;
+    private int _lastDialogueId;
 
     public DialoguesAggregator(IGame game, Player player, ILifetimeScope lifetimeScope, ILogger logger)
         => (_game, _player, _lifetimeScope, _logger, _dialogues, _timers) =
@@ -68,7 +68,7 @@ internal class DialoguesAggregator
     {
         return _dialogues.Select(dialogue =>
             new Dialogue(dialogue.Value.Text, dialogue.Value.Color, _timers[dialogue.Key].TimeLeft));
-        
+
         // 'with' keyword usage throws security exception
     }
 
@@ -83,6 +83,18 @@ internal class DialoguesAggregator
             AddDialogueWithoutUpdate(_lastDialogueId, dialogue);
             CreateAndStartTimer(_lastDialogueId, dialogue);
         }
+
+        Update();
+    }
+
+    public void RemoveAllDialogues()
+    {
+        if (!_dialogues.Any())
+            return;
+
+        _dialogues.Keys
+            .ToList()
+            .ForEach(CloseDialogue);
 
         Update();
     }
@@ -143,17 +155,5 @@ internal class DialoguesAggregator
         // which is bad, because i know that no dialogue in luckyblocks shows too long
         // and i can think about 1 minute dialogue as 'infinite dialogue'
         // but i have no idea how to fix it in right way
-    }
-
-    private void RemoveAllDialogues()
-    {
-        if (!_dialogues.Any())
-            return;
-
-        _dialogues.Keys
-            .ToList()
-            .ForEach(CloseDialogue);
-
-        Update();
     }
 }

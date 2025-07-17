@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using LuckyBlocks.Data;
+using LuckyBlocks.Data.Args;
 using LuckyBlocks.Data.Weapons;
 using LuckyBlocks.Extensions;
-using LuckyBlocks.Loot.WeaponPowerups;
-using LuckyBlocks.Loot.WeaponPowerups.Bullets;
+using LuckyBlocks.Features.WeaponPowerups;
+using LuckyBlocks.Features.WeaponPowerups.Bullets;
 using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Loot.Weapons;

@@ -26,3 +26,8 @@ internal class InjectWeaponsMapperAttribute : InjectAttribute
 internal class InjectTimeProviderAttribute : InjectAttribute
 {
 }
+
+[AttributeUsage(AttributeTargets.Property)]
+internal class InjectMappedObjectsServiceAttribute : InjectAttribute
+{
+}

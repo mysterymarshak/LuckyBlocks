@@ -79,6 +79,22 @@ internal abstract class TimerBase
     public abstract void Stop();
     public abstract void Reset();
 
+    public void Restart()
+    {
+        if (_updateEventSubscription is not null)
+        {
+            Stop();
+        }
+
+        Reset();
+        Start();
+    }
+
+    public void SetElapsed(TimeSpan elapsed)
+    {
+        _elapsed = (float)elapsed.TotalMilliseconds;
+    }
+
     protected void StartInternal()
     {
         if (_isFinished)

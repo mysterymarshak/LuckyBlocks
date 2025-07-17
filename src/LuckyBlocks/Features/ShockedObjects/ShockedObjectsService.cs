@@ -1,9 +1,9 @@
 ﻿using System;
 using Autofac;
-using LuckyBlocks.Entities;
+using LuckyBlocks.Features.Entities;
 using LuckyBlocks.Features.Time;
-using LuckyBlocks.Notifications;
-using LuckyBlocks.Repositories;
+using LuckyBlocks.Features.Time.TimeStop;
+using LuckyBlocks.Mediator;
 using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
 using LuckyBlocks.Utils;
 using Mediator;
@@ -15,13 +15,13 @@ namespace LuckyBlocks.Features.ShockedObjects;
 internal interface IShockedObjectsService
 {
     void Initialize();
-    ShockedObject Shock(IObject @object, TimeSpan shockDuration);
+    void Shock(IObject @object, TimeSpan shockDuration);
     bool IsShocked(IObject @object);
 }
 
 internal class ShockedObjectsService : IShockedObjectsService
 {
-    private readonly IShockedObjectsRepository _shockedObjectsRepository;
+    private readonly IEntitiesService _entitiesService;
     private readonly IEffectsPlayer _effectsPlayer;
     private readonly ITimeStopService _timeStopService;
     private readonly ITimeProvider _timeProvider;
@@ -30,11 +30,11 @@ internal class ShockedObjectsService : IShockedObjectsService
     private readonly IMediator _mediator;
     private readonly IExtendedEvents _extendedEvents;
 
-    public ShockedObjectsService(IShockedObjectsRepository shockedObjectsRepository, IEffectsPlayer effectsPlayer,
+    public ShockedObjectsService(IEntitiesService entitiesService, IEffectsPlayer effectsPlayer,
         ITimeStopService timeStopService, ITimeProvider timeProvider, IGame game, ILogger logger, IMediator mediator,
         ILifetimeScope lifetimeScope)
     {
-        _shockedObjectsRepository = shockedObjectsRepository;
+        _entitiesService = entitiesService;
         _effectsPlayer = effectsPlayer;
         _timeStopService = timeStopService;
         _timeProvider = timeProvider;
@@ -51,50 +51,48 @@ internal class ShockedObjectsService : IShockedObjectsService
         _extendedEvents.HookOnUpdate(OnUpdate, EventHookMode.Default);
     }
 
-    public ShockedObject Shock(IObject @object, TimeSpan shockDuration)
+    public void Shock(IObject @object, TimeSpan shockDuration)
     {
         var shockedObject = new ShockedObject(@object, shockDuration, _effectsPlayer, _game);
         shockedObject.Initialize();
+        _entitiesService.Add(shockedObject);
 
-        _shockedObjectsRepository.AddShockedObject(shockedObject);
-
-        _logger.Debug("Object '{Id}': {Name} was shocked for {Time}ms", @object.UniqueId, @object.Name,
+        _logger.Verbose("Object '{Id}': {Name} was shocked for {Time}ms", @object.UniqueId, @object.Name,
             Math.Round(shockedObject.TimeLeft.TotalMilliseconds));
-
-        return shockedObject;
     }
 
     public bool IsShocked(IObject @object)
     {
-        return _shockedObjectsRepository.IsShockedObject(@object);
+        return _entitiesService.IsRegistered(@object);
     }
 
-    private void OnShockEnded(ShockedObject shockedObject, int index)
+    private void OnShockEnded(ShockedObject shockedObject)
     {
         shockedObject.Dispose();
-        _shockedObjectsRepository.RemoveShockedObject(shockedObject.ObjectId, index);
+        _entitiesService.Remove(shockedObject.ObjectId);
 
-        _logger.Debug("Shock from object '{Id}': {Name} was removed", shockedObject.ObjectId, shockedObject.Name);
+        _logger.Verbose("Shock from object '{Id}': {Name} was removed", shockedObject.ObjectId, shockedObject.Name);
     }
 
     private void OnUpdate(Event<float> @event)
     {
         var elapsed = @event.Args * _timeProvider.GameSlowMoModifier;
 
-        var shockedObjects = _shockedObjectsRepository.GetShockedObjects();
+        var shockedObjects = _entitiesService.GetAllUnsafe<ShockedObject>();
         if (shockedObjects.Count == 0)
             return;
 
         var isTimeStopped = _timeStopService.IsTimeStopped;
 
-        for (var i = shockedObjects.Count - 1; i >= 0; i--)
+        for (var index = shockedObjects.Count - 1; index >= 0; index--)
         {
-            var shockedObject = shockedObjects[i];
+            var entity = shockedObjects[index];
+            var shockedObject = (ShockedObject)entity;
             var touchedObjects = shockedObject.Update(elapsed, isTimeStopped);
 
             if (shockedObject.Charge <= ShockedObject.ELEMENTARY_CHARGE)
             {
-                OnShockEnded(shockedObject, i);
+                OnShockEnded(shockedObject);
                 continue;
             }
 

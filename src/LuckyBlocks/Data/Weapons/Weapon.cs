@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using LuckyBlocks.Extensions;
-using LuckyBlocks.Loot.WeaponPowerups;
+using LuckyBlocks.Features.WeaponPowerups;
 using LuckyBlocks.Reflection;
 using Serilog;
 using SFDGameScriptInterface;

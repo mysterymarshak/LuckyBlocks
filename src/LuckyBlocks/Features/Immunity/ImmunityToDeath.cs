@@ -1,7 +1,7 @@
 ﻿using Autofac;
-using LuckyBlocks.Data;
-using LuckyBlocks.Entities;
+using LuckyBlocks.Data.Args;
 using LuckyBlocks.Exceptions;
+using LuckyBlocks.Features.Identity;
 using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
 using LuckyBlocks.Utils;
 using Serilog;
@@ -21,21 +21,22 @@ internal class ImmunityToDeath : IApplicableImmunity
     private readonly IExtendedEvents _extendedEvents;
 
     public ImmunityToDeath(Player player, ImmunityConstructorArgs args, ILifetimeScope lifetimeScope)
-        => (_player, _respawner, _lifetimeScope, _logger, _extendedEvents) = (player, args.Respawner, lifetimeScope, args.Logger, lifetimeScope.Resolve<IExtendedEvents>());
+        => (_player, _respawner, _lifetimeScope, _logger, _extendedEvents) = (player, args.Respawner, lifetimeScope,
+            args.Logger, lifetimeScope.Resolve<IExtendedEvents>());
 
     public void Apply()
     {
         var playerInstance = _player.Instance;
         ArgumentWasNullException.ThrowIfNull(playerInstance);
-        
+
         _extendedEvents.HookOnDead(playerInstance, OnDead, EventHookMode.GlobalThisPre);
     }
 
     public void Remove()
     {
-        Dispose();  
+        Dispose();
     }
-    
+
     private bool OnDead(Event<PlayerDeathArgs> @event)
     {
         var args = @event.Args;
@@ -44,12 +45,12 @@ internal class ImmunityToDeath : IApplicableImmunity
             _respawner.RespawnPlayer(_player.User, _player.Profile);
             _logger.Debug("{PlayerName} respawned from immunity to death", _player.Name);
         }
-        
+
         Dispose();
-        
+
         return false;
     }
-    
+
     private void Dispose()
     {
         _lifetimeScope.Dispose();

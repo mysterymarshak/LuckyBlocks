@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using LuckyBlocks.Data;
-using LuckyBlocks.Entities;
+using LuckyBlocks.Data.Args;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Buffs;
+using LuckyBlocks.Features.Buffs.Instant;
 using LuckyBlocks.Features.Identity;
-using LuckyBlocks.Loot.Buffs.Instant;
 using LuckyBlocks.Utils;
 using SFDGameScriptInterface;
 
@@ -19,16 +18,27 @@ internal class FireMagic : AreaMagicBase
     private readonly IBuffsService _buffsService;
     private readonly IIdentityService _identityService;
     private readonly IGame _game;
+    private readonly MagicConstructorArgs _args;
 
-    private List<int>? _ignitedPlayers;
+    private List<Player>? _ignitedPlayers;
 
-    public FireMagic(Player wizard, BuffConstructorArgs args, int direction = default) : base(wizard, args, direction)
-        => (_buffsService, _identityService, _game) = (args.BuffsService, args.IdentityService, args.Game);
+    public FireMagic(Player wizard, MagicConstructorArgs args, int direction = default) : base(wizard, args, direction)
+    {
+        _buffsService = args.BuffsService;
+        _identityService = args.IdentityService;
+        _game = args.Game;
+        _args = args;
+    }
 
     public override void PlayEffects(Area area)
     {
         var fireNodes = _game.SpawnFireNodes(area.Center, 25, 5f, FireNodeType.Flamethrower);
         ScheduleEndFireNodes(fireNodes);
+    }
+
+    protected override MagicBase CloneInternal()
+    {
+        return new FireMagic(Wizard, _args) { _ignitedPlayers = _ignitedPlayers };
     }
 
     protected override void CastInternal(Area fullArea, Area iterationArea)
@@ -68,10 +78,11 @@ internal class FireMagic : AreaMagicBase
         if (playerInstance == wizardInstance)
             return;
 
-        if (_ignitedPlayers?.Contains(playerInstance.UniqueId) == true)
+        var player = _identityService.GetPlayerByInstance(playerInstance);
+
+        if (_ignitedPlayers?.Contains(player) == true)
             return;
 
-        var player = _identityService.GetPlayerByInstance(playerInstance);
         var igniteBuff = new Ignite(player);
         var result = _buffsService.TryAddBuff(igniteBuff, player);
 
@@ -79,7 +90,7 @@ internal class FireMagic : AreaMagicBase
             return;
 
         _ignitedPlayers ??= [];
-        _ignitedPlayers.Add(playerInstance.UniqueID);
+        _ignitedPlayers.Add(player);
     }
 
     private void ScheduleEndFireNodes(FireNode[] fireNodes)

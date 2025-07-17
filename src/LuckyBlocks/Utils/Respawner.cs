@@ -68,14 +68,12 @@ internal class Respawner : IRespawner
         playerInstance.SetFaceDirection(direction);
         playerInstance.SetUser(user);
 
+        var player = _identityService.GetPlayerByInstance(playerInstance);
+        player.InvalidateWeaponsDataOwner();
+
         if (user.IsBot)
         {
             SetBotSoul(playerInstance, user);
-        }
-        else
-        {
-            var player = _identityService.GetPlayerByInstance(playerInstance);
-            player.InvalidateWeaponsDataOwner();
         }
 
         return playerInstance;

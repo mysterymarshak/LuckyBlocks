@@ -1,8 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Autofac;
-using LuckyBlocks.Entities;
-using LuckyBlocks.Repositories;
 using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
 using LuckyBlocks.Utils;
 using OneOf;
@@ -81,7 +79,7 @@ internal class IdentityService : IIdentityService
             RegisterUser(user.UserIdentifier);
         }
     }
-    
+
     private void OnObjectDestroyed(Event<IObject[]> @event)
     {
         foreach (var @object in @event.Args)
@@ -101,7 +99,7 @@ internal class IdentityService : IIdentityService
             _logger.Error("Failed to register user with id '{UserId}': {Message}", userId, validationResult.AsT1);
             return;
         }
-        
+
         _logger.Debug("Registered user with id '{UserId}'", userId);
     }
 }

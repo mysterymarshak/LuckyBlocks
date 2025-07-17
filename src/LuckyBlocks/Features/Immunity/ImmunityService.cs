@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using LuckyBlocks.Data;
-using LuckyBlocks.Entities;
+using LuckyBlocks.Data.Args;
 using LuckyBlocks.Extensions;
-using LuckyBlocks.Loot.Buffs;
+using LuckyBlocks.Features.Buffs;
+using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Utils;
 using OneOf;
 using OneOf.Types;

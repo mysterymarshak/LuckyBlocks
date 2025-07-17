@@ -1,16 +1,16 @@
-﻿using LuckyBlocks.Data;
-using LuckyBlocks.Entities;
+﻿using LuckyBlocks.Data.Args;
+using LuckyBlocks.Features.Identity;
 
 namespace LuckyBlocks.Features.Magic.NonAreaMagic;
 
 internal abstract class NonAreaMagicBase : MagicBase, INonAreaMagic
 {
-    public abstract override string Name { get; }
-    
-    protected Player Wizard { get; }
+    protected NonAreaMagicBase(Player wizard, MagicConstructorArgs args) : base(wizard, args)
+    {
+    }
 
-    protected NonAreaMagicBase(Player wizard, BuffConstructorArgs args) : base(args)
-        => (Wizard) = (wizard);
-
-    public abstract void Cast();
+    public sealed override IMagic Clone()
+    {
+        return base.Clone();
+    }
 }

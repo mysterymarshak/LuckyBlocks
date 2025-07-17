@@ -15,6 +15,7 @@ internal interface IDialoguesService
     void RemoveDialogue(IPlayer playerInstance, int id);
     IEnumerable<Dialogue> CopyDialogues(IPlayer playerInstance);
     void RestoreDialogues(IPlayer playerInstance, IEnumerable<Dialogue> dialogues);
+    void RemoveAllDialogues();
 }
 
 internal class DialoguesService : IDialoguesService
@@ -55,6 +56,15 @@ internal class DialoguesService : IDialoguesService
     {
         var dialoguesAggregator = GetDialogueAggregator(playerInstance);
         dialoguesAggregator.RestoreDialogues(dialogues);
+    }
+
+    public void RemoveAllDialogues()
+    {
+        var dialoguesAggregators = _dialoguesByPlayerInstances.Values;
+        foreach (var aggregator in dialoguesAggregators)
+        {
+            aggregator.RemoveAllDialogues();
+        }
     }
 
     private DialoguesAggregator GetDialogueAggregator(IPlayer playerInstance)

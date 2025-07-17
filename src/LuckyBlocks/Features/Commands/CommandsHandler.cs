@@ -2,21 +2,22 @@
 using System.Linq;
 using Autofac;
 using Autofac.Util;
-using LuckyBlocks.Data;
+using LuckyBlocks.Data.Args;
 using LuckyBlocks.Features.Buffs;
+using LuckyBlocks.Features.Entities;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.LuckyBlocks;
-using LuckyBlocks.Features.Watchers;
+using LuckyBlocks.Features.Objects;
+using LuckyBlocks.Features.Time.TimeRevert;
 using LuckyBlocks.Features.WeaponPowerups;
-using LuckyBlocks.Loot;
-using LuckyBlocks.Loot.Buffs;
-using LuckyBlocks.Loot.Other;
-using LuckyBlocks.Loot.WeaponPowerups.Bullets;
-using LuckyBlocks.Loot.WeaponPowerups.Melees;
-using LuckyBlocks.Loot.WeaponPowerups.ThrownItems;
+using LuckyBlocks.Features.WeaponPowerups.Bullets;
+using LuckyBlocks.Features.WeaponPowerups.Melees;
+using LuckyBlocks.Features.WeaponPowerups.ThrownItems;
+using LuckyBlocks.Loot.Events;
 using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
 using LuckyBlocks.Utils;
 using LuckyBlocks.Utils.Timers;
+using LuckyBlocks.Utils.Watchers;
 using Serilog;
 using SFDGameScriptInterface;
 
@@ -40,12 +41,19 @@ internal class CommandsHandler : ICommandsHandler
     private readonly LootConstructorArgs _lootArgs;
     private readonly IWeaponPowerupsService _weaponPowerupsService;
     private readonly IWeaponsDataWatcher _weaponsDataWatcher;
+    private readonly ITimeRevertService _timeRevertService;
+    private readonly IMappedObjectsService _mappedObjectsService;
+    private readonly IEntitiesService _entitiesService;
+    private readonly ISnapshotCreator _snapshotCreator;
+    private readonly ISpawnChanceService _spawnChanceService;
     private readonly IExtendedEvents _extendedEvents;
 
     public CommandsHandler(ILuckyBlocksService luckyBlocksService, IIdentityService identityService,
         IBuffFactory buffFactory, IPowerupFactory powerupFactory, IBuffsService buffsService, IRespawner respawner,
         LootConstructorArgs lootArgs, IGame game, ILogger logger, IWeaponPowerupsService weaponPowerupsService,
-        ILifetimeScope lifetimeScope, IWeaponsDataWatcher weaponsDataWatcher)
+        ILifetimeScope lifetimeScope, IWeaponsDataWatcher weaponsDataWatcher, ITimeRevertService timeRevertService,
+        IMappedObjectsService mappedObjectsService, IEntitiesService entitiesService, ISnapshotCreator snapshotCreator,
+        ISpawnChanceService spawnChanceService)
     {
         _luckyBlocksService = luckyBlocksService;
         _identityService = identityService;
@@ -58,6 +66,11 @@ internal class CommandsHandler : ICommandsHandler
         _lootArgs = lootArgs;
         _weaponPowerupsService = weaponPowerupsService;
         _weaponsDataWatcher = weaponsDataWatcher;
+        _timeRevertService = timeRevertService;
+        _mappedObjectsService = mappedObjectsService;
+        _entitiesService = entitiesService;
+        _snapshotCreator = snapshotCreator;
+        _spawnChanceService = spawnChanceService;
         _extendedEvents = lifetimeScope.BeginLifetimeScope().Resolve<IExtendedEvents>();
     }
 
@@ -86,9 +99,13 @@ internal class CommandsHandler : ICommandsHandler
             {
                 case "restart":
                 {
+#if DEBUG
+                    _game.RunCommand("/stopscript luckyblocks_wtf");
+                    _game.RunCommand("/startscript luckyblocks_wtf");
+#else
                     _game.RunCommand("/stopscript LuckyBlocks");
                     _game.RunCommand("/startscript LuckyBlocks");
-
+#endif
                     break;
                 }
 #if DEBUG
@@ -243,6 +260,49 @@ internal class CommandsHandler : ICommandsHandler
                     var weapon = _weaponsDataWatcher.RegisterWeapon(katana);
                     var flamyPowerup = _powerupFactory.CreatePowerup(weapon, typeof(FlamyKatana));
                     _weaponPowerupsService.AddWeaponPowerup(flamyPowerup, weapon);
+                    break;
+                }
+                case "test7":
+                {
+                    var revolver = _game.SpawnWeaponItem(WeaponItem.REVOLVER, playerInstance.GetWorldPosition(), true);
+                    var weapon = _weaponsDataWatcher.RegisterWeapon(revolver);
+                    var poisonPowerup = _powerupFactory.CreatePowerup(weapon, typeof(PoisonBullets));
+                    _weaponPowerupsService.AddWeaponPowerup(poisonPowerup, weapon);
+                    break;
+                }
+                case "test8":
+                {
+                    var uzi = _game.SpawnWeaponItem(WeaponItem.UZI, playerInstance.GetWorldPosition(), true);
+                    var weapon = _weaponsDataWatcher.RegisterWeapon(uzi);
+                    var pushPowerup = _powerupFactory.CreatePowerup(weapon, typeof(PushBullets));
+                    _weaponPowerupsService.AddWeaponPowerup(pushPowerup, weapon);
+                    break;
+                }
+                case "hp":
+                {
+                    playerInstance.SetHealth(100);
+                    break;
+                }
+                case "lazer":
+                {
+                    var lazer = _game.CreateObject("BgPennant00B", position, MathHelper.PI / 2);
+                    lazer.SetColor1("BgPink");
+                    lazer.SetSizeFactor(new Point(5, 1));
+                    break;
+                }
+                case "snapshot":
+                {
+                    _timeRevertService.TakeSnapshot();
+                    break;
+                }
+                case "restore":
+                {
+                    _timeRevertService.RestoreFromSnapshot(_timeRevertService.Snapshots.Last().Id);
+                    break;
+                }
+                case "chance":
+                {
+                    _spawnChanceService.Increase();
                     break;
                 }
 #endif

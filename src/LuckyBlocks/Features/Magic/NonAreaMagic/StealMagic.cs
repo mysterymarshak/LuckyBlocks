@@ -2,12 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Autofac;
-using LuckyBlocks.Data;
-using LuckyBlocks.Entities;
+using LuckyBlocks.Data.Args;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.Immunity;
-using LuckyBlocks.Features.Time;
+using LuckyBlocks.Features.Time.TimeStop;
 using LuckyBlocks.Features.WeaponPowerups;
 using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
 using LuckyBlocks.Utils;
@@ -18,14 +17,17 @@ namespace LuckyBlocks.Features.Magic.NonAreaMagic;
 
 internal class StealMagic : NonAreaMagicBase
 {
+    public event Action? EnterStealMode;
+    public event Action? Steal;
+    public event Action<string>? StealFail;
+
     public override string Name => "Steal magic";
-    public bool IsStole { get; private set; }
-    public bool NoOneHasWeapon { get; private set; }
 
     private readonly IIdentityService _identityService;
     private readonly IWeaponPowerupsService _weaponPowerupsService;
     private readonly IEffectsPlayer _effectsPlayer;
     private readonly ITimeStopService _timeStopService;
+    private readonly MagicConstructorArgs _args;
     private readonly IExtendedEvents _extendedEvents;
     private readonly PeriodicTimer _timer;
 
@@ -33,12 +35,13 @@ internal class StealMagic : NonAreaMagicBase
     private IPlayer? _selectedPlayer;
     private VirtualKeyEvent _previousKeyState;
 
-    public StealMagic(Player wizard, BuffConstructorArgs args) : base(wizard, args)
+    public StealMagic(Player wizard, MagicConstructorArgs args) : base(wizard, args)
     {
         _identityService = args.IdentityService;
         _weaponPowerupsService = args.WeaponPowerupsService;
         _effectsPlayer = args.EffectsPlayer;
         _timeStopService = args.TimeStopService;
+        _args = args;
         var thisScope = args.LifetimeScope.BeginLifetimeScope();
         _extendedEvents = thisScope.Resolve<IExtendedEvents>();
         _timer = new PeriodicTimer(TimeSpan.FromMilliseconds(100), TimeBehavior.TimeModifier, OnTimerCallback, null,
@@ -47,7 +50,12 @@ internal class StealMagic : NonAreaMagicBase
 
     public override void Cast()
     {
-        if (_isInSelection)
+        var magicWasRestoredAndDidntCast = IsCloned && !_isInSelection;
+        if (magicWasRestoredAndDidntCast)
+            return;
+
+        var magicWasntRestoredAndInSelection = !IsCloned && _isInSelection;
+        if (magicWasntRestoredAndInSelection)
         {
             StealFromSelectedPlayer();
             return;
@@ -56,10 +64,21 @@ internal class StealMagic : NonAreaMagicBase
         _extendedEvents.HookOnKeyInput(OnKeyInput, EventHookMode.Default);
         _selectedPlayer = PickAlivePlayer();
         _timer.Start();
+
+        var magicWasCastedAndRestored = IsCloned && _isInSelection;
+        if (magicWasCastedAndRestored)
+            return;
+
         _isInSelection = true;
+        EnterStealMode?.Invoke();
     }
 
-    protected override void OnFinished()
+    protected override MagicBase CloneInternal()
+    {
+        return new StealMagic(Wizard, _args) { _isInSelection = _isInSelection };
+    }
+
+    protected override void OnFinishInternal()
     {
         Dispose();
     }
@@ -72,9 +91,13 @@ internal class StealMagic : NonAreaMagicBase
             var playerWeaponsData = _weaponPowerupsService.CreateWeaponsDataCopy(player);
             _weaponPowerupsService.RestoreWeaponsDataFromCopy(Wizard, playerWeaponsData);
             _selectedPlayer.RemoveAllWeapons();
-            IsStole = true;
+
+            Steal?.Invoke();
+            ExternalFinish();
+            return;
         }
 
+        StealFail?.Invoke("NO SELECTED PLAYER");
         ExternalFinish();
     }
 
@@ -136,17 +159,19 @@ internal class StealMagic : NonAreaMagicBase
             throw new NullReferenceException(nameof(_selectedPlayer));
         }
 
-        var getPlayerResult = _identityService.GetPlayerById(_selectedPlayer.UniqueId);
-        if (!_selectedPlayer.IsValidUser() || _selectedPlayer.IsDead || !getPlayerResult.IsT0 ||
-            !getPlayerResult.AsT0.HasAnyWeapon())
+        if (!_selectedPlayer.IsValidUser() || _selectedPlayer.IsDead)
         {
-            _selectedPlayer = PickAlivePlayer();
-
-            if (_selectedPlayer is null)
+            var getPlayerResult = _identityService.GetPlayerById(_selectedPlayer!.UniqueId);
+            if (!getPlayerResult.TryPickT0(out var player, out _) || !player.HasAnyWeapon())
             {
-                NoOneHasWeapon = true;
-                ExternalFinish();
-                return;
+                _selectedPlayer = PickAlivePlayer();
+
+                if (_selectedPlayer is null)
+                {
+                    StealFail?.Invoke("NO ONE HAS WEAPON");
+                    ExternalFinish();
+                    return;
+                }
             }
         }
 

@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Threading;
-using Autofac;
-using LuckyBlocks.Data;
-using LuckyBlocks.Entities;
+using LuckyBlocks.Data.Args;
 using LuckyBlocks.Extensions;
+using LuckyBlocks.Features.Identity;
+using LuckyBlocks.Features.Notifications;
 using LuckyBlocks.Features.PlayerModifiers;
-using LuckyBlocks.Features.Time;
-using LuckyBlocks.Loot;
+using LuckyBlocks.Features.Time.TimeStop;
 using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
 using LuckyBlocks.Utils;
 using LuckyBlocks.Utils.Timers;
@@ -19,42 +18,55 @@ internal class TimeStopMagic : NonAreaMagicBase
 {
     public override string Name => "Time stop magic";
 
+    private static TimeSpan TimeStopDuration => TimeSpan.FromSeconds(7);
+
     private readonly ITimeStopService _timeStopService;
     private readonly IEffectsPlayer _effectsPlayer;
     private readonly IGame _game;
     private readonly INotificationService _notificationService;
     private readonly IPlayerModifiersService _playerModifiersService;
-    private readonly IExtendedEvents _extendedEvents;
+    private readonly MagicConstructorArgs _args;
 
     private TimeStopEffect? _timeStopEffect;
     private CancellationTokenSource? _timeStoppingCts;
     private CancellationTokenSource? _resumeTimeCts;
     private SFDPlayerModifiers? _playerModifiers;
 
-    public TimeStopMagic(Player wizard, BuffConstructorArgs args) : base(wizard, args)
-        => (_timeStopService, _effectsPlayer, _game, _notificationService, _playerModifiersService, _extendedEvents) = (args.TimeStopService,
-            args.EffectsPlayer, args.Game, args.NotificationService, args.PlayerModifiersService, LifetimeScope.Resolve<IExtendedEvents>());
+    public TimeStopMagic(Player wizard, MagicConstructorArgs args) : base(wizard, args)
+    {
+        _timeStopService = args.TimeStopService;
+        _effectsPlayer = args.EffectsPlayer;
+        _game = args.Game;
+        _notificationService = args.NotificationService;
+        _playerModifiersService = args.PlayerModifiersService;
+        _args = args;
+    }
 
     public override void Cast()
     {
         _game.RunCommand("/slomo 0");
 
         _timeStoppingCts = new CancellationTokenSource();
-        
+
         GiveBoostsToWizard();
         PlayTimeStopEffect();
 
         var wizardInstance = Wizard.Instance!;
-        
-        _timeStopService.StopTime(wizardInstance);
+
+        _timeStopService.StopTime(TimeStopDuration, wizardInstance);
         _notificationService.CreateDialogueNotification("TOKI WO TOMARE!", Color.Yellow, _timeStopService.TimeStopDelay,
             wizardInstance, realTime: true);
 
-        _extendedEvents.HookOnDead(wizardInstance, OnDead, EventHookMode.Default);
+        ExtendedEvents.HookOnDead(wizardInstance, OnDead, EventHookMode.Default);
         Awaiter.Start(OnTimeStop, _timeStopService.TimeStopDelay, _timeStoppingCts.Token);
     }
 
-    protected override void OnFinished()
+    protected override MagicBase CloneInternal()
+    {
+        return new TimeStopMagic(Wizard, _args);
+    }
+
+    protected override void OnFinishInternal()
     {
         Dispose();
     }
@@ -62,9 +74,8 @@ internal class TimeStopMagic : NonAreaMagicBase
     private void GiveBoostsToWizard()
     {
         var wizardInstance = Wizard.Instance!;
-        
-        wizardInstance.SetSpeedBoostTime((float)(_timeStopService.TimeStopDelay + _timeStopService.TimeStopDuration)
-            .TotalMilliseconds);
+
+        wizardInstance.SetSpeedBoostTime((float)(_timeStopService.TimeStopDelay + TimeStopDuration).TotalMilliseconds);
 
         _playerModifiers = wizardInstance.GetModifiers();
         _playerModifiersService.AddModifiers(Wizard, new SFDPlayerModifiers { CanBurn = 0 });
@@ -73,19 +84,19 @@ internal class TimeStopMagic : NonAreaMagicBase
     private void RemoveBoostsFromWizard()
     {
         var wizardInstance = Wizard.Instance;
-        
+
         wizardInstance?.SetSpeedBoostTime(0);
-        
+
         _playerModifiersService.RevertModifiers(Wizard, new SFDPlayerModifiers { CanBurn = 0 }, _playerModifiers!);
     }
 
     private void PlayTimeStopEffect()
     {
-        _timeStopEffect = new TimeStopEffect(_game, _effectsPlayer, _extendedEvents, _timeStopService.TimeStopDuration,
+        _timeStopEffect = new TimeStopEffect(_game, _effectsPlayer, ExtendedEvents, TimeStopDuration,
             _timeStopService.TimeStopDelay);
         _timeStopEffect.Play(_timeStoppingCts!.Token);
     }
-    
+
     private void OnTimeStop()
     {
         _game.RunCommand("/settime 1");
@@ -98,7 +109,7 @@ internal class TimeStopMagic : NonAreaMagicBase
         }
 
         _resumeTimeCts = new CancellationTokenSource();
-        Awaiter.Start(OnResumeTime, _timeStopService.TimeStopDuration, _resumeTimeCts.Token);
+        Awaiter.Start(OnResumeTime, TimeStopDuration, _resumeTimeCts.Token);
         ScheduleTimeLeftDialogueCreation();
 
         _timeStopEffect!.PlayTickEffect(_resumeTimeCts.Token);
@@ -106,11 +117,11 @@ internal class TimeStopMagic : NonAreaMagicBase
 
     private void OnResumeTime()
     {
-        _extendedEvents.Clear();
+        ExtendedEvents.Clear();
         _timeStopEffect!.PlayTimeResumeEffect();
-        
+
         RemoveBoostsFromWizard();
-        
+
         Awaiter.Start(ExternalFinish, _timeStopService.TimeStopDelay);
     }
 
@@ -143,9 +154,9 @@ internal class TimeStopMagic : NonAreaMagicBase
                 {
                     _notificationService.CreateDialogueNotification($"TIME RESUMING IN {secondsToTimeResuming--}",
                         Color.Yellow, TimeSpan.FromSeconds(1), Wizard.Instance!, realTime: true);
-                }, default, secondsToTimeResuming, _extendedEvents, _resumeTimeCts!.Token);
+                }, null, secondsToTimeResuming, ExtendedEvents, _resumeTimeCts!.Token);
             timer.Start();
-        }, _timeStopService.TimeStopDuration - TimeSpan.FromSeconds(secondsToTimeResuming + 1), _resumeTimeCts!.Token);
+        }, TimeStopDuration - TimeSpan.FromSeconds(secondsToTimeResuming + 1), _resumeTimeCts!.Token);
     }
 
     private void Dispose()
@@ -155,7 +166,7 @@ internal class TimeStopMagic : NonAreaMagicBase
         _resumeTimeCts?.Dispose();
 
         _notificationService.ClosePopupNotification();
-        _extendedEvents.Clear();
+        ExtendedEvents.Clear();
     }
 
     private class TimeStopEffect

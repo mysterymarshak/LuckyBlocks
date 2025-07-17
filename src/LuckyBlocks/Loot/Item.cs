@@ -1,7 +1,7 @@
-﻿using LuckyBlocks.Loot.Attributes;
-using LuckyBlocks.Loot.Buffs.Durable;
-using LuckyBlocks.Loot.Buffs.Wizards;
-using LuckyBlocks.Loot.WeaponPowerups.Bullets;
+﻿using LuckyBlocks.Features.Buffs.Durable;
+using LuckyBlocks.Features.Buffs.Wizards;
+using LuckyBlocks.Features.WeaponPowerups.Bullets;
+using LuckyBlocks.Loot.Attributes;
 
 namespace LuckyBlocks.Loot;
 
@@ -25,7 +25,7 @@ internal enum Item
     Freeze,
 
     [OnlyPlayer]
-    [ModifiedModifiers(typeof(StrongMan), nameof(Buffs.Durable.StrongMan.ModifiedModifiers))]
+    [ModifiedModifiers(typeof(StrongMan), nameof(Features.Buffs.Durable.StrongMan.ModifiedModifiers))]
     StrongMan,
 
     [BarrelExists]
@@ -37,7 +37,7 @@ internal enum Item
     IncreaseSpawnChance,
 
     [OnlyPlayer]
-    [ModifiedModifiers(typeof(HighJumps), nameof(Buffs.Durable.HighJumps.ModifiedModifiers))]
+    [ModifiedModifiers(typeof(HighJumps), nameof(Features.Buffs.Durable.HighJumps.ModifiedModifiers))]
     HighJumps,
 
     [AlivePlayersMoreThanOne]
@@ -52,7 +52,7 @@ internal enum Item
     BananaGrenades,
 
     [OnlyPlayer]
-    [ModifiedModifiers(typeof(Vampirism), nameof(Buffs.Durable.Vampirism.ModifiedModifiers))]
+    [ModifiedModifiers(typeof(Vampirism), nameof(Features.Buffs.Durable.Vampirism.ModifiedModifiers))]
     Vampirism,
 
     [OnlyPlayer]
@@ -62,15 +62,15 @@ internal enum Item
     IgniteRandomPlayer,
 
     [OnlyPlayer]
-    [ModifiedModifiers(typeof(Shield), nameof(Buffs.Durable.Shield.ModifiedModifiers))]
+    [ModifiedModifiers(typeof(Shield), nameof(Features.Buffs.Durable.Shield.ModifiedModifiers))]
     Shield,
 
     [OnlyPlayer]
-    [ModifiedModifiers(typeof(Hulk), nameof(Buffs.Durable.Hulk.ModifiedModifiers))]
+    [ModifiedModifiers(typeof(Hulk), nameof(Features.Buffs.Durable.Hulk.ModifiedModifiers))]
     Hulk,
 
     [OnlyPlayer]
-    [ModifiedModifiers(typeof(Dwarf), nameof(Buffs.Durable.Dwarf.ModifiedModifiers))]
+    [ModifiedModifiers(typeof(Dwarf), nameof(Features.Buffs.Durable.Dwarf.ModifiedModifiers))]
     Dwarf,
 
     [Weight(0.5f)]
@@ -95,7 +95,6 @@ internal enum Item
     TripleRicochetBullets,
 
     [OnlyPlayer]
-    [AlivePlayersMoreThanOne]
     [PlayerHasAnyFirearm]
     [IncompatibleWithSomePowerups(SourcePowerup = typeof(FreezeBullets))]
     FreezeBullets,
@@ -106,7 +105,6 @@ internal enum Item
     PushBullets,
 
     [OnlyPlayer]
-    [AlivePlayersMoreThanOne]
     [PlayerHasAnyFirearm]
     [IncompatibleWithSomePowerups(SourcePowerup = typeof(AimBullets))]
     AimBullets,
@@ -139,9 +137,9 @@ internal enum Item
     PoisonBullets,
 
     [OnlyPlayer]
+    [AlivePlayersMoreThanOne]
     [Weight(0.5f / 2)]
     [AnyPlayerHaveAnyWeapon(true)]
-    [AlivePlayersMoreThanOne]
     RemoveWeaponsExceptPlayer,
 
     [Weight(0.5f / 2)]
@@ -158,5 +156,10 @@ internal enum Item
     [PlayerIsNotOtherWizard(SourceWizard = typeof(StealWizard))]
     StealWizard,
 
-    FunWeapon
+    FunWeapon,
+
+    [OnlyPlayer]
+    [NoOneHaveBuff(typeof(TimeRevertWizard))]
+    [PlayerIsNotOtherWizard(SourceWizard = typeof(TimeRevertWizard))]
+    TimeRevertWizard
 }

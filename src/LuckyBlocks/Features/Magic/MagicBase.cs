@@ -1,43 +1,73 @@
 ﻿using System;
 using Autofac;
 using LuckyBlocks.Data;
+using LuckyBlocks.Data.Args;
+using LuckyBlocks.Features.Identity;
+using LuckyBlocks.Utils;
+using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Features.Magic;
 
 internal abstract class MagicBase : IMagic
 {
     public abstract string Name { get; }
-
+    public Player Wizard { get; }
+    public IPlayer? WizardInstance => Wizard.Instance;
+    public bool IsCloned { get; private set; }
+    public bool IsFinished { get; private set; }
+    public virtual bool ShouldCastOnRestore => true;
     public IFinishCondition<IMagic> WhenFinish => _finishCondition;
 
     protected ILifetimeScope LifetimeScope { get; }
+    protected IExtendedEvents ExtendedEvents { get; }
 
     private readonly MagicFinishCondition _finishCondition;
 
-    private bool _isFinished;
+    public MagicBase(Player wizard, MagicConstructorArgs args)
+    {
+        Wizard = wizard;
+        LifetimeScope = args.LifetimeScope.BeginLifetimeScope();
+        ExtendedEvents = LifetimeScope.Resolve<IExtendedEvents>();
+        _finishCondition = new MagicFinishCondition();
+    }
 
-    public MagicBase(BuffConstructorArgs args)
-        => (LifetimeScope, _finishCondition) = (args.LifetimeScope.BeginLifetimeScope(), new());
+    public virtual IMagic Clone()
+    {
+        var clonedMagic = CloneInternal();
+        clonedMagic.IsCloned = true;
+        return clonedMagic;
+    }
 
     public void ExternalFinish()
     {
-        if (_isFinished)
+        if (IsFinished)
             return;
 
-        _isFinished = true;
-        
-        OnFinishedInternal();
-        OnFinished();
-        SendFinishNotification();
+        OnFinish();
     }
 
-    protected virtual void OnFinished()
+    public abstract void Cast();
+
+    public void OnRestored()
+    {
+        IsCloned = false;
+    }
+
+    protected abstract MagicBase CloneInternal();
+
+    protected virtual void OnFinishInternal()
     {
     }
 
-    private void OnFinishedInternal()
+    private void OnFinish()
     {
+        IsFinished = true;
+
         LifetimeScope.Dispose();
+        ExtendedEvents.Clear();
+
+        OnFinishInternal();
+        SendFinishNotification();
     }
 
     private void SendFinishNotification()

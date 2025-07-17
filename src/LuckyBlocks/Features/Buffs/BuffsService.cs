@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using LuckyBlocks.Data;
-using LuckyBlocks.Entities;
 using LuckyBlocks.Extensions;
+using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.Immunity;
-using LuckyBlocks.Loot.Buffs;
 using LuckyBlocks.Utils;
 using OneOf;
 using OneOf.Types;
@@ -40,7 +39,7 @@ internal class BuffsService : IBuffsService
     public OneOf<Success, PlayerIsDeadResult, ImmunityFlag> TryAddBuff(IBuff buff, Player player)
     {
         var playerInstance = player.Instance;
-        if (!player.IsValid() || playerInstance!.IsDead)
+        if (!player.IsInstanceValid() || playerInstance!.IsDead)
             return new PlayerIsDeadResult();
 
         if (buff is IRepressibleByImmunityFlagsBuff repressibleByImmunityFlagsBuff)

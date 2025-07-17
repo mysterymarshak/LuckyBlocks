@@ -2,8 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using Autofac;
+using LuckyBlocks.Data;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Magic.AreaMagic;
+using LuckyBlocks.Features.Magic.NonAreaMagic;
 using LuckyBlocks.Features.Time;
 using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
 using LuckyBlocks.Utils;
@@ -15,7 +17,9 @@ namespace LuckyBlocks.Features.Magic;
 
 internal interface IMagicService
 {
-    void Cast(IAreaMagic magic, IPlayer wizardInstance);
+    IFinishCondition<IMagic> Cast<T>(T magic) where T : IMagic;
+    MagicServiceState CloneState();
+    void RestoreState(MagicServiceState state);
 }
 
 internal class MagicService : IMagicService
@@ -24,9 +28,9 @@ internal class MagicService : IMagicService
     private readonly ILogger _logger;
     private readonly ITimeProvider _timeProvider;
     private readonly IExtendedEvents _extendedEvents;
-    private readonly Dictionary<int, CastingMagic> _castingMagics;
-
-    private int _lastMagicId;
+    private readonly List<IMagic> _magics = [];
+    private readonly List<IAreaMagic> _areaMagics = [];
+    private readonly Dictionary<IMagic, IEventSubscription> _deathSubscriptions = new();
 
     public MagicService(IGame game, ILogger logger, ITimeProvider timeProvider, ILifetimeScope lifetimeScope)
     {
@@ -35,96 +39,173 @@ internal class MagicService : IMagicService
         _timeProvider = timeProvider;
         var serviceLifetimeScope = lifetimeScope.BeginLifetimeScope();
         _extendedEvents = serviceLifetimeScope.Resolve<IExtendedEvents>();
-        _castingMagics = new();
     }
 
-    public void Cast(IAreaMagic magic, IPlayer wizardInstance)
+    public IFinishCondition<IMagic> Cast<T>(T magic) where T : IMagic
     {
-        var castingMagic = Cast(magic, wizardInstance.GetWorldPosition());
+        var wizard = magic.Wizard;
 
-        _extendedEvents.HookOnDead(wizardInstance, (Event _) => StopMagic(castingMagic), EventHookMode.Default);
+        if (!_magics.Contains(magic))
+        {
+            switch (magic)
+            {
+                case IAreaMagic areaMagic:
+                    RegisterAreaMagic(areaMagic);
+#if DEBUG
+                    if (_game.IsEditorTest)
+                    {
+                        var debugMagicDrawTimer = new PeriodicTimer<IAreaMagic>(TimeSpan.Zero,
+                            TimeBehavior.TimeModifier | TimeBehavior.IgnoreTimeStop,
+                            magic =>
+                            {
+                                _game.DrawArea(magic.GetCurrentIteration());
+                                _game.DrawArea(magic.GetFullArea(), Color.Red);
+                            }, x => x.IsFinished, null, areaMagic, _extendedEvents);
+                        debugMagicDrawTimer.Start();
+                    }
+#endif
+                    break;
+                case INonAreaMagic nonAreaMagic:
+                    RegisterNonAreaMagic(nonAreaMagic);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(magic));
+            }
 
-        _logger.Debug("{MagicName} casted by {WizardName}", magic.Name, wizardInstance.Name);
+            _magics.Add(magic);
+
+            if (magic.IsCloned)
+            {
+                var buff = wizard.WizardBuff;
+                if (buff is null)
+                {
+                    throw new InvalidOperationException("trynna to cast cloned magic for player which is not wizard");
+                }
+
+                buff.BindMagic(magic);
+                _logger.Debug("{MagicName} was binded for {WizardName}", magic.Name, wizard.Name);
+            }
+        }
+
+        if (!magic.IsCloned || (magic.IsCloned && magic.ShouldCastOnRestore))
+        {
+            magic.Cast();
+            _logger.Debug("{MagicName} casted by {WizardName}", magic.Name, wizard.Name);
+        }
+
+        return magic.WhenFinish;
     }
 
-    private CastingMagic Cast(IAreaMagic magic, Vector2 startPosition)
+    public MagicServiceState CloneState()
     {
-        _lastMagicId++;
-        var magicId = _lastMagicId;
-
-        var timer = new PeriodicTimer(
-            TimeSpan.FromMilliseconds(magic.PropagationTime.TotalMilliseconds / magic.IterationsCount),
-            TimeBehavior.TimeModifier | TimeBehavior.IgnoreTimeStop |
-            TimeBehavior.TicksInTimeStopDoesntAffectToIterationsCount, () => OnMagicIterated(magicId),
-            () => OnMagicFinished(magicId), magic.IterationsCount, _extendedEvents);
-
-        var castingMagic = new CastingMagic(magicId, magic, startPosition, timer);
-        _castingMagics.Add(magicId, castingMagic);
-        timer.Start();
+        var clonedMagics = _magics
+            .Select(x => x.Clone())
+            .ToList();
 
 #if DEBUG
-        if (_game.IsEditorTest)
-        {
-            var debugMagicDrawTimer = new PeriodicTimer<CastingMagic>(TimeSpan.Zero,
-                TimeBehavior.TimeModifier | TimeBehavior.IgnoreTimeStop,
-                magic =>
-                {
-                    _game.DrawArea(magic.GetCurrentIteration());
-                    _game.DrawArea(magic.GetFullArea(), Color.Red);
-                }, x => x.IsFinished, null, castingMagic, _extendedEvents);
-            debugMagicDrawTimer.Start();
-        }
+        _logger.Debug("Cloned magics: {ClonedMagics}", clonedMagics.Select(x => $"{x.Wizard.Name}: {x.Name}").ToList());
 #endif
 
-        return castingMagic;
+        return new MagicServiceState(clonedMagics);
     }
 
-    private void OnMagicIterated(int magicId)
+    public void RestoreState(MagicServiceState state)
     {
-        var castingMagic = _castingMagics[magicId];
-        var magic = castingMagic.Magic;
+        RemoveAllMagics();
 
-        if (_timeProvider.IsTimeStopped)
+        foreach (var magic in state.Magics)
         {
-            magic.PlayEffects(castingMagic.GetCurrentIteration());
-            return;
+            Cast(magic);
+            magic.OnRestored();
+            _logger.Debug("{MagicName} restored for {WizardName}", magic.Name, magic.Wizard.Name);
         }
 
-        var iterationArea = castingMagic.Iterate();
-        magic.Cast(castingMagic.GetFullArea(), iterationArea);
+        _logger.Debug("Magic service state restored");
+    }
 
+    private void RegisterAreaMagic(IAreaMagic areaMagic)
+    {
+        _areaMagics.Add(areaMagic);
+
+        areaMagic.Iterate += OnAreaMagicIterated;
+        HookEvents(areaMagic);
+    }
+
+    private void RegisterNonAreaMagic(INonAreaMagic nonAreaMagic)
+    {
+        HookEvents(nonAreaMagic);
+    }
+
+    private void HookEvents(IMagic magic)
+    {
+        var wizard = magic.Wizard;
+        var wizardInstance = wizard.Instance!;
+
+        var subscription =
+            _extendedEvents.HookOnDead(wizardInstance, (Event _) => StopMagic(magic), EventHookMode.Default);
+        _deathSubscriptions.Add(magic, subscription);
+
+        magic.WhenFinish
+            .Invoke(OnMagicFinished);
+    }
+
+    private void StopMagic(IMagic magic)
+    {
+        magic.ExternalFinish();
+    }
+
+    private void RemoveAllMagics()
+    {
+        for (var index = _magics.Count - 1; index >= 0; index--)
+        {
+            var magic = _magics[index];
+            StopMagic(magic);
+        }
+    }
+
+    private void OnAreaMagicIterated(IAreaMagic areaMagic)
+    {
+        var iterationArea = areaMagic.GetCurrentIteration();
+        var fullArea = areaMagic.GetFullArea();
+
+        areaMagic.PlayEffects(iterationArea);
+
+        if (_timeProvider.IsTimeStopped)
+            return;
+
+        areaMagic.Cast(fullArea, iterationArea);
         CheckCollisions();
     }
 
-    private void OnMagicFinished(int magicId)
+    private void OnMagicFinished(IMagic magic)
     {
-        var castingMagic = _castingMagics[magicId];
-        OnMagicFinished(castingMagic);
-    }
+        var deathSubscription = _deathSubscriptions[magic];
+        _deathSubscriptions.Remove(magic);
+        deathSubscription.Dispose();
 
-    private void OnMagicFinished(CastingMagic castingMagic)
-    {
-        castingMagic.Dispose();
-        _castingMagics.Remove(castingMagic.Id);
+        _magics.Remove(magic);
+        if (magic is IAreaMagic areaMagic)
+        {
+            areaMagic.Iterate -= OnAreaMagicIterated;
+            _areaMagics.Remove(areaMagic);
+        }
 
-        _logger.Debug("{CastingMagicName} removed", castingMagic.Name);
+        _logger.Debug("{MagicName} removed", magic.Name);
     }
 
     private void CheckCollisions()
     {
-        if (_castingMagics.Count <= 1)
+        if (_areaMagics.Count <= 1)
             return;
 
-        var castingMagics = _castingMagics.Values;
-
-        for (var i = 0; i < castingMagics.Count; i++)
+        for (var i = 0; i < _areaMagics.Count; i++)
         {
-            var magic1 = castingMagics.ElementAt(i);
+            var magic1 = _areaMagics[i];
             var magic1Zone = magic1.GetCurrentIteration();
 
-            for (var j = i + 1; j < castingMagics.Count; j++)
+            for (var j = i + 1; j < _areaMagics.Count; j++)
             {
-                var magic2 = castingMagics.ElementAt(j);
+                var magic2 = _areaMagics[j];
                 var magic2Zone = magic2.GetCurrentIteration();
 
                 var intersectArea = Area.Intersect(magic1Zone, magic2Zone);
@@ -135,7 +216,7 @@ internal class MagicService : IMagicService
                 if (intersectArea.IsEmpty)
                     continue;
 
-                var collisionResult = Collide(magic1.Magic, magic2.Magic);
+                var collisionResult = Collide(magic1, magic2);
                 if (collisionResult == MagicCollisionResult.None)
                     continue;
 
@@ -147,7 +228,7 @@ internal class MagicService : IMagicService
         }
     }
 
-    private void HandleMagicCollide(CastingMagic magic1, CastingMagic magic2, Area intersectArea,
+    private void HandleMagicCollide(IAreaMagic magic1, IAreaMagic magic2, Area intersectArea,
         MagicCollisionResult collisionResult)
     {
         if (collisionResult.HasFlag<MagicCollisionResult>(MagicCollisionResult.Absorb))
@@ -189,82 +270,4 @@ internal class MagicService : IMagicService
         (AreaMagicType.Fire, AreaMagicType.Wind) => MagicCollisionResult.WasAbsorbed,
         _ => MagicCollisionResult.None
     };
-
-    private void StopMagic(CastingMagic castingMagic)
-    {
-        castingMagic.Stop();
-        OnMagicFinished(castingMagic);
-    }
-
-    private class CastingMagic
-    {
-        public string Name => Magic.Name;
-        public IAreaMagic Magic { get; }
-        public int Id { get; }
-        public bool IsFinished { get; private set; }
-
-        private readonly Vector2 _startPosition;
-        private readonly PeriodicTimer _timer;
-
-        private int _iterationIndex;
-
-        public CastingMagic(int id, IAreaMagic magic, Vector2 startPosition, PeriodicTimer timer)
-            => (Id, Magic, _startPosition, _timer) =
-                (id, magic, startPosition, timer);
-
-        public Area Iterate()
-        {
-            var area = GetCurrentIteration();
-
-            _iterationIndex++;
-
-            return area;
-        }
-
-        public void Reflect()
-        {
-            _iterationIndex = -_iterationIndex;
-            Magic.Reflect();
-        }
-
-        public Area GetCurrentIteration()
-        {
-            var direction = Magic.Direction;
-            var fullArea = GetFullArea();
-
-            var minX = (direction == 1 ? fullArea.Min.X : fullArea.Max.X) +
-                       (fullArea.Width / Magic.IterationsCount * (_iterationIndex + 1) * direction);
-            var minY = fullArea.Min.Y;
-            var min = new Vector2(minX, minY);
-
-            var maxX = (direction == 1 ? fullArea.Min.X : fullArea.Max.X) +
-                       (fullArea.Width / Magic.IterationsCount * (_iterationIndex) * direction);
-            var maxY = fullArea.Max.Y;
-            var max = new Vector2(maxX, maxY);
-
-            return new Area(min, max);
-        }
-
-        public void Dispose()
-        {
-            Magic.ExternalFinish();
-            IsFinished = true;
-        }
-
-        public void Stop()
-        {
-            _timer.Stop();
-        }
-
-        public Area GetFullArea()
-        {
-            var zoneSize = Magic.AreaSize;
-            var startOffset = new Vector2(8, -5);
-
-            return Magic.Direction == 1
-                ? new Area(_startPosition + startOffset, _startPosition + zoneSize + startOffset)
-                : new Area(_startPosition + new Vector2(-startOffset.X, startOffset.Y) - new Vector2(zoneSize.X, 0),
-                    _startPosition + new Vector2(-startOffset.X, startOffset.Y) + new Vector2(0, zoneSize.Y));
-        }
-    }
 }

@@ -3,16 +3,26 @@ using System.Collections.Generic;
 using System.Linq;
 using LuckyBlocks.Data.Weapons;
 using LuckyBlocks.Data.Weapons.Unsafe;
-using LuckyBlocks.Entities;
+using LuckyBlocks.Features.Buffs;
+using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.Immunity;
-using LuckyBlocks.Loot.Buffs;
 using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Extensions;
 
 internal static class PlayerExtensions
 {
+    public static bool IsFake(this Player player)
+    {
+        return player.User is FakeUser;
+    }
+
     public static bool IsValid(this Player player)
+    {
+        return !player.User.IsRemoved;
+    }
+
+    public static bool IsInstanceValid(this Player player)
     {
         return player.Instance?.IsValid() ?? false;
     }

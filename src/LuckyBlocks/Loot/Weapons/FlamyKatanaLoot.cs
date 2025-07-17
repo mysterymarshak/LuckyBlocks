@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using LuckyBlocks.Data;
+using LuckyBlocks.Data.Args;
 using LuckyBlocks.Data.Weapons;
-using LuckyBlocks.Loot.WeaponPowerups;
-using LuckyBlocks.Loot.WeaponPowerups.Melees;
+using LuckyBlocks.Features.WeaponPowerups;
+using LuckyBlocks.Features.WeaponPowerups.Melees;
 using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Loot.Weapons;

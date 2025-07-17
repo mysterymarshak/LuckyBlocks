@@ -1,12 +1,12 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using LuckyBlocks.Data;
+using LuckyBlocks.Data.Args;
 using LuckyBlocks.Data.Weapons;
-using LuckyBlocks.Entities;
 using LuckyBlocks.Features.Buffs;
+using LuckyBlocks.Features.Buffs.Wizards;
+using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.WeaponPowerups;
-using LuckyBlocks.Loot.Buffs;
-using LuckyBlocks.Loot.Buffs.Wizards;
 using Serilog;
 using SFDGameScriptInterface;
 
@@ -14,19 +14,25 @@ namespace LuckyBlocks.Features.Magic.NonAreaMagic;
 
 internal class RestoreMagic : NonAreaMagicBase
 {
+    public event Action? StateSave;
+    public event Action? StateRestore;
+
     public override string Name => "Restore magic";
+    public override bool ShouldCastOnRestore => false;
 
     private readonly IWeaponPowerupsService _weaponPowerupsService;
     private readonly IBuffsService _buffsService;
+    private readonly MagicConstructorArgs _args;
     private readonly ILogger _logger;
 
     private WizardState? _state;
 
-    public RestoreMagic(Player wizard, BuffConstructorArgs args) : base(wizard, args)
+    public RestoreMagic(Player wizard, MagicConstructorArgs args) : base(wizard, args)
     {
         _weaponPowerupsService = args.WeaponPowerupsService;
         _buffsService = args.BuffsService;
         _logger = args.Logger;
+        _args = args;
     }
 
     public override void Cast()
@@ -34,11 +40,19 @@ internal class RestoreMagic : NonAreaMagicBase
         if (_state is null)
         {
             SaveState();
+            StateSave?.Invoke();
         }
         else
         {
             RestoreState();
+            StateRestore?.Invoke();
+            ExternalFinish();
         }
+    }
+
+    protected override MagicBase CloneInternal()
+    {
+        return new RestoreMagic(Wizard, _args) { _state = _state };
     }
 
     private void SaveState()
@@ -49,18 +63,16 @@ internal class RestoreMagic : NonAreaMagicBase
         var speedBoostTime = wizardInstance.GetSpeedBoostTime();
         var health = wizardInstance.GetHealth();
         var isBurning = wizardInstance.IsBurning;
-        var buffs = Wizard.Buffs
-            .Where(x => x is ICloneableBuff<IBuff> and not RestoreWizard)
-            .Cast<ICloneableBuff<IBuff>>()
-            .Select(x => x.Clone())
-            .ToList();
+        var buffs = Wizard.CloneBuffs([typeof(RestoreWizard)]);
         var weaponsData = _weaponPowerupsService.CreateWeaponsDataCopy(Wizard);
 
 #if DEBUG
-        _logger.Debug("Saved state for '{Player}' Weapons: '{WeaponsCount}' Powerups: '{Powerups}' Buffs: '{BuffsCount} | {Buffs}'",
+        _logger.Debug(
+            "Saved state for '{Player}' Weapons: '{WeaponsCount}' Powerups: '{Powerups}' Buffs: '{BuffsCount} | {Buffs}'",
             Wizard.Name,
             weaponsData.Count(),
-            weaponsData.Select(x => string.Join(", ", x.Powerups.Select(y => $"{y.Weapon.WeaponItem}: {y.Name}"))).ToList(),
+            weaponsData.Select(x => string.Join(", ", x.Powerups.Select(y => $"{y.Weapon.WeaponItem}: {y.Name}")))
+                .ToList(),
             buffs.Count,
             buffs.Select(x => x.Name).ToList());
 #endif

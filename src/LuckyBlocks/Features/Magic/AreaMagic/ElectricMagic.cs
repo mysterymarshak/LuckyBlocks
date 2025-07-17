@@ -1,11 +1,10 @@
 ﻿using System;
-using LuckyBlocks.Data;
-using LuckyBlocks.Entities;
+using LuckyBlocks.Data.Args;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Buffs;
+using LuckyBlocks.Features.Buffs.Durable;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.ShockedObjects;
-using LuckyBlocks.Loot.Buffs.Durable;
 using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Features.Magic.AreaMagic;
@@ -21,15 +20,28 @@ internal class ElectricMagic : AreaMagicBase
     private readonly IBuffsService _buffsService;
     private readonly IIdentityService _identityService;
     private readonly IShockedObjectsService _shockedObjectsService;
-    private readonly BuffConstructorArgs _args;
+    private readonly BuffConstructorArgs _buffConstructorArgs;
+    private readonly MagicConstructorArgs _args;
 
-    public ElectricMagic(Player wizard, BuffConstructorArgs args, int direction = default) :
-        base(wizard, args, direction) => (_buffsService, _identityService, _shockedObjectsService, _args) =
-        (args.BuffsService, args.IdentityService, args.ShockedObjectsService, args);
+    public ElectricMagic(Player wizard, MagicConstructorArgs args, BuffConstructorArgs buffConstructorArgs,
+        int direction = default) :
+        base(wizard, args, direction)
+    {
+        _buffsService = args.BuffsService;
+        _identityService = args.IdentityService;
+        _shockedObjectsService = args.ShockedObjectsService;
+        _buffConstructorArgs = buffConstructorArgs;
+        _args = args;
+    }
 
     public override void PlayEffects(Area area)
     {
         PlayEffects(EffectName.Electric, area, Direction);
+    }
+
+    protected override MagicBase CloneInternal()
+    {
+        return new ElectricMagic(Wizard, _args, _buffConstructorArgs);
     }
 
     protected override void CastInternal(Area fullArea, Area iterationArea)
@@ -74,7 +86,7 @@ internal class ElectricMagic : AreaMagicBase
         if (player.HasBuff(typeof(Shock)))
             return;
 
-        var shock = new Shock(player, _args, PlayerShockTime);
+        var shock = new Shock(player, _buffConstructorArgs, PlayerShockTime);
         _buffsService.TryAddBuff(shock, player);
     }
 }
