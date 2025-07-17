@@ -1,4 +1,5 @@
-﻿using SFDGameScriptInterface;
+﻿using LuckyBlocks.Loot;
+using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Data.Args;
 
@@ -7,4 +8,5 @@ internal record LuckyBlockBrokenArgs(
     Vector2 Position,
     bool IsPlayer,
     int PlayerId,
-    bool ShouldHandle);
+    bool ShouldHandle,
+    Item PredefinedItem);

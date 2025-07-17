@@ -10,13 +10,12 @@ using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Features.Buffs.Durable;
 
-internal class Freeze : DurableBuffBase, IRepressibleByImmunityFlagsBuff
+internal class Freeze : DurableRepressibleByImmunityFlagsBuffBase
 {
     public override string Name => "Freeze";
     public override TimeSpan Duration => TimeSpan.FromSeconds(5);
-    public ImmunityFlag ImmunityFlags => ImmunityFlag.ImmunityToFreeze;
-
-    protected override Color BuffColor => ExtendedColors.Electric;
+    public override ImmunityFlag ImmunityFlags => ImmunityFlag.ImmunityToFreeze;
+    public override Color BuffColor => ExtendedColors.Electric;
 
     private const string FreezeColorName = "ClothingBlue";
 

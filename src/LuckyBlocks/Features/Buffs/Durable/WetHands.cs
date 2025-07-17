@@ -4,24 +4,23 @@ using LuckyBlocks.Features.Identity;
 using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
 using LuckyBlocks.Utils;
 using SFDGameScriptInterface;
-using System;
 using System.Collections.Generic;
 using LuckyBlocks.Data.Weapons;
 using LuckyBlocks.Extensions;
-using LuckyBlocks.Utils.Timers;
+using LuckyBlocks.Features.Immunity;
 
 namespace LuckyBlocks.Features.Buffs.Durable;
 
-internal class WetHands : DurableBuffBase
+internal class WetHands : DurableRepressibleByImmunityFlagsBuffBase
 {
     public override string Name => "Wet hands";
     public override TimeSpan Duration => TimeSpan.FromSeconds(20);
-
-    protected override Color BuffColor => ExtendedColors.Water;
-    protected override Color ChatColor => ExtendedColors.LightWater;
+    public override ImmunityFlag ImmunityFlags => ImmunityFlag.ImmunityToWater;
+    public override Color BuffColor => ExtendedColors.Water;
+    public override Color ChatColor => ExtendedColors.LightWater;
 
     private const double SlippingChance = 0.1;
-    
+
     private readonly IEffectsPlayer _effectsPlayer;
     private readonly BuffConstructorArgs _args;
     private readonly List<Weapon> _hookedWeapons = [];
@@ -42,7 +41,7 @@ internal class WetHands : DurableBuffBase
         SetWetHandsProfile();
         HookExistingWeaponsEvents();
         ExtendedEvents.HookOnWeaponAdded(PlayerInstance!, OnWeaponAdded, EventHookMode.LessPrioritized);
-        
+
         ShowWetDialogue("MY HANDS ARE WET");
         _effectsPlayer.PlayEffect(EffectName.WaterSplash, PlayerInstance!.GetWorldPosition() - new Vector2(0, 5));
     }
@@ -73,7 +72,7 @@ internal class WetHands : DurableBuffBase
         clonedProfile.Hands = new IProfileClothingItem("Gloves", "ClothingBlue");
         PlayerInstance!.SetProfile(clonedProfile);
     }
-    
+
     private void HookExistingWeaponsEvents()
     {
         foreach (var weapon in Player.WeaponsData)
@@ -81,7 +80,7 @@ internal class WetHands : DurableBuffBase
             HookEvents(weapon);
         }
     }
-    
+
     private void OnWeaponAdded(Event<PlayerWeaponAddedArg> @event)
     {
         var args = @event.Args;
@@ -94,7 +93,7 @@ internal class WetHands : DurableBuffBase
 
         _hookedWeapons.Add(weapon);
         HookEvents(weapon);
-        
+
         if (!RollForSlip())
             return;
 
@@ -106,7 +105,7 @@ internal class WetHands : DurableBuffBase
         _hookedWeapons.Remove(weapon);
         UnHookEvents(weapon);
     }
-    
+
     private void HookEvents(Weapon weapon)
     {
         weapon.Draw += OnDrawn;
@@ -145,14 +144,17 @@ internal class WetHands : DurableBuffBase
         {
             throwable.Activate -= OnThrowableActivate;
         }
-        
+
         weapon.Dispose -= OnWeaponRemoved;
         weapon.Throw -= OnWeaponThrown;
         weapon.Drop -= OnWeaponDropped;
     }
 
     private void OnDrawn(Weapon weapon) => OnWeaponUse(weapon);
-    private void OnFire(Weapon weapon, IPlayer playerInstance, IEnumerable<IProjectile> projectilesEnumerable) => OnWeaponUse(weapon);
+
+    private void OnFire(Weapon weapon, IPlayer playerInstance, IEnumerable<IProjectile> projectilesEnumerable) =>
+        OnWeaponUse(weapon);
+
     private void OnMeleeHit(Weapon weapon, PlayerMeleeHitArg args) => OnWeaponUse(weapon);
     private void OnThrowableActivate(Weapon weapon) => OnWeaponUse(weapon);
     private void OnWeaponThrown(IObjectWeaponItem? objectWeaponItem, Weapon weapon) => OnWeaponRemoved(weapon);
@@ -180,7 +182,8 @@ internal class WetHands : DurableBuffBase
 
     private void Disarm(WeaponItemType weaponItemType)
     {
-        var disarmedWeapon = PlayerInstance!.Disarm(weaponItemType, new Vector2(1 * PlayerInstance.GetFaceDirection(), -0.5f));
+        var disarmedWeapon =
+            PlayerInstance!.Disarm(weaponItemType, new Vector2(1 * PlayerInstance.GetFaceDirection(), -0.5f));
         if (disarmedWeapon is not null)
         {
             var position = disarmedWeapon.GetWorldPosition();
@@ -188,7 +191,7 @@ internal class WetHands : DurableBuffBase
             _effectsPlayer.PlaySoundEffect("Throw", position);
         }
     }
-    
+
     private bool RollForSlip()
     {
         return SharedRandom.Instance.NextDouble() <= SlippingChance;

@@ -1,4 +1,3 @@
-using LuckyBlocks.Data;
 using LuckyBlocks.Data.Args;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.Magic;
@@ -13,8 +12,7 @@ internal class TimeRevertWizard : WizardBase
 {
     public override string Name => "Time revert wizard";
     public override int CastsCount => 1;
-
-    protected override Color BuffColor => ExtendedColors.KillerQueen;
+    public override Color BuffColor => ExtendedColors.KillerQueen;
 
     private readonly IMagicService _magicService;
     private readonly IMagicFactory _magicFactory;

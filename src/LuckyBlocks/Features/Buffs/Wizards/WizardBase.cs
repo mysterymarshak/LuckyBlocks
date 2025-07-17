@@ -1,9 +1,7 @@
 ﻿using System;
-using LuckyBlocks.Data;
 using LuckyBlocks.Data.Args;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.Magic;
-using LuckyBlocks.Features.Notifications;
 using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
 using LuckyBlocks.Utils;
 using SFDGameScriptInterface;
@@ -22,10 +20,15 @@ internal enum WizardFinishCondition
 internal abstract class WizardBase : FinishableBuffBase, IWizard
 {
     public abstract int CastsCount { get; }
-    public int CastsLeft { get; private set; }
+
+    public int CastsLeft
+    {
+        get => field < 0 ? (field = GetInitialCastsCount()) : field;
+        private set;
+    }
+
     public bool IsCloned { get; private set; }
 
-    private readonly INotificationService _notificationService;
     private readonly IEffectsPlayer _effectsPlayer;
     private readonly WizardFinishCondition _wizardFinishCondition;
     private readonly int _initialCastsLeft;
@@ -35,10 +38,10 @@ internal abstract class WizardBase : FinishableBuffBase, IWizard
     protected WizardBase(Player wizard, BuffConstructorArgs args, int castsLeft = -1,
         WizardFinishCondition wizardFinishCondition = WizardFinishCondition.RanOutOfCasts) : base(wizard, args)
     {
-        _notificationService = args.NotificationService;
         _effectsPlayer = args.EffectsPlayer;
         _wizardFinishCondition = wizardFinishCondition;
         _initialCastsLeft = castsLeft;
+        CastsLeft = -1;
     }
 
     public IWizard Clone()

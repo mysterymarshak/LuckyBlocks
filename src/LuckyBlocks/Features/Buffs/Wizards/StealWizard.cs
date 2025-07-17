@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using System.Threading;
-using LuckyBlocks.Data;
 using LuckyBlocks.Data.Args;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Identity;
@@ -21,9 +20,8 @@ internal class StealWizard : WizardBase, IImmunityFlagsIndicatorBuff
     public override string Name => "Steal wizard";
     public override int CastsCount => 1;
     public ImmunityFlag ImmunityFlags => ImmunityFlag.ImmunityToSteal;
-
-    protected override Color BuffColor => ExtendedColors.NightBlack;
-    protected override Color ChatColor => ExtendedColors.Night;
+    public override Color BuffColor => ExtendedColors.NightBlack;
+    public override Color ChatColor => ExtendedColors.Night;
 
     private static TimeSpan TimeForSteal => TimeSpan.FromSeconds(10);
 

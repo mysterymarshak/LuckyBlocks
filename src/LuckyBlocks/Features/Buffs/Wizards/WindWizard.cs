@@ -1,5 +1,4 @@
-﻿using LuckyBlocks.Data;
-using LuckyBlocks.Data.Args;
+﻿using LuckyBlocks.Data.Args;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.Immunity;
 using LuckyBlocks.Features.Magic;
@@ -14,8 +13,7 @@ internal class WindWizard : WizardBase, IImmunityFlagsIndicatorBuff
     public override string Name => "Wind wizard";
     public override int CastsCount => 3;
     public ImmunityFlag ImmunityFlags => ImmunityFlag.ImmunityToWind;
-
-    protected override Color BuffColor => ExtendedColors.LightGreen;
+    public override Color BuffColor => ExtendedColors.LightGreen;
 
     private readonly IMagicService _magicService;
     private readonly IMagicFactory _magicFactory;

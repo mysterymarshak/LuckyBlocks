@@ -18,4 +18,5 @@ internal static class ExtendedColors
     public static readonly Color KillerQueen = new(235, 156, 209);
     public static readonly Color Water = new(33, 64, 163);
     public static readonly Color LightWater = new(54, 105, 213);
+    public static readonly Color ChatBlue = new(18, 96, 204);
 }

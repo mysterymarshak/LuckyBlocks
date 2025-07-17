@@ -11,13 +11,12 @@ using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Features.Buffs.Durable;
 
-internal class DurablePoison : DurableBuffBase, IRepressibleByImmunityFlagsBuff
+internal class DurablePoison : DurableRepressibleByImmunityFlagsBuffBase
 {
-    public ImmunityFlag ImmunityFlags => ImmunityFlag.ImmunityToPoison;
+    public override ImmunityFlag ImmunityFlags => ImmunityFlag.ImmunityToPoison;
     public override string Name => "Poison";
     public override TimeSpan Duration => TimeSpan.FromSeconds(10);
-
-    protected override Color BuffColor => ExtendedColors.SwampGreen;
+    public override Color BuffColor => ExtendedColors.SwampGreen;
 
     private const string PoisonedColorName = "ClothingDarkGreen";
     private const float TotalDamage = 30f;

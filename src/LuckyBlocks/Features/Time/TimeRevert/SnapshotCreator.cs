@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Autofac;
-using LuckyBlocks.Data;
-using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Buffs;
 using LuckyBlocks.Features.Elevators;
 using LuckyBlocks.Features.Entities;

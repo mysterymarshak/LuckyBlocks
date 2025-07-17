@@ -3,6 +3,7 @@ using LuckyBlocks.Data.Args;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.Immunity;
 using LuckyBlocks.Features.PlayerModifiers;
+using LuckyBlocks.Utils;
 using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Features.Buffs.Durable;
@@ -22,8 +23,8 @@ internal class Shield : DurableBuffBase, IImmunityFlagsIndicatorBuff
     public override string Name => "Shield";
     public override TimeSpan Duration => TimeSpan.FromSeconds(7);
     public ImmunityFlag ImmunityFlags => ImmunityFlag.FullDamageImmunity;
-
-    protected override Color BuffColor => Color.Blue;
+    public override Color BuffColor => Color.Blue;
+    public override Color ChatColor => ExtendedColors.ChatBlue;
 
     private readonly IPlayerModifiersService _playerModifiersService;
     private readonly BuffConstructorArgs _args;

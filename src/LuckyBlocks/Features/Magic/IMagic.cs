@@ -1,5 +1,4 @@
-﻿using LuckyBlocks.Data;
-using LuckyBlocks.Features.Buffs;
+﻿using LuckyBlocks.Features.Buffs;
 using LuckyBlocks.Features.Identity;
 
 namespace LuckyBlocks.Features.Magic;

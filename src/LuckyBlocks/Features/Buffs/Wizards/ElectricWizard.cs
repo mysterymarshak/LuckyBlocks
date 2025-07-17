@@ -1,4 +1,4 @@
-﻿using LuckyBlocks.Data;
+﻿using System;
 using LuckyBlocks.Data.Args;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.Immunity;
@@ -9,13 +9,13 @@ using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Features.Buffs.Wizards;
 
-internal class ElectricWizard : WizardBase, IImmunityFlagsIndicatorBuff
+internal class ElectricWizard : WizardBase, IDelayedImmunityRemovalBuff
 {
     public override string Name => "Electric wizard";
     public override int CastsCount => 3;
     public ImmunityFlag ImmunityFlags => ImmunityFlag.ImmunityToShock;
-
-    protected override Color BuffColor => ExtendedColors.Electric;
+    public TimeSpan ImmunityRemovalDelay => TimeSpan.FromSeconds(2);
+    public override Color BuffColor => ExtendedColors.Electric;
 
     private readonly IMagicService _magicService;
     private readonly IMagicFactory _magicFactory;

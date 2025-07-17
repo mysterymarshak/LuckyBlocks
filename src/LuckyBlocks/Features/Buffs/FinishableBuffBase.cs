@@ -1,6 +1,5 @@
 ﻿using System;
 using Autofac;
-using LuckyBlocks.Data;
 using LuckyBlocks.Data.Args;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.Notifications;
@@ -14,11 +13,10 @@ internal abstract class FinishableBuffBase : IFinishableBuff
 {
     public abstract string Name { get; }
     public bool IsFinished { get; private set; }
-
+    public abstract Color BuffColor { get; }
+    public virtual Color ChatColor => BuffColor;
     public IFinishCondition<IFinishableBuff> WhenFinish => _finishCondition;
 
-    protected abstract Color BuffColor { get; }
-    protected virtual Color ChatColor => BuffColor;
     protected Player Player { get; }
     protected IPlayer? PlayerInstance => Player.Instance;
     protected IExtendedEvents ExtendedEvents { get; }

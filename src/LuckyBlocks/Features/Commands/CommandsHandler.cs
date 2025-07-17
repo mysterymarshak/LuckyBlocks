@@ -13,10 +13,10 @@ using LuckyBlocks.Features.WeaponPowerups;
 using LuckyBlocks.Features.WeaponPowerups.Bullets;
 using LuckyBlocks.Features.WeaponPowerups.Melees;
 using LuckyBlocks.Features.WeaponPowerups.ThrownItems;
+using LuckyBlocks.Loot;
 using LuckyBlocks.Loot.Events;
 using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
 using LuckyBlocks.Utils;
-using LuckyBlocks.Utils.Timers;
 using LuckyBlocks.Utils.Watchers;
 using Serilog;
 using SFDGameScriptInterface;
@@ -115,7 +115,8 @@ internal class CommandsHandler : ICommandsHandler
                 {
                     var supplyCrate = (_game.CreateObject("SupplyCrate00", position) as IObjectSupplyCrate)!;
 
-                    _luckyBlocksService.CreateLuckyBlock(supplyCrate);
+                    ItemExtensions.TryParse(commandArgs, out var predefinedItem, true);
+                    _luckyBlocksService.CreateLuckyBlock(supplyCrate, predefinedItem);
 
                     break;
                 }

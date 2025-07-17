@@ -1,6 +1,7 @@
 ﻿using LuckyBlocks.Data.Args;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Objects;
+using LuckyBlocks.Loot;
 using LuckyBlocks.Mediator;
 using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
 using LuckyBlocks.Utils;
@@ -18,15 +19,18 @@ internal class LuckyBlock : IEntity
     private readonly MappedObject _crate;
     private readonly IMediator _mediator;
     private readonly IExtendedEvents _extendedEvents;
+    private readonly Item _predefinedItem;
 
     private bool _isBroken;
     private IEventSubscription? _damageSubscription;
 
-    public LuckyBlock(IObjectSupplyCrate crate, IMediator mediator, IExtendedEvents extendedEvents)
+    public LuckyBlock(IObjectSupplyCrate crate, IMediator mediator, IExtendedEvents extendedEvents,
+        Item predefinedItem = Item.None)
     {
         _crate = crate.ToMappedObject();
         _mediator = mediator;
         _extendedEvents = extendedEvents;
+        _predefinedItem = predefinedItem;
     }
 
     public void Initialize()
@@ -64,7 +68,8 @@ internal class LuckyBlock : IEntity
         _isBroken = true;
         Dispose();
 
-        var args = new LuckyBlockBrokenArgs(ObjectId, Position, isPlayer, playerId, customId != "RemovedLuckyBlock");
+        var args = new LuckyBlockBrokenArgs(ObjectId, Position, isPlayer, playerId, customId != "RemovedLuckyBlock",
+            _predefinedItem);
         var notification = new LuckyBlockBrokenNotification(args);
         _mediator.Publish(notification);
     }

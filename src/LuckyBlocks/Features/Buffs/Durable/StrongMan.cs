@@ -22,8 +22,7 @@ internal class StrongMan : DurableBuffBase, IImmunityFlagsIndicatorBuff
     public override string Name => "Strong man";
     public override TimeSpan Duration => TimeSpan.FromSeconds(5);
     public ImmunityFlag ImmunityFlags => ImmunityFlag.ImmunityToWind;
-    
-    protected override Color BuffColor => ExtendedColors.ImperialRed;
+    public override Color BuffColor => ExtendedColors.ImperialRed;
     
     private readonly IPlayerModifiersService _playerModifiersService;
     private readonly BuffConstructorArgs _args;

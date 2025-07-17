@@ -1,5 +1,4 @@
-﻿using LuckyBlocks.Data;
-using LuckyBlocks.Data.Args;
+﻿using LuckyBlocks.Data.Args;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.Immunity;
 using LuckyBlocks.Features.Magic;
@@ -13,9 +12,10 @@ internal class FireWizard : WizardBase, IImmunityFlagsIndicatorBuff
 {
     public override string Name => "Fire wizard";
     public override int CastsCount => 3;
-    public ImmunityFlag ImmunityFlags => ImmunityFlag.ImmunityToFire | ImmunityFlag.ImmunityToFreeze;
 
-    protected override Color BuffColor => ExtendedColors.Orange;
+    public ImmunityFlag ImmunityFlags =>
+        ImmunityFlag.ImmunityToFire | ImmunityFlag.ImmunityToFreeze | ImmunityFlag.ImmunityToWater;
+    public override Color BuffColor => ExtendedColors.Orange;
 
     private readonly IMagicService _magicService;
     private readonly IMagicFactory _magicFactory;

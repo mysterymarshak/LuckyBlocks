@@ -12,15 +12,14 @@ using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Features.Buffs.Durable;
 
-internal class Shock : DurableBuffBase, IDelayedImmunityRemovalBuff, IRepressibleByImmunityFlagsBuff
+internal class Shock : DurableRepressibleByImmunityFlagsBuffBase, IDelayedImmunityRemovalBuff
 {
     public override string Name => "Shock";
     public override TimeSpan Duration => TimeSpan.FromSeconds(5);
 
-    public ImmunityFlag ImmunityFlags => ImmunityFlag.ImmunityToShock;
+    public override ImmunityFlag ImmunityFlags => ImmunityFlag.ImmunityToShock;
     public TimeSpan ImmunityRemovalDelay => TimeSpan.FromMilliseconds(700);
-
-    protected override Color BuffColor => ExtendedColors.Electric;
+    public override Color BuffColor => ExtendedColors.Electric;
 
     private static TimeSpan ShockDamagePeriod => TimeSpan.FromMilliseconds(300);
     private const float ShockDamage = 3f;
@@ -82,6 +81,7 @@ internal class Shock : DurableBuffBase, IDelayedImmunityRemovalBuff, IRepressibl
         _fakePlayer = _game.CreatePlayer(_oldPosition);
         _fakePlayer.SetProfile(Player.Profile);
         _fakePlayer.SetBotName($"{Player.Name} (fake)");
+        _fakePlayer.SetCameraSecondaryFocusMode(CameraFocusMode.Focus);
         _fakePlayer.Kill();
 
         PlayerInstance!.SetWorldPosition(_invisibleBlock!.GetWorldPosition() + new Vector2(0, 16));
@@ -163,6 +163,7 @@ internal class Shock : DurableBuffBase, IDelayedImmunityRemovalBuff, IRepressibl
     private void RemovePlayer()
     {
         PlayerInstance?.RemoveDelayed();
+        _fakePlayer?.SetCameraSecondaryFocusMode(CameraFocusMode.Ignore);
     }
 
     private void UpdateDialogue(IPlayer player, bool ignoreDeath)

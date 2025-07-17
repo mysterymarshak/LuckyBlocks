@@ -12,8 +12,7 @@ internal class TotemOfUndying : FinishableBuffBase, ICloneableBuff<IFinishableBu
 {
     public override string Name => "Totem of undying";
     public ImmunityFlag ImmunityFlags => ImmunityFlag.ImmunityToDeath;
-
-    protected override Color BuffColor => Color.Yellow;
+    public override Color BuffColor => Color.Yellow;
 
     private readonly BuffConstructorArgs _args;
 

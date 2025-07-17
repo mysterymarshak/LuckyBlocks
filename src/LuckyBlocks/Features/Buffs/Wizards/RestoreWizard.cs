@@ -1,5 +1,4 @@
 using System;
-using LuckyBlocks.Data;
 using LuckyBlocks.Data.Args;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.Magic;
@@ -14,8 +13,7 @@ internal class RestoreWizard : WizardBase
 {
     public override string Name => "Restore wizard";
     public override int CastsCount => 2;
-
-    protected override Color BuffColor => ExtendedColors.Amethyst;
+    public override Color BuffColor => ExtendedColors.Amethyst;
 
     private readonly IMagicFactory _magicFactory;
     private readonly INotificationService _notificationService;

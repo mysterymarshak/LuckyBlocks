@@ -14,7 +14,7 @@ namespace LuckyBlocks.Features.LuckyBlocks;
 internal interface ILuckyBlocksService
 {
     void Initialize();
-    void CreateLuckyBlock(IObjectSupplyCrate supplyCrate);
+    void CreateLuckyBlock(IObjectSupplyCrate supplyCrate, Item predefinedItem = Item.None);
     void OnLuckyBlockBroken(LuckyBlockBrokenArgs args);
 }
 
@@ -52,9 +52,9 @@ internal class LuckyBlocksService : ILuckyBlocksService
         _logger.Information("Lucky blocks started ~ {Chance}%", _spawnChanceService.Chance * 100);
     }
 
-    public void CreateLuckyBlock(IObjectSupplyCrate supplyCrate)
+    public void CreateLuckyBlock(IObjectSupplyCrate supplyCrate, Item predefinedItem = Item.None)
     {
-        var luckyBlock = new LuckyBlock(supplyCrate, _mediator, _extendedEvents);
+        var luckyBlock = new LuckyBlock(supplyCrate, _mediator, _extendedEvents, predefinedItem);
         luckyBlock.Initialize();
         _entitiesService.Add(luckyBlock);
 
@@ -65,7 +65,7 @@ internal class LuckyBlocksService : ILuckyBlocksService
     {
         if (args.ShouldHandle)
         {
-            var item = _randomItemProvider.GetRandomItem(args);
+            var item = args.PredefinedItem == Item.None ? _randomItemProvider.GetRandomItem(args) : args.PredefinedItem;
             var createLootResult = _lootFactory.CreateLoot(args, item);
 
             if (createLootResult.TryPickT1(out var error, out var loot))

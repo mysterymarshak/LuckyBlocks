@@ -1,5 +1,4 @@
-﻿using LuckyBlocks.Data;
-using LuckyBlocks.Data.Args;
+﻿using LuckyBlocks.Data.Args;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.Immunity;
 using LuckyBlocks.Features.Magic;
@@ -14,8 +13,7 @@ internal class TimeStopWizard : WizardBase, IImmunityFlagsIndicatorBuff
     public override string Name => "Time stop wizard";
     public override int CastsCount => 1;
     public ImmunityFlag ImmunityFlags => ImmunityFlag.ImmunityToTimeStop;
-
-    protected override Color BuffColor => Color.Yellow;
+    public override Color BuffColor => Color.Yellow;
 
     private readonly IMagicService _magicService;
     private readonly IMagicFactory _magicFactory;

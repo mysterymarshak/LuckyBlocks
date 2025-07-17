@@ -2,9 +2,11 @@
 using LuckyBlocks.Features.Buffs.Wizards;
 using LuckyBlocks.Features.WeaponPowerups.Bullets;
 using LuckyBlocks.Loot.Attributes;
+using NetEscapades.EnumGenerators;
 
 namespace LuckyBlocks.Loot;
 
+[EnumExtensions]
 internal enum Item
 {
     [Unused]

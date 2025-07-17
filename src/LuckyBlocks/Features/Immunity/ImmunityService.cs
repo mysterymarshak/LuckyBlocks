@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using LuckyBlocks.Data.Args;
 using LuckyBlocks.Extensions;
@@ -57,7 +58,8 @@ internal class ImmunityService : IImmunityService
 
     public void RemoveImmunity(Player player, IImmunity immunity)
     {
-        if (immunity is IDelayedRemoveImmunity delayedRemoveImmunity)
+        if (immunity is IDelayedRemoveImmunity delayedRemoveImmunity &&
+            delayedRemoveImmunity.RemovalDelay > TimeSpan.Zero)
         {
             Awaiter.Start(() => RemoveImmunityInternal(player, immunity), delayedRemoveImmunity.RemovalDelay);
             return;
@@ -89,6 +91,8 @@ internal class ImmunityService : IImmunityService
             => new ImmunityToShock(removalDelay),
         ImmunityFlag.ImmunityToShock => new ImmunityToShock(),
         ImmunityFlag.ImmunityToTimeStop => new ImmunityToTimeStop(),
+        ImmunityFlag.ImmunityToSteal => new ImmunityToSteal(),
+        ImmunityFlag.ImmunityToWater => new ImmunityToWater(),
         _ => new NotFound()
     };
 }

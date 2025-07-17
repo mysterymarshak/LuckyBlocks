@@ -29,8 +29,7 @@ internal class Hulk : DurableBuffBase
 
     public override string Name => "Hulk";
     public override TimeSpan Duration => TimeSpan.FromSeconds(10);
-
-    protected override Color BuffColor => ExtendedColors.Emerald;
+    public override Color BuffColor => ExtendedColors.Emerald;
 
     private const string HulkColorName = "ClothingGreen";
 

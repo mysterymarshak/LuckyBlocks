@@ -40,7 +40,7 @@ internal class Player
     {
         if (buff is IStackableBuff)
         {
-            if (_buffs.FirstOrDefault(x => x.Name == buff.Name) is IStackableBuff alreadyExistingBuff)
+            if (_buffs.FirstOrDefault(x => x.GetType() == buff.GetType()) is IStackableBuff alreadyExistingBuff)
             {
                 alreadyExistingBuff.ApplyAgain(buff);
                 return;

@@ -21,8 +21,7 @@ internal class Dwarf : DurableBuffBase
 
     public override string Name => "Dwarf";
     public override TimeSpan Duration => TimeSpan.FromSeconds(10);
-
-    protected override Color BuffColor => ExtendedColors.Emerald;
+    public override Color BuffColor => ExtendedColors.Emerald;
 
     private readonly IPlayerModifiersService _playerModifiersService;
     private readonly BuffConstructorArgs _args;

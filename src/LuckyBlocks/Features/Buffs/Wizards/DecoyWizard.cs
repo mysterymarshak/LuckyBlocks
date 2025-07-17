@@ -1,5 +1,4 @@
-﻿using LuckyBlocks.Data;
-using LuckyBlocks.Data.Args;
+﻿using LuckyBlocks.Data.Args;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.Magic;
 using LuckyBlocks.Features.Magic.NonAreaMagic;
@@ -11,8 +10,7 @@ internal class DecoyWizard : WizardBase
 {
     public override string Name => "Decoy wizard";
     public override int CastsCount => 1;
-
-    protected override Color BuffColor => Color.White;
+    public override Color BuffColor => Color.White;
 
     private readonly IMagicService _magicService;
     private readonly IMagicFactory _magicFactory;

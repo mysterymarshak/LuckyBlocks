@@ -25,8 +25,7 @@ internal class Vampirism : DurableBuffBase
 
     public override string Name => "Vampirism";
     public override TimeSpan Duration => TimeSpan.FromSeconds(15);
-
-    protected override Color BuffColor => ExtendedColors.ImperialRed;
+    public override Color BuffColor => ExtendedColors.ImperialRed;
 
     private const float BuffedEnergyRechargeModifier = 1.5f;
     private const float BuffedEnergyConsumptionModifier = 0.75f;

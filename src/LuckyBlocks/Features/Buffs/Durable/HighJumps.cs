@@ -17,8 +17,7 @@ internal class HighJumps : DurableBuffBase, IImmunityFlagsIndicatorBuff
     public override string Name => "High jumps";
     public override TimeSpan Duration => TimeSpan.FromSeconds(10);
     public ImmunityFlag ImmunityFlags => ImmunityFlag.ImmunityToFall;
-
-    protected override Color BuffColor => Color.White;
+    public override Color BuffColor => Color.White;
 
     private readonly IPlayerModifiersService _playerModifiersService;
     private readonly BuffConstructorArgs _args;

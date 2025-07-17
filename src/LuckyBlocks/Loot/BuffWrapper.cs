@@ -1,7 +1,12 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
+using LuckyBlocks.Data;
 using LuckyBlocks.Features.Buffs;
 using LuckyBlocks.Features.Buffs.Durable;
 using LuckyBlocks.Features.Identity;
+using LuckyBlocks.Features.Immunity;
+using OneOf;
+using OneOf.Types;
 
 namespace LuckyBlocks.Loot;
 
@@ -22,28 +27,46 @@ internal class BuffWrapper : IBuffWrapper
         return new WrappedBuff(item, buff, () => OnRan(buff, player));
     }
 
-    private void OnRan(IBuff buff, Player player)
+    private OneOf<Success, PlayerIsDeadResult, ImmunityFlag> OnRan(IBuff buff, Player player)
     {
-        _buffsService.TryAddBuff(buff, player);
+        return _buffsService.TryAddBuff(buff, player, false);
     }
 
     private class WrappedBuff : ILoot
     {
         public Item Item { get; }
 
-        public string Name => _buff is IDurableBuff durableBuff
-            ? $"{durableBuff.Name} | {durableBuff.Duration.TotalSeconds}s"
-            : _buff.Name;
+        [field: MaybeNull]
+        public string Name => field ??= GetHintName();
 
         private readonly IBuff _buff;
-        private readonly Action _runCallback;
+        private readonly Func<OneOf<Success, PlayerIsDeadResult, ImmunityFlag>> _runCallback;
 
-        public WrappedBuff(Item item, IBuff buff, Action runCallback)
-            => (Item, _buff, _runCallback) = (item, buff, runCallback);
+        private bool _isRepressed;
+
+        public WrappedBuff(Item item, IBuff buff, Func<OneOf<Success, PlayerIsDeadResult, ImmunityFlag>> runCallback)
+        {
+            Item = item;
+            _buff = buff;
+            _runCallback = runCallback;
+        }
 
         public void Run()
         {
-            _runCallback.Invoke();
+            var buffAdditionResult = _runCallback.Invoke();
+            if (buffAdditionResult.IsT2)
+            {
+                _isRepressed = true;
+            }
+        }
+
+        private string GetHintName()
+        {
+            var name = _buff is IDurableBuff durableBuff
+                ? $"{durableBuff.Name}: {durableBuff.Duration.TotalSeconds}s"
+                : _buff.Name;
+
+            return _isRepressed ? $"{name} | Repressed" : name;
         }
     }
 }

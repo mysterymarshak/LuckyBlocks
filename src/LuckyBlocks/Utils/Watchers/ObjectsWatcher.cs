@@ -2,7 +2,6 @@
 using System.Linq;
 using Autofac;
 using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
-using Serilog;
 using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Utils.Watchers;
