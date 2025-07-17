@@ -25,8 +25,6 @@ internal abstract class WizardBase : FinishableBuffBase, IWizard
     public int CastsLeft { get; private set; }
     public bool IsCloned { get; private set; }
 
-    protected virtual Color ChatColor => BuffColor;
-
     private readonly INotificationService _notificationService;
     private readonly IEffectsPlayer _effectsPlayer;
     private readonly WizardFinishCondition _wizardFinishCondition;
@@ -68,7 +66,7 @@ internal abstract class WizardBase : FinishableBuffBase, IWizard
         ExtendedEvents.HookOnPlayerMeleeAction(PlayerInstance!, OnMeleeAction, EventHookMode.Default);
 
         ShowDialogue(Name.ToUpper(), TimeSpan.FromSeconds(3), BuffColor, default, default, true);
-        _notificationService.CreateChatNotification("[ALT + A] TO USE MAGIC", ChatColor, Player.UserIdentifier);
+        ShowChatMessage("[ALT + A] TO USE MAGIC");
         ShowCastsCount();
 
         OnRunInternal();
@@ -115,8 +113,7 @@ internal abstract class WizardBase : FinishableBuffBase, IWizard
 
         if (!CanUseMagic())
         {
-            _notificationService.CreateChatNotification("You can't use magic now", ExtendedColors.ImperialRed,
-                Player.UserIdentifier);
+            ShowChatMessage("You can't use magic now", ExtendedColors.ImperialRed);
             return;
         }
 
@@ -155,7 +152,7 @@ internal abstract class WizardBase : FinishableBuffBase, IWizard
 
     private void ShowCastsCount()
     {
-        _notificationService.CreateChatNotification($"Casts left: {CastsLeft}", ChatColor, Player.UserIdentifier);
+        ShowChatMessage($"Casts left: {CastsLeft}");
     }
 
     private int GetInitialCastsCount() => IsCloned ? _initialCastsLeft : CastsCount;

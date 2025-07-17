@@ -215,6 +215,7 @@ internal class TimeRevertMagic : NonAreaMagicBase
         _notificationService.CreateChatNotification(
             $"You have {TimeForChooseSnapshot.Seconds}s to choose an interval! Otherwise, a random one will be selected",
             ExtendedColors.KillerQueen, Wizard.UserIdentifier);
+        // todo: move to wizard
     }
 
     private void OnTimeForChoosePassed()

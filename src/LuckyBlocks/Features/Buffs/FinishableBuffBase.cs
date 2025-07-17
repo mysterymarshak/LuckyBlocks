@@ -18,6 +18,7 @@ internal abstract class FinishableBuffBase : IFinishableBuff
     public IFinishCondition<IFinishableBuff> WhenFinish => _finishCondition;
 
     protected abstract Color BuffColor { get; }
+    protected virtual Color ChatColor => BuffColor;
     protected Player Player { get; }
     protected IPlayer? PlayerInstance => Player.Instance;
     protected IExtendedEvents ExtendedEvents { get; }
@@ -68,7 +69,7 @@ internal abstract class FinishableBuffBase : IFinishableBuff
 
     protected void ShowChatMessage(string message, Color? color = null)
     {
-        _notificationService.CreateChatNotification(message, color ?? BuffColor, Player.UserIdentifier);
+        _notificationService.CreateChatNotification(message, color ?? ChatColor, Player.UserIdentifier);
     }
 
     protected void CloseDialogue()

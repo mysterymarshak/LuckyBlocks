@@ -124,10 +124,8 @@ internal class StealWizard : WizardBase, IImmunityFlagsIndicatorBuff
     private void ShowStealModeHints()
     {
         ShowDialogue($"{_stealTimer.TimeLeft.Seconds}s FOR STEAL!", TimeSpan.FromSeconds(2), BuffColor);
-        _notificationService.CreateChatNotification("[ALT] for change selected player", ChatColor,
-            Player.UserIdentifier);
-        _notificationService.CreateChatNotification("[ALT + A] to steal weapons from selected player", ChatColor,
-            Player.UserIdentifier);
+        ShowChatMessage("[ALT] for change selected player");
+        ShowChatMessage("[ALT + A] to steal weapons from selected player");
 
         if (_stealTimer.TimeLeft > TimeSpan.FromSeconds(_secondsWarningCount + 1))
         {

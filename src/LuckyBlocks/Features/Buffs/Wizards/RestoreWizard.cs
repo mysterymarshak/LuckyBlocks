@@ -47,8 +47,7 @@ internal class RestoreWizard : WizardBase
         _magic = restoreMagic;
 
         _magic.StateRestore += OnStateRestored;
-        _notificationService.CreateChatNotification("[ALT + A] for restore saved state", BuffColor,
-            Player.UserIdentifier);
+        ShowChatMessage("[ALT + A] for restore saved state");
 
         // if there is a magic for bind => magic casted => state saved
     }
@@ -80,8 +79,8 @@ internal class RestoreWizard : WizardBase
         _effectsPlayer.PlayEffect(EffectName.ItemGleam, effectPosition);
 
         _stateSaved = true;
-        _notificationService.CreateChatNotification("You saved your state", BuffColor, Player.UserIdentifier);
-        _notificationService.CreateChatNotification("[ALT + A] for restore", BuffColor, Player.UserIdentifier);
+        ShowChatMessage("You saved your state");
+        ShowChatMessage("[ALT + A] for restore");
     }
 
     private void OnStateRestored()
