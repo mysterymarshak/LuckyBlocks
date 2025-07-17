@@ -42,8 +42,8 @@ internal class ElevatorsService : IElevatorsService
             var elevatorAttachmentJoints = _game.GetObjects<IObjectElevatorAttachmentJoint>();
             foreach (var attachmentJoint in elevatorAttachmentJoints)
             {
-                var pathJoints = _objectsWatcher.StaticObjects
-                    .Where(x => x.Value.CustomId.StartsWith(
+                var pathJoints = _objectsWatcher.StaticObjects.Values
+                    .Where(x => x.CustomId.StartsWith(
                         $"{attachmentJoint.CustomId.Split(["_EleJoint"], StringSplitOptions.None)[0]}_PathJoint_"))
                     .Cast<IObjectElevatorPathJoint>()
                     .ToList();
@@ -60,7 +60,11 @@ internal class ElevatorsService : IElevatorsService
         }
         catch (Exception exception)
         {
+#if DEBUG
+            _logger.Error(exception, "Exception in ElevatorsService.Initialize");
+#else
             _logger.Warning("Cannot initialize elevators");
+#endif
         }
     }
 
