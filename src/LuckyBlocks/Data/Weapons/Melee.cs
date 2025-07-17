@@ -7,7 +7,7 @@ namespace LuckyBlocks.Data.Weapons;
 internal record Melee(WeaponItem WeaponItem, WeaponItemType WeaponItemType, float CurrentDurability)
     : Weapon(WeaponItem, WeaponItemType)
 {
-    public event Action<PlayerMeleeHitArg>? MeleeHit;
+    public event Action<Weapon, PlayerMeleeHitArg>? MeleeHit;
 
     public override bool IsDrawn => !IsDropped && Owner!.CurrentWeaponDrawn == WeaponItemType &&
                                     Owner.CurrentMeleeMakeshiftWeapon.WeaponItem == WeaponItem.NONE;
@@ -26,7 +26,7 @@ internal record Melee(WeaponItem WeaponItem, WeaponItemType WeaponItemType, floa
 
         if (@event == WeaponEvent.MeleeHit)
         {
-            MeleeHit?.Invoke((PlayerMeleeHitArg)args[0]!);
+            MeleeHit?.Invoke(this, (PlayerMeleeHitArg)args[0]!);
         }
     }
 

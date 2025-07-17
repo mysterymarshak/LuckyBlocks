@@ -21,4 +21,32 @@ internal static class IProfileExtensions
             Name = originalProfile.Name
         };
     }
+
+    public static IProfile Clone(this IProfile originalProfile)
+    {
+        return new IProfile
+        {
+            Accesory = originalProfile.Accesory?.Clone(),
+            ChestOver = originalProfile.ChestOver?.Clone(),
+            ChestUnder = originalProfile.ChestUnder?.Clone(),
+            Feet = originalProfile.Feet?.Clone(),
+            Hands = originalProfile.Hands?.Clone(),
+            Legs = originalProfile.Legs?.Clone(),
+            Skin = originalProfile.Skin?.Clone(),
+            Waist = originalProfile.Waist?.Clone(),
+            Head = originalProfile.Head?.Clone(),
+            Gender = originalProfile.Gender,
+            Name = originalProfile.Name
+        };
+    }
+
+    private static IProfileClothingItem? Clone(this IProfileClothingItem? originalClothingItem)
+    {
+        if (originalClothingItem is null)
+        {
+            return null;
+        }
+        
+        return new IProfileClothingItem(originalClothingItem.Name, originalClothingItem.Color1, originalClothingItem.Color2, originalClothingItem.Color3);
+    }
 }

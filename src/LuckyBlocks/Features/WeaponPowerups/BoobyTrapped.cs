@@ -53,7 +53,7 @@ internal class BoobyTrapped : IStackablePowerup<Weapon>
 
     private void OnDrawn(Weapon weapon) => Explode();
 
-    private void OnFired(IPlayer? playerInstance, IEnumerable<IProjectile>? projectilesEnumerable)
+    private void OnFired(Weapon weapon, IPlayer playerInstance, IEnumerable<IProjectile> projectilesEnumerable)
     {
         foreach (var projectile in projectilesEnumerable)
         {
@@ -63,7 +63,7 @@ internal class BoobyTrapped : IStackablePowerup<Weapon>
         Explode();
     }
 
-    private void OnActivated() => Explode();
+    private void OnActivated(Weapon weapon) => Explode();
 
 
     public bool IsCompatibleWith(Type otherPowerupType) => true;

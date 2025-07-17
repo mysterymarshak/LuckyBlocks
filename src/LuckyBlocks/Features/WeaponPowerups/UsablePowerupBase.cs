@@ -169,7 +169,7 @@ internal abstract class UsablePowerupBase<T> : IUsablePowerup<T> where T : Weapo
         ShowUsesLeft(PowerupEvent.GrenadeUse, playerInstance);
     }
 
-    private void OnUseFirearm(IPlayer? playerInstance, IEnumerable<IProjectile>? projectiles)
+    private void OnUseFirearm(Weapon weapon, IPlayer playerInstance, IEnumerable<IProjectile> projectiles)
     {
         OnFireInternal(playerInstance, projectiles);
 

@@ -12,8 +12,8 @@ internal record Throwable(
     bool IsActive)
     : Weapon(WeaponItem, WeaponItemType)
 {
-    public event Action<IPlayer?, IObject?, Throwable?>? GrenadeThrow;
-    public event Action? Activate;
+    public event Action<IPlayer, IObject?, Throwable>? GrenadeThrow;
+    public event Action<Weapon>? Activate;
 
     public int CurrentAmmo { get; protected set; } = CurrentAmmo;
     public bool IsActive { get; protected set; } = IsActive;
@@ -31,10 +31,10 @@ internal record Throwable(
         switch (@event)
         {
             case WeaponEvent.GrenadeThrown:
-                GrenadeThrow?.Invoke(args[0] as IPlayer, args[1] as IObject, args[2] as Throwable);
+                GrenadeThrow?.Invoke((args[0] as IPlayer)!, args[1] as IObject, (args[2] as Throwable)!);
                 break;
             case WeaponEvent.Activated:
-                Activate?.Invoke();
+                Activate?.Invoke(this);
                 break;
         }
     }

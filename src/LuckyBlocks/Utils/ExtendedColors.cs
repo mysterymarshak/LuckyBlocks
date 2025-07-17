@@ -16,5 +16,6 @@ internal static class ExtendedColors
     public static readonly Color NightBlack = new(15, 11, 10);
     public static readonly Color Night = new(76, 63, 142);
     public static readonly Color KillerQueen = new(235, 156, 209);
-    public static readonly Color Water = new(11, 108, 163);
+    public static readonly Color Water = new(33, 64, 163);
+    public static readonly Color LightWater = new(54, 105, 213);
 }

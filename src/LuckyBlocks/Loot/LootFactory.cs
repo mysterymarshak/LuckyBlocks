@@ -89,6 +89,7 @@ internal class LootFactory : ILootFactory
         Item.RestoreWizard => CreateWrappedBuff<RestoreWizard>(player, Item.RestoreWizard),
         Item.StealWizard => CreateWrappedBuff<StealWizard>(player, Item.StealWizard),
         Item.TimeRevertWizard => CreateWrappedBuff<TimeRevertWizard>(player, Item.TimeRevertWizard),
+        Item.WetHands => CreateWrappedBuff<WetHands>(player, Item.WetHands),
         _ => new ArgumentOutOfRangeException(nameof(item))
     };
 

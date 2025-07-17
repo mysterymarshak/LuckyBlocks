@@ -18,7 +18,7 @@ internal record Firearm(
     ProjectileItem ProjectileItem)
     : Weapon(WeaponItem, WeaponItemType)
 {
-    public event Action<IPlayer?, IEnumerable<IProjectile>?>? Fire;
+    public event Action<Weapon, IPlayer, IEnumerable<IProjectile>>? Fire;
     public event Action<Weapon, IPlayer>? Reload;
 
     public int CurrentAmmo { get; protected set; } = CurrentAmmo;
@@ -42,7 +42,7 @@ internal record Firearm(
         switch (@event)
         {
             case WeaponEvent.Fired:
-                Fire?.Invoke(args[0] as IPlayer, args[1] as IEnumerable<IProjectile>);
+                Fire?.Invoke(this, (args[0] as IPlayer)!, (args[1] as IEnumerable<IProjectile>)!);
                 break;
             case WeaponEvent.Reloaded:
                 Reload?.Invoke(this, (args[0] as IPlayer)!);

@@ -136,7 +136,7 @@ internal class FlamyKatana : IStackablePowerup<Melee>
         _durabilityTimer.Restart();
     }
 
-    private void OnMeleeHit(PlayerMeleeHitArg args)
+    private void OnMeleeHit(Weapon weapon, PlayerMeleeHitArg args)
     {
         var hitObject = args.HitObject;
         if (hitObject.GetBodyType() == BodyType.Static)

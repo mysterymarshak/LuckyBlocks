@@ -19,6 +19,8 @@ public enum EventHookMode
     
     InstanceThisPost,
     
+    LessPrioritized,
+    
     Default,
     
     Prioritized,

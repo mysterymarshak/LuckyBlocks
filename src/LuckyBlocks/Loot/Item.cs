@@ -161,5 +161,8 @@ internal enum Item
     [OnlyPlayer]
     [NoOneHaveBuff(typeof(TimeRevertWizard))]
     [PlayerIsNotOtherWizard(SourceWizard = typeof(TimeRevertWizard))]
-    TimeRevertWizard
+    TimeRevertWizard,
+
+    [OnlyPlayer]
+    WetHands
 }
