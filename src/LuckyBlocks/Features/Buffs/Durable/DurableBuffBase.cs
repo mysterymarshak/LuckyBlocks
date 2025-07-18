@@ -48,13 +48,13 @@ internal abstract class DurableBuffBase : FinishableBuffBase, IDurableBuff
         var playerInstance = Player.Instance;
         ArgumentWasNullException.ThrowIfNull(playerInstance);
 
-        var oldDuration = _duration;
+        var timeLeft = TimeLeft;
         var additionalBuffDuration = ((IDurableBuff)additionalBuff).TimeLeft;
         _duration = MathHelper.Clamp((float)(TimeLeft + additionalBuffDuration).TotalMilliseconds,
             (float)TimeLeft.TotalMilliseconds,
             (float)Duration.TotalMilliseconds);
 
-        if (oldDuration == _duration)
+        if (Math.Abs(timeLeft.TotalMilliseconds - _duration) < 1f)
             return;
 
         CreateAndStartTimer();
