@@ -89,7 +89,7 @@ internal class TimeStoppedPlayer : TimeStoppedDynamicObjectBase
         if (args.DamageType == PlayerDamageEventType.Fire)
             return;
 
-        _delayedDamage += args.Damage * 0.7f;
+        _delayedDamage += args.Damage;
     }
 
     // source idea: https://steamcommunity.com/sharedfiles/filedetails/?id=2061774989
