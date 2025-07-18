@@ -281,6 +281,14 @@ internal class CommandsHandler : ICommandsHandler
                     _weaponPowerupsService.AddWeaponPowerup(pushPowerup, weapon);
                     break;
                 }
+                case "test9":
+                {
+                    var sawedOff = _game.SpawnWeaponItem(WeaponItem.SAWED_OFF, playerInstance.GetWorldPosition(), true);
+                    var weapon = _weaponsDataWatcher.RegisterWeapon(sawedOff);
+                    var poisonPowerup = _powerupFactory.CreatePowerup(weapon, typeof(PoisonBullets));
+                    _weaponPowerupsService.AddWeaponPowerup(poisonPowerup, weapon);
+                    break;
+                }
                 case "hp":
                 {
                     playerInstance.SetHealth(100);
