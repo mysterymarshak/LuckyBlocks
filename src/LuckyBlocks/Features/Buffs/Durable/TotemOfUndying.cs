@@ -4,6 +4,7 @@ using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.Immunity;
 using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
+using LuckyBlocks.Utils;
 using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Features.Buffs.Durable;
@@ -12,7 +13,7 @@ internal class TotemOfUndying : FinishableBuffBase, ICloneableBuff<IFinishableBu
 {
     public override string Name => "Totem of undying";
     public ImmunityFlag ImmunityFlags => ImmunityFlag.ImmunityToDeath;
-    public override Color BuffColor => Color.Yellow;
+    public override Color BuffColor => ExtendedColors.TotemOfUndying;
 
     private readonly BuffConstructorArgs _args;
 
@@ -49,6 +50,6 @@ internal class TotemOfUndying : FinishableBuffBase, ICloneableBuff<IFinishableBu
 
     private void ShowTotemDialogue(string message, bool ignoreFinish = false)
     {
-        ShowDialogue(message, TimeSpan.FromMilliseconds(2500), BuffColor, ignoreFinish: ignoreFinish);
+        ShowDialogue(message, TimeSpan.FromSeconds(3), BuffColor, ignoreFinish: ignoreFinish);
     }
 }
