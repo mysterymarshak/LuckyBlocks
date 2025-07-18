@@ -5,6 +5,7 @@ using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.Immunity;
 using LuckyBlocks.Features.Notifications;
+using LuckyBlocks.Features.Profiles;
 using LuckyBlocks.Utils;
 using LuckyBlocks.Utils.Timers;
 using SFDGameScriptInterface;
@@ -18,17 +19,18 @@ internal class DurablePoison : DurableRepressibleByImmunityFlagsBuffBase
     public override TimeSpan Duration => TimeSpan.FromSeconds(10);
     public override Color BuffColor => ExtendedColors.SwampGreen;
 
-    private const string PoisonedColorName = "ClothingDarkGreen";
     private const float TotalDamage = 30f;
 
     private readonly INotificationService _notificationService;
     private readonly BuffConstructorArgs _args;
     private readonly TimerBase _timer;
+    private readonly IProfilesService _profilesService;
 
     public DurablePoison(Player player, BuffConstructorArgs args, TimeSpan timeLeft = default) : base(player, args,
         timeLeft)
     {
         _notificationService = args.NotificationService;
+        _profilesService = args.ProfilesService;
         _args = args;
         _timer = new PeriodicTimer(TimeSpan.FromSeconds(1), TimeBehavior.TimeModifier, OnTick, null, int.MaxValue,
             ExtendedEvents);
@@ -44,9 +46,7 @@ internal class DurablePoison : DurableRepressibleByImmunityFlagsBuffBase
         ShowPersistentDialogue("POISONED");
         ShowChatMessage();
 
-        var profile = Player.Profile;
-        var poisonedProfile = profile.ToSingleColor(PoisonedColorName);
-        PlayerInstance!.SetProfile(poisonedProfile);
+        _profilesService.RequestProfileChanging<DurablePoison>(Player);
 
         _timer.Start();
         OnTick();
@@ -60,11 +60,7 @@ internal class DurablePoison : DurableRepressibleByImmunityFlagsBuffBase
     protected override void OnFinishInternal()
     {
         _timer.Stop();
-
-        if (Player.IsInstanceValid())
-        {
-            PlayerInstance!.SetProfile(Player.Profile);
-        }
+        _profilesService.RequestProfileRestoring<DurablePoison>(Player);
     }
 
     private void OnTick()

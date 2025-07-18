@@ -1,52 +1,41 @@
-﻿using SFDGameScriptInterface;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Extensions;
 
 internal static class IProfileExtensions
 {
-    public static IProfile ToSingleColor(this IProfile originalProfile, string colorName)
+    private static readonly Dictionary<string, FieldInfo> FieldsInfo = new();
+
+    public static FieldInfo GetField(string name)
     {
-        return new IProfile
+        if (!FieldsInfo.TryGetValue(name, out var field))
         {
-            Accesory = new IProfileClothingItem(originalProfile.Accessory?.Name, colorName, colorName),
-            ChestOver = new IProfileClothingItem(originalProfile.ChestOver?.Name, colorName, colorName),
-            ChestUnder = new IProfileClothingItem(originalProfile.ChestUnder?.Name, colorName, colorName),
-            Feet = new IProfileClothingItem(originalProfile.Feet?.Name, colorName, colorName),
-            Hands = new IProfileClothingItem(originalProfile.Hands?.Name, colorName, colorName),
-            Legs = new IProfileClothingItem(originalProfile.Legs?.Name, colorName, colorName),
-            Skin = new IProfileClothingItem(originalProfile.Skin?.Name, colorName, colorName),
-            Waist = new IProfileClothingItem(originalProfile.Waist?.Name, colorName, colorName),
-            Head = new IProfileClothingItem(originalProfile.Head?.Name, colorName, colorName),
-            Gender = originalProfile.Gender,
-            Name = originalProfile.Name
-        };
+            field = typeof(IProfile).GetField(name);
+            FieldsInfo.Add(name, field);
+        }
+
+        return field;
     }
 
-    public static IProfile Clone(this IProfile originalProfile)
+    public static IEnumerable<string> GetProperties()
     {
-        return new IProfile
-        {
-            Accesory = originalProfile.Accesory?.Clone(),
-            ChestOver = originalProfile.ChestOver?.Clone(),
-            ChestUnder = originalProfile.ChestUnder?.Clone(),
-            Feet = originalProfile.Feet?.Clone(),
-            Hands = originalProfile.Hands?.Clone(),
-            Legs = originalProfile.Legs?.Clone(),
-            Skin = originalProfile.Skin?.Clone(),
-            Waist = originalProfile.Waist?.Clone(),
-            Head = originalProfile.Head?.Clone(),
-            Gender = originalProfile.Gender,
-            Name = originalProfile.Name
-        };
+        return typeof(IProfile).GetFields()
+            .Where(x => x.FieldType == typeof(IProfileClothingItem))
+            .Select(x => x.Name)
+            .Where(x => x is not (nameof(IProfile.Gender) or nameof(IProfile.Name)));
     }
 
-    private static IProfileClothingItem? Clone(this IProfileClothingItem? originalClothingItem)
+    public static IProfileClothingItem? Clone(this IProfileClothingItem? originalClothingItem, string? colorName = null)
     {
         if (originalClothingItem is null)
         {
             return null;
         }
-        
-        return new IProfileClothingItem(originalClothingItem.Name, originalClothingItem.Color1, originalClothingItem.Color2, originalClothingItem.Color3);
+
+        return new IProfileClothingItem(originalClothingItem.Name, colorName ?? originalClothingItem.Color1,
+            colorName ?? originalClothingItem.Color2, colorName ?? originalClothingItem.Color3);
     }
 }

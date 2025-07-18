@@ -5,6 +5,7 @@ using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.Immunity;
 using LuckyBlocks.Features.Notifications;
+using LuckyBlocks.Features.Profiles;
 using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
 using LuckyBlocks.Utils;
 using LuckyBlocks.Utils.Timers;
@@ -25,6 +26,7 @@ internal class Shock : DurableRepressibleByImmunityFlagsBuffBase, IDelayedImmuni
     private const float ShockDamage = 3f;
     private static IObject? _invisibleBlock;
 
+    private readonly IProfilesService _profileService;
     private readonly INotificationService _notificationService;
     private readonly BuffConstructorArgs _args;
     private readonly IGame _game;
@@ -35,6 +37,7 @@ internal class Shock : DurableRepressibleByImmunityFlagsBuffBase, IDelayedImmuni
 
     public Shock(Player player, BuffConstructorArgs args, TimeSpan timeLeft = default) : base(player, args, timeLeft)
     {
+        _profileService = args.ProfilesService;
         _notificationService = args.NotificationService;
         _args = args;
         _game = args.Game;
@@ -78,12 +81,14 @@ internal class Shock : DurableRepressibleByImmunityFlagsBuffBase, IDelayedImmuni
             _oldPosition = PlayerInstance!.GetWorldPosition();
         }
 
+        var profile = _profileService.GetPlayerProfile(Player);
         _fakePlayer = _game.CreatePlayer(_oldPosition);
-        _fakePlayer.SetProfile(Player.Profile);
+        _fakePlayer.SetProfile(profile);
         _fakePlayer.SetBotName($"{Player.Name} (fake)");
         _fakePlayer.SetCameraSecondaryFocusMode(CameraFocusMode.Focus);
         _fakePlayer.Kill();
 
+        Player.ProfileChanged += OnProfileChanged;
         PlayerInstance!.SetWorldPosition(_invisibleBlock!.GetWorldPosition() + new Vector2(0, 16));
         PlayerInstance.SetInputMode(PlayerInputMode.Disabled);
         PlayerInstance.SetLinearVelocity(Vector2.Zero);
@@ -105,6 +110,8 @@ internal class Shock : DurableRepressibleByImmunityFlagsBuffBase, IDelayedImmuni
             _fakePlayer?.RemoveDelayed();
         }
 
+        Player.ProfileChanged -= OnProfileChanged;
+
         if (PlayerInstance?.IsDead != false)
             return;
 
@@ -112,6 +119,14 @@ internal class Shock : DurableRepressibleByImmunityFlagsBuffBase, IDelayedImmuni
         PlayerInstance.SetInputMode(PlayerInputMode.Enabled);
         PlayerInstance.SetNametagVisible(true);
         PlayerInstance.SetCameraSecondaryFocusMode(CameraFocusMode.Focus);
+    }
+
+    private void OnProfileChanged(IProfile profile)
+    {
+        if (_fakePlayer?.IsValid() == true)
+        {
+            _fakePlayer.SetProfile(profile);
+        }
     }
 
     private void OnDamage(Event<PlayerDamageArgs> @event)

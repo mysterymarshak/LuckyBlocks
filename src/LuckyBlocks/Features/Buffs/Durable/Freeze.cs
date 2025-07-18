@@ -4,6 +4,7 @@ using LuckyBlocks.Data.Args;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.Immunity;
+using LuckyBlocks.Features.Profiles;
 using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
 using LuckyBlocks.Utils;
 using SFDGameScriptInterface;
@@ -17,8 +18,7 @@ internal class Freeze : DurableRepressibleByImmunityFlagsBuffBase
     public override ImmunityFlag ImmunityFlags => ImmunityFlag.ImmunityToFreeze;
     public override Color BuffColor => ExtendedColors.Electric;
 
-    private const string FreezeColorName = "ClothingBlue";
-
+    private readonly IProfilesService _profilesService;
     private readonly BuffConstructorArgs _args;
 
     private bool _isBurning;
@@ -26,6 +26,7 @@ internal class Freeze : DurableRepressibleByImmunityFlagsBuffBase
 
     public Freeze(Player player, BuffConstructorArgs args, TimeSpan timeLeft = default) : base(player, args, timeLeft)
     {
+        _profilesService = args.ProfilesService;
         _args = args;
     }
 
@@ -56,11 +57,8 @@ internal class Freeze : DurableRepressibleByImmunityFlagsBuffBase
 
     private void EnableBuff()
     {
-        var profile = Player.Profile;
-        var frozenProfile = profile.ToSingleColor(FreezeColorName);
-
-        PlayerInstance!.SetProfile(frozenProfile);
-        PlayerInstance.SetInputMode(PlayerInputMode.Disabled);
+        _profilesService.RequestProfileChanging<Freeze>(Player);
+        PlayerInstance!.SetInputMode(PlayerInputMode.Disabled);
 
         ExtendedEvents.HookOnDamage(PlayerInstance, OnDamage, EventHookMode.Default);
     }
@@ -70,8 +68,8 @@ internal class Freeze : DurableRepressibleByImmunityFlagsBuffBase
         if (!Player.IsInstanceValid())
             return;
 
+        _profilesService.RequestProfileRestoring<Freeze>(Player);
         PlayerInstance!.SetInputMode(PlayerInputMode.Enabled);
-        PlayerInstance.SetProfile(Player.Profile);
     }
 
     private void OnDamage(Event<PlayerDamageArgs> @event)

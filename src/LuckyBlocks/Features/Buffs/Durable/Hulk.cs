@@ -3,6 +3,7 @@ using LuckyBlocks.Data.Args;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.PlayerModifiers;
+using LuckyBlocks.Features.Profiles;
 using LuckyBlocks.Utils;
 using SFDGameScriptInterface;
 
@@ -31,8 +32,7 @@ internal class Hulk : DurableBuffBase
     public override TimeSpan Duration => TimeSpan.FromSeconds(10);
     public override Color BuffColor => ExtendedColors.Emerald;
 
-    private const string HulkColorName = "ClothingGreen";
-
+    private readonly IProfilesService _profilesService;
     private readonly IPlayerModifiersService _playerModifiersService;
     private readonly BuffConstructorArgs _args;
 
@@ -40,6 +40,7 @@ internal class Hulk : DurableBuffBase
 
     public Hulk(Player player, BuffConstructorArgs args, TimeSpan timeLeft = default) : base(player, args, timeLeft)
     {
+        _profilesService = args.ProfilesService;
         _playerModifiersService = args.PlayerModifiersService;
         _args = args;
     }
@@ -73,11 +74,8 @@ internal class Hulk : DurableBuffBase
 
     private void EnableBuff()
     {
-        var profile = Player.Profile;
-        var hulkProfile = profile.ToSingleColor(HulkColorName);
-
-        PlayerInstance!.SetProfile(hulkProfile);
-        PlayerInstance.SetStrengthBoostTime((float)TimeLeft.TotalMilliseconds);
+        _profilesService.RequestProfileChanging<Hulk>(Player);
+        PlayerInstance!.SetStrengthBoostTime((float)TimeLeft.TotalMilliseconds);
 
         _playerModifiersService.AddModifiers(Player, ModifiedModifiers);
     }
@@ -85,11 +83,7 @@ internal class Hulk : DurableBuffBase
     private void DisableBuff()
     {
         _playerModifiersService.RevertModifiers(Player, ModifiedModifiers, _playerModifiers!);
-
-        if (!Player.IsInstanceValid())
-            return;
-
-        PlayerInstance!.SetProfile(Player.Profile);
+        _profilesService.RequestProfileRestoring<Hulk>(Player);
     }
 
     private void UpdateDialogue()

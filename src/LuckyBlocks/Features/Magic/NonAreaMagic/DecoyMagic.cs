@@ -95,6 +95,8 @@ internal class DecoyMagic : NonAreaMagicBase
             _finishTimer = new Timer(_timeLeft, TimeBehavior.TimeModifier, ExternalFinish, ExtendedEvents);
         }
 
+        Wizard.ProfileChanged += OnProfileChanged;
+
         _finishTimer.Start();
     }
 
@@ -111,6 +113,7 @@ internal class DecoyMagic : NonAreaMagicBase
 
         var wizardInstance = Wizard.Instance;
         wizardInstance?.SetTeam(PlayerTeam.Independent);
+        Wizard.ProfileChanged -= OnProfileChanged;
     }
 
     private void CreateDecoys()
@@ -201,6 +204,17 @@ internal class DecoyMagic : NonAreaMagicBase
         }
 
         return copiedDecoys;
+    }
+
+    private void OnProfileChanged(IProfile profile)
+    {
+        foreach (var decoy in _decoys)
+        {
+            if (decoy.IsValid())
+            {
+                decoy.SetProfile(profile);
+            }
+        }
     }
 
     private void OnDecoyDead(Event @event)

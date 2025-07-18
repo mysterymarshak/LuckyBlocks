@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using LuckyBlocks.Data.Weapons;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Immunity;
+using LuckyBlocks.Features.Profiles;
 
 namespace LuckyBlocks.Features.Buffs.Durable;
 
@@ -21,12 +22,14 @@ internal class WetHands : DurableRepressibleByImmunityFlagsBuffBase
 
     private const double SlippingChance = 0.1;
 
+    private readonly IProfilesService _profileService;
     private readonly IEffectsPlayer _effectsPlayer;
     private readonly BuffConstructorArgs _args;
     private readonly List<Weapon> _hookedWeapons = [];
 
     public WetHands(Player player, BuffConstructorArgs args) : base(player, args)
     {
+        _profileService = args.ProfilesService;
         _effectsPlayer = args.EffectsPlayer;
         _args = args;
     }
@@ -38,11 +41,11 @@ internal class WetHands : DurableRepressibleByImmunityFlagsBuffBase
 
     protected override void OnRunInternal()
     {
-        SetWetHandsProfile();
         HookExistingWeaponsEvents();
         ExtendedEvents.HookOnWeaponAdded(PlayerInstance!, OnWeaponAdded, EventHookMode.LessPrioritized);
 
         ShowWetDialogue("MY HANDS ARE WET");
+        _profileService.RequestProfileChanging<WetHands>(Player);
         _effectsPlayer.PlayEffect(EffectName.WaterSplash, PlayerInstance!.GetWorldPosition() - new Vector2(0, 5));
     }
 
@@ -54,23 +57,12 @@ internal class WetHands : DurableRepressibleByImmunityFlagsBuffBase
 
     protected override void OnFinishInternal()
     {
-        if (Player.IsInstanceValid())
-        {
-            PlayerInstance!.SetProfile(Player.Profile);
-        }
+        _profileService.RequestProfileRestoring<WetHands>(Player);
 
         foreach (var weapon in _hookedWeapons)
         {
             UnHookEvents(weapon);
         }
-    }
-
-    private void SetWetHandsProfile()
-    {
-        var profile = Player.Profile;
-        var clonedProfile = profile.Clone();
-        clonedProfile.Hands = new IProfileClothingItem("Gloves", "ClothingBlue");
-        PlayerInstance!.SetProfile(clonedProfile);
     }
 
     private void HookExistingWeaponsEvents()

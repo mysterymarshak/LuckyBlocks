@@ -4,6 +4,7 @@ using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.Magic;
 using LuckyBlocks.Features.Notifications;
 using LuckyBlocks.Features.PlayerModifiers;
+using LuckyBlocks.Features.Profiles;
 using LuckyBlocks.Features.Time.TimeRevert;
 using LuckyBlocks.Features.Time.TimeStop;
 using LuckyBlocks.Utils;
@@ -22,6 +23,7 @@ internal record BuffConstructorArgs(
     IIdentityService IdentityService,
     ITimeStopService TimeStopService,
     ITimeRevertService TimeRevertService,
+    IProfilesService ProfilesService,
     IGame Game,
     ILogger Logger,
     ILifetimeScope LifetimeScope);

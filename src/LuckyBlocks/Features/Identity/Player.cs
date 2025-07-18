@@ -12,6 +12,8 @@ namespace LuckyBlocks.Features.Identity;
 
 internal class Player
 {
+    public event Action<IProfile>? ProfileChanged;
+
     public int UserIdentifier => User.UserIdentifier;
     public string Name => User.Name;
     public IPlayer? Instance => User.GetPlayer();
@@ -73,6 +75,15 @@ internal class Player
     public void RemoveImmunity(IImmunity immunity)
     {
         _immunities.Remove(immunity);
+    }
+
+    public void SetInstanceProfile(IProfile profile)
+    {
+        if (!this.IsInstanceValid())
+            return;
+
+        Instance!.SetProfile(profile);
+        ProfileChanged?.Invoke(profile);
     }
 
     public List<IBuff> CloneBuffs(IEnumerable<Type>? exclusions = null)

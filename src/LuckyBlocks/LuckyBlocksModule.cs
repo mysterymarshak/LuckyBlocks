@@ -15,6 +15,7 @@ using LuckyBlocks.Features.Magic;
 using LuckyBlocks.Features.Notifications;
 using LuckyBlocks.Features.Objects;
 using LuckyBlocks.Features.PlayerModifiers;
+using LuckyBlocks.Features.Profiles;
 using LuckyBlocks.Features.ShockedObjects;
 using LuckyBlocks.Features.Time;
 using LuckyBlocks.Features.Time.TimeRevert;
@@ -253,6 +254,14 @@ internal class LuckyBlocksModule : Module
 
         builder.RegisterType<GrenadesService>()
             .As<IGrenadesService>()
+            .SingleInstance();
+
+        builder.RegisterType<ProfilesRepository>()
+            .As<IProfilesRepository>()
+            .SingleInstance();
+        
+        builder.RegisterType<ProfilesService>()
+            .As<IProfilesService>()
             .SingleInstance();
     }
 }
