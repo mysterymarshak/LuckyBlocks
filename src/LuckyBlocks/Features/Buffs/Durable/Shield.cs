@@ -37,9 +37,9 @@ internal class Shield : DurableBuffBase, IImmunityFlagsIndicatorBuff
         _args = args;
     }
 
-    protected override DurableBuffBase CloneInternal()
+    protected override DurableBuffBase CloneInternal(Player player)
     {
-        return new Shield(Player, _args, TimeLeft);
+        return new Shield(player, _args, TimeLeft);
     }
 
     protected override void OnRunInternal()

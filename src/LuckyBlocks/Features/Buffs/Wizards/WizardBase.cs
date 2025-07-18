@@ -1,5 +1,6 @@
 ﻿using System;
 using LuckyBlocks.Data.Args;
+using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.Magic;
 using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
@@ -44,9 +45,9 @@ internal abstract class WizardBase : FinishableBuffBase, IWizard
         CastsLeft = -1;
     }
 
-    public IWizard Clone()
+    public IWizard Clone(Player? player = null)
     {
-        var clonedWizard = CloneInternal();
+        var clonedWizard = CloneInternal(player ?? Player);
         clonedWizard.IsCloned = true;
         return clonedWizard;
     }
@@ -83,7 +84,7 @@ internal abstract class WizardBase : FinishableBuffBase, IWizard
         ShowCastsCount();
     }
 
-    protected abstract WizardBase CloneInternal();
+    protected abstract WizardBase CloneInternal(Player player);
 
     protected virtual void BindMagicInternal(IMagic magic)
     {
@@ -114,7 +115,7 @@ internal abstract class WizardBase : FinishableBuffBase, IWizard
     {
         var playerInstance = Player.Instance!;
 
-        if (!CanUseMagic())
+        if (!CanUseMagic() || Player.IsFake())
         {
             ShowChatMessage("You can't use magic now", ExtendedColors.ImperialRed);
             return;

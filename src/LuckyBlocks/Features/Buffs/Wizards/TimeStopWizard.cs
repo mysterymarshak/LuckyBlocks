@@ -29,9 +29,9 @@ internal class TimeStopWizard : WizardBase, IImmunityFlagsIndicatorBuff
         _args = args;
     }
 
-    protected override WizardBase CloneInternal()
+    protected override WizardBase CloneInternal(Player player)
     {
-        return new TimeStopWizard(Player, _args, CastsLeft);
+        return new TimeStopWizard(player, _args, CastsLeft);
     }
 
     protected override IFinishCondition<IMagic> OnUseMagic()

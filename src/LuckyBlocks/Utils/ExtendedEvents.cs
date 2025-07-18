@@ -41,7 +41,15 @@ public interface IExtendedEvents
         bool ignoreHandled = false);
 
     [GameCallbackType(typeof(Events.PlayerDeathCallback))]
+    IEventSubscription HookOnDead(IPlayer player, Action<Event<IPlayer, PlayerDeathArgs>> callback,
+        EventHookMode hookMode, bool ignoreHandled = false);
+
+    [GameCallbackType(typeof(Events.PlayerDeathCallback))]
     IEventSubscription HookOnDead(Action<Event<IPlayer>> callback, EventHookMode hookMode,
+        bool ignoreHandled = false);
+
+    [GameCallbackType(typeof(Events.PlayerDeathCallback))]
+    IEventSubscription HookOnDead(Action<Event<IPlayer, PlayerDeathArgs>> callback, EventHookMode hookMode,
         bool ignoreHandled = false);
 
     [GameCallbackType(typeof(Events.PlayerDeathCallback))]

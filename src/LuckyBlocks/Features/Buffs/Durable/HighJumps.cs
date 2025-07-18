@@ -31,9 +31,9 @@ internal class HighJumps : DurableBuffBase, IImmunityFlagsIndicatorBuff
         _args = args;
     }
 
-    protected override DurableBuffBase CloneInternal()
+    protected override DurableBuffBase CloneInternal(Player player)
     {
-        return new HighJumps(Player, _args, TimeLeft);
+        return new HighJumps(player, _args, TimeLeft);
     }
 
     protected override void OnRunInternal()

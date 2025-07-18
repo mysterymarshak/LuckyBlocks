@@ -1,6 +1,7 @@
 ﻿using Autofac;
 using LuckyBlocks.Data.Args;
 using LuckyBlocks.Exceptions;
+using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
 using LuckyBlocks.Utils;
@@ -40,7 +41,7 @@ internal class ImmunityToDeath : IApplicableImmunity
     private bool OnDead(Event<PlayerDeathArgs> @event)
     {
         var args = @event.Args;
-        if (!args.Removed)
+        if (!args.Removed && !_player.IsFake())
         {
             _respawner.RespawnPlayer(_player.User, _player.Profile);
             _logger.Debug("{PlayerName} respawned from immunity to death", _player.Name);

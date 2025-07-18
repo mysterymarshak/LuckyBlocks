@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Autofac;
+using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Buffs;
 using LuckyBlocks.Features.Elevators;
 using LuckyBlocks.Features.Entities;
@@ -146,6 +147,7 @@ internal class SnapshotCreator : ISnapshotCreator
             .Select(CreateAdditionalRevertedObject)
             .GetEnumerator();
         _dynamicObjectsChunksEnumerator = dynamicObjects
+            .Where(x => x.Value is not IPlayer playerInstance || playerInstance.IsValidUser())
             .Select(x => CreateRevertedObject(x.Value))
             .GetEnumerator();
         _staticObjects = new List<IRevertedObject>(staticObjects.Count);

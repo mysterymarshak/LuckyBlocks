@@ -13,6 +13,9 @@ namespace LuckyBlocks.Features.Identity;
 internal interface IIdentityService
 {
     void Initialize();
+    Player RegisterFake(Player sourcePlayer, IPlayer fakeInstance);
+    void RemoveFakePlayer(Player player);
+    IEnumerable<Player> GetFakesForPlayer(Player sourcePlayer);
     OneOf<Player, Unknown> GetPlayerById(int uniqueId);
     Player GetPlayerByInstance(IPlayer player);
     IEnumerable<Player> GetAlivePlayers(bool includeFakePlayers = true);
@@ -44,6 +47,21 @@ internal class IdentityService : IIdentityService
 
         _extendedEvents.HookOnUserJoined(OnUserJoined, EventHookMode.Default);
         _extendedEvents.HookOnDestroyed(OnObjectDestroyed, EventHookMode.Default);
+    }
+
+    public Player RegisterFake(Player sourcePlayer, IPlayer fakeInstance)
+    {
+        return _playersRepository.RegisterFake(sourcePlayer, fakeInstance);
+    }
+
+    public void RemoveFakePlayer(Player player)
+    {
+        _playersRepository.RemoveFakePlayer(player);
+    }
+
+    public IEnumerable<Player> GetFakesForPlayer(Player sourcePlayer)
+    {
+        return _playersRepository.GetFakesForPlayer(sourcePlayer);
     }
 
     public OneOf<Player, Unknown> GetPlayerById(int uniqueId)

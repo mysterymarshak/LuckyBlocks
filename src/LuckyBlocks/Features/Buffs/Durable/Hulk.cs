@@ -53,9 +53,9 @@ internal class Hulk : DurableBuffBase
         UpdateDialogue();
     }
 
-    protected override DurableBuffBase CloneInternal()
+    protected override DurableBuffBase CloneInternal(Player player)
     {
-        return new Hulk(Player, _args, TimeLeft);
+        return new Hulk(player, _args, TimeLeft);
     }
 
     protected override void OnApplyAgainInternal()

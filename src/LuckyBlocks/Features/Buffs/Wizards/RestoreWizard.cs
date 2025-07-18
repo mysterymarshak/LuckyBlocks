@@ -34,9 +34,9 @@ internal class RestoreWizard : WizardBase
         _args = args;
     }
 
-    protected override WizardBase CloneInternal()
+    protected override WizardBase CloneInternal(Player player)
     {
-        return new RestoreWizard(Player, _args, CastsLeft) { _stateSaved = _stateSaved };
+        return new RestoreWizard(player, _args, CastsLeft) { _stateSaved = _stateSaved };
     }
 
     protected override void BindMagicInternal(IMagic magic)

@@ -27,7 +27,7 @@ internal class RevertedPlayer : RevertedDynamicObject
     private readonly float _energy;
     private readonly float _corpseHealth;
     private readonly WeaponsData _weaponsDataCopy;
-    private readonly List<IBuff> _buffs;
+    private readonly List<ICloneableBuff<IBuff>> _buffs;
 
     public RevertedPlayer(Player player, IRespawner respawner, IWeaponPowerupsService weaponPowerupsService,
         IBuffsService buffsService) : base(player.Instance!)

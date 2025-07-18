@@ -22,9 +22,9 @@ internal class WindWizard : WizardBase, IImmunityFlagsIndicatorBuff
     public WindWizard(Player wizard, BuffConstructorArgs args, int castsLeft = -1) : base(wizard, args, castsLeft)
         => (_magicService, _magicFactory, _args) = (args.MagicService, args.MagicFactory, args);
 
-    protected override WizardBase CloneInternal()
+    protected override WizardBase CloneInternal(Player player)
     {
-        return new WindWizard(Player, _args, CastsLeft);
+        return new WindWizard(player, _args, CastsLeft);
     }
 
     protected override IFinishCondition<IMagic> OnUseMagic()

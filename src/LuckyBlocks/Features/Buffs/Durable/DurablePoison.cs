@@ -36,9 +36,9 @@ internal class DurablePoison : DurableRepressibleByImmunityFlagsBuffBase
             ExtendedEvents);
     }
 
-    protected override DurableBuffBase CloneInternal()
+    protected override DurableBuffBase CloneInternal(Player player)
     {
-        return new DurablePoison(Player, _args, TimeLeft);
+        return new DurablePoison(player, _args, TimeLeft);
     }
 
     protected override void OnRunInternal()

@@ -23,10 +23,10 @@ internal class StrongMan : DurableBuffBase, IImmunityFlagsIndicatorBuff
     public override TimeSpan Duration => TimeSpan.FromSeconds(5);
     public ImmunityFlag ImmunityFlags => ImmunityFlag.ImmunityToWind;
     public override Color BuffColor => ExtendedColors.ImperialRed;
-    
+
     private readonly IPlayerModifiersService _playerModifiersService;
     private readonly BuffConstructorArgs _args;
-    
+
     private SFDGameScriptInterface.PlayerModifiers? _playerModifiers;
 
     public StrongMan(Player player, BuffConstructorArgs args, TimeSpan timeLeft = default) : base(player, args,
@@ -37,17 +37,17 @@ internal class StrongMan : DurableBuffBase, IImmunityFlagsIndicatorBuff
         _args = args;
     }
 
-    protected override DurableBuffBase CloneInternal()
+    protected override DurableBuffBase CloneInternal(Player player)
     {
-        return new StrongMan(Player, _args, TimeLeft);
+        return new StrongMan(player, _args, TimeLeft);
     }
 
     protected override void OnApplyAgainInternal()
     {
         UpdateDialogue();
-        
+
         PlayerInstance!.SetStrengthBoostTime((float)TimeLeft.TotalMilliseconds);
-        
+
         ShowChatMessage($"You are strong again for {TimeLeft.TotalSeconds}s");
     }
 

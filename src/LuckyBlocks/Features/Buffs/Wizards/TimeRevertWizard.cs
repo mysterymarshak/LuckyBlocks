@@ -28,9 +28,9 @@ internal class TimeRevertWizard : WizardBase
         _args = args;
     }
 
-    protected override WizardBase CloneInternal()
+    protected override WizardBase CloneInternal(Player player)
     {
-        return new TimeRevertWizard(Player, _args, CastsLeft);
+        return new TimeRevertWizard(player, _args, CastsLeft);
     }
 
     protected override bool CanUseMagic() => _timeRevertService.TimeCanBeReverted;

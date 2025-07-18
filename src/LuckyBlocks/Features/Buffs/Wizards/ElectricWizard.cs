@@ -29,9 +29,9 @@ internal class ElectricWizard : WizardBase, IDelayedImmunityRemovalBuff
         _args = args;
     }
 
-    protected override WizardBase CloneInternal()
+    protected override WizardBase CloneInternal(Player player)
     {
-        return new ElectricWizard(Player, _args, CastsLeft);
+        return new ElectricWizard(player, _args, CastsLeft);
     }
 
     protected override IFinishCondition<IMagic> OnUseMagic()

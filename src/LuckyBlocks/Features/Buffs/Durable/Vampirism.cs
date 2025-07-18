@@ -63,9 +63,9 @@ internal class Vampirism : DurableBuffBase
             OnRestoreEnergyModifier, ExtendedEvents);
     }
 
-    protected override DurableBuffBase CloneInternal()
+    protected override DurableBuffBase CloneInternal(Player player)
     {
-        return new Vampirism(Player, _args, TimeLeft);
+        return new Vampirism(player, _args, TimeLeft);
     }
 
     protected override void OnRunInternal()

@@ -2,6 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using LuckyBlocks.Data.Args;
 using LuckyBlocks.Extensions;
+using LuckyBlocks.Features.Buffs.Wizards;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.Immunity;
 using LuckyBlocks.Features.Notifications;
@@ -44,9 +45,9 @@ internal class Shock : DurableRepressibleByImmunityFlagsBuffBase, IDelayedImmuni
         _invisibleBlock ??= _game.CreateObject("InvisibleBlock", args.Game.GetCameraArea().TopLeft);
     }
 
-    protected override DurableBuffBase CloneInternal()
+    protected override DurableBuffBase CloneInternal(Player player)
     {
-        return new Shock(Player, _args, TimeLeft) { _oldPosition = _oldPosition };
+        return new Shock(player, _args, TimeLeft) { _oldPosition = _oldPosition };
     }
 
     protected override void OnRunInternal()
@@ -95,6 +96,17 @@ internal class Shock : DurableRepressibleByImmunityFlagsBuffBase, IDelayedImmuni
         PlayerInstance.SetAngularVelocity(0f);
         PlayerInstance.SetNametagVisible(false);
         PlayerInstance.SetCameraSecondaryFocusMode(CameraFocusMode.Ignore);
+
+        TryRemoveDecoysWizardBuff();
+    }
+
+    private void TryRemoveDecoysWizardBuff()
+    {
+        var wizardBuff = Player.WizardBuff;
+        if (wizardBuff is DecoyWizard)
+        {
+            wizardBuff.ExternalFinish();
+        }
     }
 
     private void DisableBuff()
@@ -105,17 +117,18 @@ internal class Shock : DurableRepressibleByImmunityFlagsBuffBase, IDelayedImmuni
             position = _oldPosition;
         }
 
-        if (_fakePlayer?.IsValid() == true && Player.IsInstanceValid() && PlayerInstance!.IsDead == false)
+        if (_fakePlayer?.IsValid() == true && Player.IsInstanceValid())
         {
-            _fakePlayer?.RemoveDelayed();
+            _fakePlayer.RemoveDelayed();
+            _fakePlayer.SetCameraSecondaryFocusMode(CameraFocusMode.Ignore);
         }
 
         Player.ProfileChanged -= OnProfileChanged;
 
-        if (PlayerInstance?.IsDead != false)
+        if (!Player.IsInstanceValid())
             return;
 
-        PlayerInstance.SetWorldPosition(position + new Vector2(0, 5));
+        PlayerInstance!.SetWorldPosition(position + new Vector2(0, 5));
         PlayerInstance.SetInputMode(PlayerInputMode.Enabled);
         PlayerInstance.SetNametagVisible(true);
         PlayerInstance.SetCameraSecondaryFocusMode(CameraFocusMode.Focus);
@@ -171,14 +184,7 @@ internal class Shock : DurableRepressibleByImmunityFlagsBuffBase, IDelayedImmuni
 
     private void OnFakePlayerRemovedOrParentDead(Event @event)
     {
-        RemovePlayer();
         ExternalFinish();
-    }
-
-    private void RemovePlayer()
-    {
-        PlayerInstance?.RemoveDelayed();
-        _fakePlayer?.SetCameraSecondaryFocusMode(CameraFocusMode.Ignore);
     }
 
     private void UpdateDialogue(IPlayer player, bool ignoreDeath)

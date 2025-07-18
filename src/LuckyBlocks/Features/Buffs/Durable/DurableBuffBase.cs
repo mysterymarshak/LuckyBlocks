@@ -26,9 +26,9 @@ internal abstract class DurableBuffBase : FinishableBuffBase, IDurableBuff
         _duration = timeLeft == default ? (float)Duration.TotalMilliseconds : (float)timeLeft.TotalMilliseconds;
     }
 
-    public IDurableBuff Clone()
+    public IDurableBuff Clone(Player? player = null)
     {
-        var clonedBuff = CloneInternal();
+        var clonedBuff = CloneInternal(player ?? Player);
         clonedBuff.IsCloned = true;
         return clonedBuff;
     }
@@ -57,7 +57,7 @@ internal abstract class DurableBuffBase : FinishableBuffBase, IDurableBuff
         OnApplyAgainInternal();
     }
 
-    protected abstract DurableBuffBase CloneInternal();
+    protected abstract DurableBuffBase CloneInternal(Player player);
     protected abstract void OnRunInternal();
     protected abstract void OnApplyAgainInternal();
 

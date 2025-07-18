@@ -15,6 +15,7 @@ internal class FireWizard : WizardBase, IImmunityFlagsIndicatorBuff
 
     public ImmunityFlag ImmunityFlags =>
         ImmunityFlag.ImmunityToFire | ImmunityFlag.ImmunityToFreeze | ImmunityFlag.ImmunityToWater;
+
     public override Color BuffColor => ExtendedColors.Orange;
 
     private readonly IMagicService _magicService;
@@ -24,9 +25,9 @@ internal class FireWizard : WizardBase, IImmunityFlagsIndicatorBuff
     public FireWizard(Player wizard, BuffConstructorArgs args, int castsLeft = -1) : base(wizard, args, castsLeft)
         => (_magicService, _magicFactory, _args) = (args.MagicService, args.MagicFactory, args);
 
-    protected override WizardBase CloneInternal()
+    protected override WizardBase CloneInternal(Player player)
     {
-        return new FireWizard(Player, _args, CastsLeft);
+        return new FireWizard(player, _args, CastsLeft);
     }
 
     protected override IFinishCondition<IMagic> OnUseMagic()

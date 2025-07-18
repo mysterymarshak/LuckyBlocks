@@ -4,8 +4,10 @@ using System.Linq;
 using LuckyBlocks.Data.Args;
 using LuckyBlocks.Data.Weapons;
 using LuckyBlocks.Extensions;
+using LuckyBlocks.Features.Buffs;
 using LuckyBlocks.Features.Dialogues;
 using LuckyBlocks.Features.Identity;
+using LuckyBlocks.Features.PlayerModifiers;
 using LuckyBlocks.Features.WeaponPowerups;
 using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
 using LuckyBlocks.Utils.Timers;
@@ -25,7 +27,8 @@ internal readonly record struct DecoyInstance(
     float StrengthBoostTime,
     float SpeedBoostTime,
     float Health,
-    List<Dialogue> Dialogues);
+    List<Dialogue> Dialogues,
+    List<ICloneableBuff<IBuff>> Buffs);
 
 internal class DecoyMagic : NonAreaMagicBase
 {
@@ -34,26 +37,14 @@ internal class DecoyMagic : NonAreaMagicBase
     private const int DecoysCount = 3;
     private const PlayerTeam DecoysTeam = PlayerTeam.Team1;
 
-    private static readonly SFDPlayerModifiers DecoysModifiers = new()
-    {
-        MeleeDamageTakenModifier = 2f,
-        ExplosionDamageTakenModifier = 2f,
-        FireDamageTakenModifier = 2f,
-        ImpactDamageTakenModifier = 2f,
-        ProjectileDamageTakenModifier = 2f,
-        ProjectileDamageDealtModifier = 0,
-        ProjectileCritChanceDealtModifier = 0,
-        MeleeForceModifier = 0,
-        MeleeDamageDealtModifier = 0,
-        ItemDropMode = 2
-    };
-
     private static TimeSpan DecoysLifeTime => TimeSpan.FromSeconds(10);
 
     private readonly IGame _game;
     private readonly IDialoguesService _dialoguesService;
     private readonly IIdentityService _identityService;
+    private readonly IBuffsService _buffsService;
     private readonly IWeaponPowerupsService _weaponPowerupsService;
+    private readonly IPlayerModifiersService _playerModifiersService;
     private readonly MagicConstructorArgs _args;
     private readonly List<IPlayer> _decoys = [];
     private readonly List<DecoyInstance>? _copiedDecoys;
@@ -70,7 +61,9 @@ internal class DecoyMagic : NonAreaMagicBase
         _game = args.Game;
         _dialoguesService = args.DialoguesService;
         _identityService = args.IdentityService;
+        _buffsService = args.BuffsService;
         _weaponPowerupsService = args.WeaponPowerupsService;
+        _playerModifiersService = args.PlayerModifiersService;
         _args = args;
         _copiedDecoys = copiedDecoys;
         _timeLeft = timeLeft;
@@ -135,15 +128,21 @@ internal class DecoyMagic : NonAreaMagicBase
             bot.SetBotName(name);
             bot.SetProfile(profile);
             bot.SetTeam(DecoysTeam);
-            bot.SetModifiers(DecoysModifiers);
+            bot.SetModifiers(_playerModifiersService.DecoysModifiers);
             bot.SetStrengthBoostTime(strengthBoostTime);
             bot.SetSpeedBoostTime(speedBoostTime);
             bot.SetHealth(health);
-            _dialoguesService.RestoreDialogues(bot, dialogues);
 
-            var fakePlayer = _identityService.GetPlayerByInstance(bot);
+            var fakePlayer = _identityService.RegisterFake(Wizard, bot);
             var weaponsDataCopy = _weaponPowerupsService.CreateWeaponsDataCopy(Wizard);
             _weaponPowerupsService.RestoreWeaponsDataFromCopy(fakePlayer, weaponsDataCopy, false);
+
+            foreach (var buff in Wizard.CloneBuffs(player: fakePlayer))
+            {
+                _buffsService.TryAddBuff(buff, fakePlayer, false);
+            }
+
+            _dialoguesService.RestoreDialogues(bot, dialogues);
 
             ExtendedEvents.HookOnDead(bot, OnDecoyDead, EventHookMode.Default);
             _decoys.Add(bot);
@@ -171,15 +170,23 @@ internal class DecoyMagic : NonAreaMagicBase
 
             if (!decoyCopy.IsDead)
             {
-                var fakePlayer = _identityService.GetPlayerByInstance(decoyInstance);
+                var fakePlayer = _identityService.RegisterFake(Wizard, decoyInstance);
                 _weaponPowerupsService.RestoreWeaponsDataFromCopy(fakePlayer, decoyCopy.WeaponsData, false);
                 decoyInstance.SetStrengthBoostTime(decoyCopy.StrengthBoostTime);
                 decoyInstance.SetSpeedBoostTime(decoyCopy.SpeedBoostTime);
+
+                foreach (var buff in decoyCopy.Buffs)
+                {
+                    var clonedBuff = buff.Clone(fakePlayer);
+                    _buffsService.TryAddBuff(clonedBuff, fakePlayer, false);
+                }
+
                 _dialoguesService.RestoreDialogues(decoyInstance, decoyCopy.Dialogues);
+
                 ExtendedEvents.HookOnDead(decoyInstance, OnDecoyDead, EventHookMode.Default);
             }
 
-            decoyInstance.SetModifiers(DecoysModifiers);
+            decoyInstance.SetModifiers(_playerModifiersService.DecoysModifiers);
             decoyInstance.SetHealth(decoyCopy.Health);
             decoyInstance.SetLinearVelocity(decoyCopy.Velocity);
 
@@ -193,13 +200,16 @@ internal class DecoyMagic : NonAreaMagicBase
 
         foreach (var decoyInstance in _decoys)
         {
+            if (!decoyInstance.IsValid())
+                continue;
+
             var decoy = _identityService.GetPlayerByInstance(decoyInstance);
             var weaponsDataCopy = _weaponPowerupsService.CreateWeaponsDataCopy(decoy);
             var decoyCopy = new DecoyInstance(decoyInstance.IsDead, decoyInstance, decoyInstance.Name,
                 decoyInstance.GetProfile(), weaponsDataCopy, decoyInstance.GetWorldPosition(),
                 decoyInstance.GetLinearVelocity(), decoyInstance.GetStrengthBoostTime(),
                 decoyInstance.GetSpeedBoostTime(), decoyInstance.GetHealth(),
-                _dialoguesService.CopyDialogues(decoyInstance).ToList());
+                _dialoguesService.CopyDialogues(decoyInstance).ToList(), Wizard.CloneBuffs());
             copiedDecoys.Add(decoyCopy);
         }
 
@@ -217,9 +227,12 @@ internal class DecoyMagic : NonAreaMagicBase
         }
     }
 
-    private void OnDecoyDead(Event @event)
+    private void OnDecoyDead(Event<IPlayer, PlayerDeathArgs> @event)
     {
         _decoysDead++;
+
+        var decoyInstance = @event.Arg1;
+        decoyInstance.RemoveDelayed();
 
         if (_decoysDead != _decoys.Count)
             return;

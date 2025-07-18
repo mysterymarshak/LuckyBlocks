@@ -86,12 +86,12 @@ internal class Player
         ProfileChanged?.Invoke(profile);
     }
 
-    public List<IBuff> CloneBuffs(IEnumerable<Type>? exclusions = null)
+    public List<ICloneableBuff<IBuff>> CloneBuffs(IEnumerable<Type>? exclusions = null, Player? player = null)
     {
         return Buffs
             .Where(x => x is ICloneableBuff<IBuff> && exclusions?.All(y => y.IsInstanceOfType(x)) != true)
             .Cast<ICloneableBuff<IBuff>>()
-            .Select(x => x.Clone())
+            .Select(x => (ICloneableBuff<IBuff>)x.Clone(player ?? this))
             .ToList();
     }
 

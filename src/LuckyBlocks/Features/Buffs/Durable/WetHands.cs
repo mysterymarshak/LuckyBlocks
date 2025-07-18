@@ -34,9 +34,9 @@ internal class WetHands : DurableRepressibleByImmunityFlagsBuffBase
         _args = args;
     }
 
-    protected override DurableBuffBase CloneInternal()
+    protected override DurableBuffBase CloneInternal(Player player)
     {
-        return new WetHands(Player, _args);
+        return new WetHands(player, _args);
     }
 
     protected override void OnRunInternal()

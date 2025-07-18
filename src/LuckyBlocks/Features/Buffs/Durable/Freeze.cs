@@ -30,9 +30,9 @@ internal class Freeze : DurableRepressibleByImmunityFlagsBuffBase
         _args = args;
     }
 
-    protected override DurableBuffBase CloneInternal()
+    protected override DurableBuffBase CloneInternal(Player player)
     {
-        return new Freeze(Player, _args, TimeLeft);
+        return new Freeze(player, _args, TimeLeft);
     }
 
     protected override void OnRunInternal()

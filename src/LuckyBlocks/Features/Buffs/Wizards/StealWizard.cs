@@ -52,9 +52,9 @@ internal class StealWizard : WizardBase, IImmunityFlagsIndicatorBuff
             null, _secondsWarningCount, ExtendedEvents);
     }
 
-    protected override WizardBase CloneInternal()
+    protected override WizardBase CloneInternal(Player player)
     {
-        return new StealWizard(Player, _args, CastsLeft, _stealTimer.TimeLeft) { _isInStealMode = _isInStealMode };
+        return new StealWizard(player, _args, CastsLeft, _stealTimer.TimeLeft) { _isInStealMode = _isInStealMode };
     }
 
     protected override void BindMagicInternal(IMagic magic)

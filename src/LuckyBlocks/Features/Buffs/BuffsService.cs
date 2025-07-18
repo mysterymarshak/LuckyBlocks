@@ -68,7 +68,7 @@ internal class BuffsService : IBuffsService
                 GiveBuffImmunities(finishableBuff, player);
             }
         }
-        
+
         player.AddBuff(buff);
         _logger.Debug("Buff {BuffName} added to {PlayerName}", buff.Name, playerInstance.Name);
 

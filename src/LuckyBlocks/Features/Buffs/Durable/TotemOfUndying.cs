@@ -21,9 +21,9 @@ internal class TotemOfUndying : FinishableBuffBase, ICloneableBuff<IFinishableBu
         _args = args;
     }
 
-    public IFinishableBuff Clone()
+    public IFinishableBuff Clone(Player? player = null)
     {
-        return new TotemOfUndying(Player, _args);
+        return new TotemOfUndying(player ?? Player, _args);
     }
 
     public override void Run()

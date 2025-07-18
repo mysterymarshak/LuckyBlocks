@@ -16,7 +16,10 @@ internal interface IPlayersRepository
     OneOf<Player, Unknown> GetPlayerById(int uniqueId);
     Player GetPlayerByInstance(IPlayer playerInstance);
     IEnumerable<Player> GetAlivePlayers(bool includeFakePlayers = true);
+    Player RegisterFake(Player sourcePlayer, IPlayer fakeInstance);
+    IEnumerable<Player> GetFakesForPlayer(Player sourcePlayer);
     void RemoveFakePlayer(int uniqueId);
+    void RemoveFakePlayer(Player fakePlayer);
 }
 
 internal class PlayersRepository : IPlayersRepository
@@ -25,6 +28,7 @@ internal class PlayersRepository : IPlayersRepository
     private readonly IGame _game;
     private readonly Dictionary<int, Player> _players = new();
     private readonly Dictionary<int, Player> _fakePlayers = new();
+    private readonly Dictionary<Player, List<Player>> _playerFakes = new();
 
     public PlayersRepository(ILogger logger, IGame game)
     {
@@ -41,7 +45,7 @@ internal class PlayersRepository : IPlayersRepository
     public OneOf<Player, Unknown> GetPlayerById(int uniqueId)
     {
         var playerInstance = _game.GetPlayer(uniqueId);
-        return playerInstance is null ? new Unknown() : GetPlayerByUserId(playerInstance.UserIdentifier);
+        return playerInstance is null ? new Unknown() : GetPlayerByInstance(playerInstance);
     }
 
     public Player GetPlayerByInstance(IPlayer playerInstance)
@@ -72,6 +76,37 @@ internal class PlayersRepository : IPlayersRepository
             .Select(GetPlayerByInstance);
     }
 
+    public Player RegisterFake(Player sourcePlayer, IPlayer fakeInstance)
+    {
+        if (!fakeInstance.IsFake())
+        {
+            throw new InvalidOperationException(
+                $"fake instance actually not fake ({fakeInstance.UserIdentifier} {fakeInstance.Name})");
+        }
+
+        var fakePlayer = GetFakePlayer(fakeInstance, sourcePlayer);
+        if (!_playerFakes.TryGetValue(sourcePlayer, out var fakes))
+        {
+            fakes = [];
+            _playerFakes.Add(sourcePlayer, fakes);
+        }
+
+        fakes.Add(fakePlayer);
+
+        return fakePlayer;
+    }
+
+    public IEnumerable<Player> GetFakesForPlayer(Player sourcePlayer)
+    {
+        if (!_playerFakes.TryGetValue(sourcePlayer, out var fakes))
+        {
+            return [];
+        }
+
+        InvalidateFakes(fakes);
+        return fakes;
+    }
+
     public void RemoveFakePlayer(int uniqueId)
     {
         if (_fakePlayers.Remove(uniqueId))
@@ -80,11 +115,25 @@ internal class PlayersRepository : IPlayersRepository
         }
     }
 
-    private Player GetFakePlayer(IPlayer playerInstance)
+    public void RemoveFakePlayer(Player fakePlayer)
+    {
+        var playerInstance = fakePlayer.Instance;
+        foreach (var playerFakesRecord in _playerFakes)
+        {
+            playerFakesRecord.Value.Remove(fakePlayer);
+        }
+
+        if (playerInstance is not null)
+        {
+            _fakePlayers.Remove(playerInstance.UniqueId);
+        }
+    }
+
+    private Player GetFakePlayer(IPlayer playerInstance, Player? sourcePlayer = null)
     {
         if (!_fakePlayers.TryGetValue(playerInstance.UniqueId, out var fakePlayer))
         {
-            fakePlayer = new Player(new FakeUser(playerInstance));
+            fakePlayer = new Player(new FakeUser(playerInstance, sourcePlayer));
             _fakePlayers.Add(playerInstance.UniqueId, fakePlayer);
 
             _logger.Debug("Created fake player with id {UniqueId} and name {Name}",
@@ -92,6 +141,18 @@ internal class PlayersRepository : IPlayersRepository
         }
 
         return fakePlayer;
+    }
+
+    private void InvalidateFakes(List<Player> fakePlayers)
+    {
+        for (var index = fakePlayers.Count - 1; index >= 0; index--)
+        {
+            var fakePlayer = fakePlayers[index];
+            if (!fakePlayer.IsInstanceValid())
+            {
+                fakePlayers.RemoveAt(index);
+            }
+        }
     }
 
     private OneOf<Player, Unknown> GetPlayerByUserId(int userId)

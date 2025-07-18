@@ -34,9 +34,9 @@ internal class Dwarf : DurableBuffBase
         _args = args;
     }
 
-    protected override DurableBuffBase CloneInternal()
+    protected override DurableBuffBase CloneInternal(Player player)
     {
-        return new Dwarf(Player, _args, TimeLeft);
+        return new Dwarf(player, _args, TimeLeft);
     }
 
     protected override void OnRunInternal()

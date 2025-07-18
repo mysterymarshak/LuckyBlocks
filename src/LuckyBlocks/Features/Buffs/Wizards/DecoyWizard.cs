@@ -16,6 +16,8 @@ internal class DecoyWizard : WizardBase
     private readonly IMagicFactory _magicFactory;
     private readonly BuffConstructorArgs _args;
 
+    private DecoyMagic? _magic;
+
     public DecoyWizard(Player wizard, BuffConstructorArgs args, int castsLeft = -1) : base(wizard, args, castsLeft,
         WizardFinishCondition.LastCastedMagicFinishNotification)
     {
@@ -24,9 +26,9 @@ internal class DecoyWizard : WizardBase
         _args = args;
     }
 
-    protected override WizardBase CloneInternal()
+    protected override WizardBase CloneInternal(Player player)
     {
-        return new DecoyWizard(Player, _args, CastsLeft);
+        return new DecoyWizard(player, _args, CastsLeft);
     }
 
     protected override bool CanUseMagic()
@@ -37,7 +39,12 @@ internal class DecoyWizard : WizardBase
 
     protected override IFinishCondition<IMagic> OnUseMagic()
     {
-        var magic = _magicFactory.CreateMagic<DecoyMagic>(Player);
-        return _magicService.Cast(magic);
+        _magic = _magicFactory.CreateMagic<DecoyMagic>(Player);
+        return _magicService.Cast(_magic);
+    }
+
+    protected override void OnFinishInternal()
+    {
+        _magic?.ExternalFinish();
     }
 }
