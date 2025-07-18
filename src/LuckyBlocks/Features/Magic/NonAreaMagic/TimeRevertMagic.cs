@@ -227,8 +227,7 @@ internal class TimeRevertMagic : NonAreaMagicBase
     {
         _keyInputSubscription?.Dispose();
         _game.RunCommand("/slomo 1");
-        _timeStopService.ForceResumeTime();
-        Awaiter.Start(OnTimeResumed, _timeStopService.TimeStopDelay);
+        _timeStopService.ForceResumeTime(OnTimeResumed);
     }
 
     private void OnTimeResumed()
