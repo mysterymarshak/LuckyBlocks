@@ -27,6 +27,11 @@ internal class TimeStopService : ITimeStopService
 
     public void StopTime(TimeSpan duration, IObject relativeObject)
     {
+        if (IsTimeStopped)
+        {
+            throw new InvalidOperationException("time is already stopped");
+        }
+
         IsTimeStopped = true;
         _game.AutoSpawnSupplyCratesEnabled = false;
         _timeStopCts = _timeStopper.StopTime(duration, relativeObject, timeResumedCallback: OnTimeResumed);
@@ -46,5 +51,6 @@ internal class TimeStopService : ITimeStopService
         IsTimeStopped = false;
         _game.AutoSpawnSupplyCratesEnabled = true;
         _timeResumedCallback?.Invoke();
+        _timeResumedCallback = null;
     }
 }
