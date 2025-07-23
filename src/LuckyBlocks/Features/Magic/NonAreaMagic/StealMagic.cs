@@ -159,24 +159,26 @@ internal class StealMagic : NonAreaMagicBase
             throw new NullReferenceException(nameof(_selectedPlayer));
         }
 
-        if (!_selectedPlayer.IsValidUser() || _selectedPlayer.IsDead)
+        if (!_selectedPlayer.IsValidUser() || _selectedPlayer.IsDead || !PlayerHasAnyWeapon(_selectedPlayer))
         {
-            var getPlayerResult = _identityService.GetPlayerById(_selectedPlayer!.UniqueId);
-            if (!getPlayerResult.TryPickT0(out var player, out _) || !player.HasAnyWeapon())
-            {
-                _selectedPlayer = PickAlivePlayer();
+            _selectedPlayer = PickAlivePlayer();
 
-                if (_selectedPlayer is null)
-                {
-                    StealFail?.Invoke("NO ONE HAS WEAPON");
-                    ExternalFinish();
-                    return;
-                }
+            if (_selectedPlayer is null)
+            {
+                StealFail?.Invoke("NO ONE HAS WEAPON");
+                ExternalFinish();
+                return;
             }
         }
 
         _effectsPlayer.PlayEffect(EffectName.CustomFloatText, _selectedPlayer.GetWorldPosition() + new Vector2(0, 20),
             _selectedPlayer.Name, Color.Red, 1f, 3f, true);
+    }
+
+    private bool PlayerHasAnyWeapon(IPlayer playerInstance)
+    {
+        var getPlayerResult = _identityService.GetPlayerById(playerInstance.UniqueId);
+        return getPlayerResult.TryPickT0(out var player, out _) && player.HasAnyWeapon();
     }
 
     private void Dispose()

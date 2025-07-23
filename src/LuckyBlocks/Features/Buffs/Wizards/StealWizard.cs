@@ -106,6 +106,7 @@ internal class StealWizard : WizardBase, IImmunityFlagsIndicatorBuff
         _cts.Dispose();
         _stealTimeWarningTimer.Stop();
         _stealTimer.Stop();
+        _magic.ExternalFinish();
     }
 
     private void OnStealModeEntered()
