@@ -83,16 +83,19 @@ internal class WeaponPowerupsService : IWeaponPowerupsService
 
         var isFirstPowerup = !weapon.Powerups.Any();
 
-        if (weapon.IsDropped)
+        if (powerup is IUsablePowerup<Weapon> usablePowerup)
         {
-            if (isFirstPowerup)
+            if (weapon.IsDropped)
             {
-                weapon.PickUp += EnsureWeaponHasEnoughAmmoForPowerups;
+                if (isFirstPowerup)
+                {
+                    weapon.PickUp += EnsureWeaponHasEnoughAmmoForPowerups;
+                }
             }
-        }
-        else
-        {
-            EnsureWeaponHasEnoughAmmoForPowerups(weapon, weapon.Owner);
+            else
+            {
+                EnsureWeaponHasEnoughAmmoForPowerup(weapon, usablePowerup, weapon.Owner);
+            }
         }
 
         if (isFirstPowerup)
@@ -200,7 +203,8 @@ internal class WeaponPowerupsService : IWeaponPowerupsService
             {
                 weapon.SetOwner(playerInstance);
 
-                foreach (var powerup in weapon.Powerups)
+                var powerups = restorePowerups ? weapon.Powerups : weapon.Powerups.ToList();
+                foreach (var powerup in powerups)
                 {
                     if (restorePowerups)
                     {
@@ -279,6 +283,13 @@ internal class WeaponPowerupsService : IWeaponPowerupsService
         }
     }
 
+    private void EnsureWeaponHasEnoughAmmoForPowerup(Weapon weapon, IUsablePowerup<Weapon> powerup,
+        IPlayer playerInstance)
+    {
+        var minAmmo = powerup.UsesLeft;
+        EnsureWeaponHasEnoughAmmo(weapon, playerInstance, minAmmo);
+    }
+
     private void EnsureWeaponHasEnoughAmmoForPowerups(Weapon weapon, IPlayer playerInstance)
     {
         var minAmmo = weapon.Powerups
@@ -291,6 +302,11 @@ internal class WeaponPowerupsService : IWeaponPowerupsService
         if (minAmmo == 0)
             return;
 
+        EnsureWeaponHasEnoughAmmo(weapon, playerInstance, minAmmo);
+    }
+
+    private void EnsureWeaponHasEnoughAmmo(Weapon weapon, IPlayer playerInstance, int minAmmo)
+    {
         switch (weapon)
         {
             case Firearm firearm when firearm.TotalAmmo < minAmmo:
