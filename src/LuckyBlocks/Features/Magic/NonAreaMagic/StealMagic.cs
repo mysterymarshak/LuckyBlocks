@@ -73,7 +73,7 @@ internal class StealMagic : NonAreaMagicBase
         EnterStealMode?.Invoke();
     }
 
-    protected override MagicBase CloneInternal()
+    public override MagicBase Copy()
     {
         return new StealMagic(Wizard, _args) { _isInSelection = _isInSelection };
     }

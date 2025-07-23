@@ -36,12 +36,12 @@ internal class FireMagic : AreaMagicBase
         ScheduleEndFireNodes(fireNodes);
     }
 
-    protected override MagicBase CloneInternal()
+    public override MagicBase Copy()
     {
         return new FireMagic(Wizard, _args) { _ignitedPlayers = _ignitedPlayers };
     }
 
-    protected override void CastInternal(Area fullArea, Area iterationArea)
+    public override void Cast(Area fullArea, Area iterationArea)
     {
         var objects = GetAffectedObjectsByArea(fullArea, iterationArea);
 
@@ -51,6 +51,8 @@ internal class FireMagic : AreaMagicBase
         }
 
         PlayEffects(iterationArea);
+
+        base.Cast(fullArea, iterationArea);
     }
 
     private void BurnObject(IObject @object)

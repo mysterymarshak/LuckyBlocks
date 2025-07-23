@@ -1,6 +1,7 @@
 ﻿using LuckyBlocks.Exceptions;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.Immunity;
+using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Features.Buffs.Instant;
 
@@ -20,6 +21,9 @@ internal class WindDisarm : IInstantBuff, IRepressibleByImmunityFlagsBuff
         ArgumentWasNullException.ThrowIfNull(playerInstance);
 
         var weaponItemType = playerInstance.CurrentWeaponDrawn;
-        playerInstance.Disarm(weaponItemType);
+        if (weaponItemType != WeaponItemType.NONE)
+        {
+            playerInstance.Disarm(weaponItemType);
+        }
     }
 }

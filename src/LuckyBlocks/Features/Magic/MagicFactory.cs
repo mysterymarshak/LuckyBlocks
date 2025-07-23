@@ -29,18 +29,18 @@ internal class MagicFactory : IMagicFactory
     }
 
     public IAreaMagic CreateAreaMagic<T>(Player wizard, int direction = default) where T : IAreaMagic =>
-        ((T)Activator.CreateInstance(typeof(T),
+        ((AreaMagicBase)Activator.CreateInstance(typeof(T),
             BindingFlags.CreateInstance | BindingFlags.Instance | BindingFlags.Public |
             BindingFlags.OptionalParamBinding, null, [wizard, _args, direction], CultureInfo.CurrentCulture))
-        .DecorateWithMeleeForceModifier();
+        .DecorateWithMeleeForceModifier(_args, direction);
 
     public IAreaMagic CreateAreaMagic<T>(Player wizard, BuffConstructorArgs buffConstructorArgs,
         int direction = default) where T : IAreaMagic =>
-        ((T)Activator.CreateInstance(typeof(T),
+        ((AreaMagicBase)Activator.CreateInstance(typeof(T),
             BindingFlags.CreateInstance | BindingFlags.Instance | BindingFlags.Public |
             BindingFlags.OptionalParamBinding, null, [wizard, _args, buffConstructorArgs, direction],
             CultureInfo.CurrentCulture))
-        .DecorateWithMeleeForceModifier();
+        .DecorateWithMeleeForceModifier(_args, direction);
 
     public T CreateMagic<T>(Player wizard) where T : class, INonAreaMagic =>
         (T)Activator.CreateInstance(typeof(T),

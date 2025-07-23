@@ -41,12 +41,12 @@ internal class WindMagic : AreaMagicBase
         PlayEffects(EffectName.Steam, area, Direction);
     }
 
-    protected override MagicBase CloneInternal()
+    public override MagicBase Copy()
     {
         return new WindMagic(Wizard, _args) { _reflectedProjectiles = _reflectedProjectiles };
     }
 
-    protected override void CastInternal(Area fullArea, Area iterationArea)
+    public override void Cast(Area fullArea, Area iterationArea)
     {
         var objects = GetAffectedObjectsByArea(fullArea, iterationArea).ToList();
 
@@ -80,6 +80,8 @@ internal class WindMagic : AreaMagicBase
         ScheduleWind(objects, Direction);
         ReflectProjectiles(iterationArea);
         PlayEffects(iterationArea);
+
+        base.Cast(fullArea, iterationArea);
     }
 
     private void ClearFire(IEnumerable<IObject> objects, Area area)

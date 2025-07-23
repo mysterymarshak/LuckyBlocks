@@ -74,7 +74,7 @@ internal class TimeRevertMagic : NonAreaMagicBase
         Awaiter.Start(OnTimeForChoosePassed, TimeForChooseSnapshot, _cts.Token);
     }
 
-    protected override MagicBase CloneInternal()
+    public override MagicBase Copy()
     {
         return new TimeRevertMagic(Wizard, _args);
     }

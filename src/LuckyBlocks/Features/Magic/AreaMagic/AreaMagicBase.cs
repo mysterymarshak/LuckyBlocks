@@ -82,10 +82,8 @@ internal abstract class AreaMagicBase : MagicBase, IAreaMagic
         _timer.Start();
     }
 
-    public void Cast(Area fullArea, Area iterationArea)
+    public virtual void Cast(Area fullArea, Area iterationArea)
     {
-        CastInternal(fullArea, iterationArea);
-
         _iterationIndex++;
         _iterationsPassed++;
     }
@@ -117,8 +115,6 @@ internal abstract class AreaMagicBase : MagicBase, IAreaMagic
     }
 
     public abstract void PlayEffects(Area area);
-
-    protected abstract void CastInternal(Area fullArea, Area iterationArea);
 
     protected IEnumerable<IObject> GetAffectedObjectsByArea(Area fullArea, Area iterationArea)
     {

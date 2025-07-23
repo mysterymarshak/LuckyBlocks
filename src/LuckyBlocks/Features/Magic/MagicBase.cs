@@ -33,7 +33,7 @@ internal abstract class MagicBase : IMagic
 
     public virtual IMagic Clone()
     {
-        var clonedMagic = CloneInternal();
+        var clonedMagic = Copy();
         clonedMagic.IsCloned = true;
         return clonedMagic;
     }
@@ -47,13 +47,12 @@ internal abstract class MagicBase : IMagic
     }
 
     public abstract void Cast();
+    public abstract MagicBase Copy();
 
     public void OnRestored()
     {
         IsCloned = false;
     }
-
-    protected abstract MagicBase CloneInternal();
 
     protected virtual void OnFinishInternal()
     {

@@ -61,7 +61,7 @@ internal class TimeStopMagic : NonAreaMagicBase
         Awaiter.Start(OnTimeStop, _timeStopService.TimeStopDelay, _timeStoppingCts.Token);
     }
 
-    protected override MagicBase CloneInternal()
+    public override MagicBase Copy()
     {
         return new TimeStopMagic(Wizard, _args);
     }

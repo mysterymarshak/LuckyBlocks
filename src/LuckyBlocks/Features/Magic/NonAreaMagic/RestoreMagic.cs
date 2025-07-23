@@ -50,7 +50,7 @@ internal class RestoreMagic : NonAreaMagicBase
         }
     }
 
-    protected override MagicBase CloneInternal()
+    public override MagicBase Copy()
     {
         return new RestoreMagic(Wizard, _args) { _state = _state };
     }

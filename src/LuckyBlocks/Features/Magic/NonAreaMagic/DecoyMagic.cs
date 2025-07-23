@@ -93,7 +93,7 @@ internal class DecoyMagic : NonAreaMagicBase
         _finishTimer.Start();
     }
 
-    protected override MagicBase CloneInternal()
+    public override MagicBase Copy()
     {
         var copiedDecoys = CopyDecoys();
         return new DecoyMagic(Wizard, _args, copiedDecoys, _finishTimer!.TimeLeft) { _decoysDead = _decoysDead };

@@ -39,12 +39,12 @@ internal class ElectricMagic : AreaMagicBase
         PlayEffects(EffectName.Electric, area, Direction);
     }
 
-    protected override MagicBase CloneInternal()
+    public override MagicBase Copy()
     {
         return new ElectricMagic(Wizard, _args, _buffConstructorArgs);
     }
 
-    protected override void CastInternal(Area fullArea, Area iterationArea)
+    public override void Cast(Area fullArea, Area iterationArea)
     {
         var objects = GetAffectedObjectsByArea(fullArea, iterationArea);
         foreach (var @object in objects)
@@ -53,6 +53,8 @@ internal class ElectricMagic : AreaMagicBase
         }
 
         PlayEffects(iterationArea);
+
+        base.Cast(fullArea, iterationArea);
     }
 
     private void ShockObject(IObject @object)
