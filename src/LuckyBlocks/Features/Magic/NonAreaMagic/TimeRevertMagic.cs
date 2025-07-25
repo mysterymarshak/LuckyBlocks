@@ -24,6 +24,8 @@ internal class TimeRevertMagic : NonAreaMagicBase
 
     private static TimeSpan TimeForChooseSnapshot => TimeSpan.FromSeconds(10);
 
+    private const int SnapshotsInRow = 3;
+
     private readonly ITimeStopService _timeStopService;
     private readonly ITimeRevertService _timeRevertService;
     private readonly ITimeProvider _timeProvider;
@@ -42,7 +44,6 @@ internal class TimeRevertMagic : NonAreaMagicBase
 
     private int _selectedSnapshotIndex;
     private int _selectedSnapshotId;
-    private VirtualKeyEvent _previousAltKeyState;
     private VirtualKeyEvent _previousAttackKeyState;
     private CancellationTokenSource? _cts;
     private float _elapsedRealTimeWhenStarted;
@@ -95,35 +96,61 @@ internal class TimeRevertMagic : NonAreaMagicBase
 
         foreach (var keyInput in args)
         {
-            if (keyInput.Key is not (VirtualKey.WALKING or VirtualKey.ATTACK))
+            if (keyInput.Key is not (VirtualKey.ATTACK or VirtualKey.AIM_CLIMB_UP or VirtualKey.AIM_CLIMB_DOWN
+                or VirtualKey.AIM_RUN_LEFT or VirtualKey.AIM_RUN_RIGHT))
                 continue;
 
-            if (keyInput.Key == VirtualKey.WALKING)
+            if (keyInput.Key == VirtualKey.ATTACK)
             {
-                OnAltKeyPressed(keyInput);
+                OnAttackKeyPressed(keyInput);
             }
             else
             {
-                OnAttackKeyPressed(keyInput);
+                OnArrowKeyPressed(keyInput);
             }
 
             return;
         }
     }
 
-    private void OnAltKeyPressed(VirtualKeyInfo keyInput)
+    private void OnArrowKeyPressed(VirtualKeyInfo keyInput)
     {
-        if (keyInput.Event == VirtualKeyEvent.Released && _previousAltKeyState == VirtualKeyEvent.Pressed)
-        {
-            _selectedSnapshotIndex = _selectedSnapshotIndex + 1 == _timeRevertService.SnapshotsCount
-                ? 0
-                : _selectedSnapshotIndex + 1;
-            _selectedSnapshotId = Snapshots[_selectedSnapshotIndex].Id;
-            _previousAltKeyState = VirtualKeyEvent.Released;
+        if (keyInput.Event != VirtualKeyEvent.Released)
             return;
+
+        var isFirstRow = _selectedSnapshotIndex < SnapshotsInRow;
+        var isSingleRow = Snapshots.Count <= SnapshotsInRow;
+        var indexInRow = _selectedSnapshotIndex % SnapshotsInRow;
+        var rowsCount = (int)Math.Ceiling(Snapshots.Count / (double)SnapshotsInRow);
+        var lastIndex = Snapshots.Count - 1;
+        var lastRowStartIndex = (rowsCount - 1) * SnapshotsInRow;
+        var newIndex = _selectedSnapshotIndex + keyInput.Key switch
+        {
+            VirtualKey.AIM_CLIMB_DOWN when IsOutOfBounds(_selectedSnapshotIndex + SnapshotsInRow) && isFirstRow => 0,
+            VirtualKey.AIM_CLIMB_DOWN when IsOutOfBounds(_selectedSnapshotIndex + SnapshotsInRow) => indexInRow +
+                (Snapshots.Count - _selectedSnapshotIndex),
+            VirtualKey.AIM_CLIMB_DOWN => SnapshotsInRow,
+            VirtualKey.AIM_CLIMB_UP when IsOutOfBounds(_selectedSnapshotIndex - SnapshotsInRow) && isSingleRow => 0,
+            VirtualKey.AIM_CLIMB_UP when IsOutOfBounds(_selectedSnapshotIndex - SnapshotsInRow) &&
+                                         lastIndex >= lastRowStartIndex + indexInRow => lastRowStartIndex,
+            VirtualKey.AIM_CLIMB_UP when IsOutOfBounds(_selectedSnapshotIndex - SnapshotsInRow) =>
+                lastRowStartIndex - (SnapshotsInRow - indexInRow) - _selectedSnapshotIndex,
+            VirtualKey.AIM_CLIMB_UP => -SnapshotsInRow,
+            VirtualKey.AIM_RUN_LEFT => -1,
+            VirtualKey.AIM_RUN_RIGHT => 1
+        };
+
+        if (newIndex < 0)
+        {
+            newIndex = Snapshots.Count + newIndex;
         }
 
-        _previousAltKeyState = VirtualKeyEvent.Pressed;
+        newIndex %= Snapshots.Count;
+
+        _selectedSnapshotIndex = newIndex;
+        _selectedSnapshotId = Snapshots[_selectedSnapshotIndex].Id;
+
+        bool IsOutOfBounds(int index) => index < 0 || index >= Snapshots.Count;
     }
 
     private void OnAttackKeyPressed(VirtualKeyInfo keyInput)
@@ -140,7 +167,6 @@ internal class TimeRevertMagic : NonAreaMagicBase
 
     private void OnTimerCallback()
     {
-        const int snapshotsInRow = 3;
         var snapshotIndex = 0;
         var wizardInstance = Wizard.Instance!;
         var position = wizardInstance.GetWorldPosition();
@@ -169,8 +195,8 @@ internal class TimeRevertMagic : NonAreaMagicBase
 
         foreach (var snapshot in Snapshots)
         {
-            var textPosition = position + additionalOffset + new Vector2(-50 + 50 * (snapshotIndex % snapshotsInRow),
-                -30 * (snapshotIndex / snapshotsInRow) - 15);
+            var textPosition = position + additionalOffset + new Vector2(-50 + 50 * (snapshotIndex % SnapshotsInRow),
+                -30 * (snapshotIndex / SnapshotsInRow) - 15);
             var textColor = snapshotIndex == _selectedSnapshotIndex ? ExtendedColors.KillerQueen : Color.Grey;
             var timeBehind = TimeSpan.FromMilliseconds(_timeProvider.ElapsedGameTime - snapshot.ElapsedGameTime);
 
@@ -181,7 +207,7 @@ internal class TimeRevertMagic : NonAreaMagicBase
             snapshotIndex++;
         }
 
-        var rows = (int)Math.Ceiling(_timeRevertService.SnapshotsCount / (double)snapshotsInRow);
+        var rows = (int)Math.Ceiling(Snapshots.Count / (double)SnapshotsInRow);
         const string tipBaseText = "HOW MUCH TIME YOU WANNA REVERT?";
         const string tip3SecondsLeft = "3 SECONDS LEFT";
         const string tip2SecondsLeft = "2 SECONDS LEFT";
@@ -207,7 +233,7 @@ internal class TimeRevertMagic : NonAreaMagicBase
         _selectedSnapshotId = Snapshots[0].Id;
         _keyInputSubscription = _extendedEvents.HookOnKeyInput(OnKeyInput, EventHookMode.Default);
         _timer.Start();
-        _notificationService.CreateChatNotification("[ALT] for change interval", ExtendedColors.KillerQueen,
+        _notificationService.CreateChatNotification("[ARROWS] for change interval", ExtendedColors.KillerQueen,
             Wizard.UserIdentifier);
         _notificationService.CreateChatNotification("[A] for confirm your choice", ExtendedColors.KillerQueen,
             Wizard.UserIdentifier);
