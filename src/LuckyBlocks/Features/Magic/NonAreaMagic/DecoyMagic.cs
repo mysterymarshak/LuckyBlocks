@@ -12,7 +12,6 @@ using LuckyBlocks.Features.WeaponPowerups;
 using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
 using LuckyBlocks.Utils.Timers;
 using SFDGameScriptInterface;
-using SFDPlayerModifiers = SFDGameScriptInterface.PlayerModifiers;
 
 namespace LuckyBlocks.Features.Magic.NonAreaMagic;
 
@@ -137,7 +136,8 @@ internal class DecoyMagic : NonAreaMagicBase
             var weaponsDataCopy = _weaponPowerupsService.CreateWeaponsDataCopy(Wizard);
             _weaponPowerupsService.RestoreWeaponsDataFromCopy(fakePlayer, weaponsDataCopy, false);
 
-            foreach (var buff in Wizard.CloneBuffs(player: fakePlayer))
+            var clonedBuffs = _buffsService.CloneBuffs(Wizard, playerToBind: fakePlayer);
+            foreach (var buff in clonedBuffs)
             {
                 _buffsService.TryAddBuff(buff, fakePlayer, false);
             }
@@ -209,7 +209,7 @@ internal class DecoyMagic : NonAreaMagicBase
                 decoyInstance.GetProfile(), weaponsDataCopy, decoyInstance.GetWorldPosition(),
                 decoyInstance.GetLinearVelocity(), decoyInstance.GetStrengthBoostTime(),
                 decoyInstance.GetSpeedBoostTime(), decoyInstance.GetHealth(),
-                _dialoguesService.CopyDialogues(decoyInstance).ToList(), Wizard.CloneBuffs());
+                _dialoguesService.CopyDialogues(decoyInstance).ToList(), _buffsService.CloneBuffs(Wizard));
             copiedDecoys.Add(decoyCopy);
         }
 

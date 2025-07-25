@@ -10,6 +10,7 @@ using LuckyBlocks.Features.Elevators;
 using LuckyBlocks.Features.Entities;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.Immunity;
+using LuckyBlocks.Features.Keyboard;
 using LuckyBlocks.Features.LuckyBlocks;
 using LuckyBlocks.Features.Magic;
 using LuckyBlocks.Features.Notifications;
@@ -259,9 +260,13 @@ internal class LuckyBlocksModule : Module
         builder.RegisterType<ProfilesRepository>()
             .As<IProfilesRepository>()
             .SingleInstance();
-        
+
         builder.RegisterType<ProfilesService>()
             .As<IProfilesService>()
+            .SingleInstance();
+
+        builder.RegisterType<KeyboardService>()
+            .As<IKeyboardService>()
             .SingleInstance();
     }
 }

@@ -44,7 +44,7 @@ internal class RevertedPlayer : RevertedDynamicObject
         _energy = Instance.GetEnergy();
         _corpseHealth = Instance.GetCorpseHealth();
         _weaponsDataCopy = weaponPowerupsService.CreateWeaponsDataCopy(player);
-        _buffs = player.CloneBuffs();
+        _buffs = buffsService.CloneBuffs(player);
     }
 
     protected override void RestoreInternal(IGame game, Dictionary<int, int>? objectsMap)
@@ -73,7 +73,7 @@ internal class RevertedPlayer : RevertedDynamicObject
 
         _weaponPowerupsService.RestoreWeaponsDataFromCopy(_player, _weaponsDataCopy);
 
-        _player.RemoveAllBuffs();
+        _buffsService.ForceFinishAllBuffs(_player);
         foreach (var buff in _buffs)
         {
             if (buff is not TimeRevertWizard)

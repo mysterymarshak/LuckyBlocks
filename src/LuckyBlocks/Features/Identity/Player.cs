@@ -18,7 +18,7 @@ internal class Player
     public string Name => User.Name;
     public IPlayer? Instance => User.GetPlayer();
     public IEnumerable<IImmunity> Immunities => _immunities;
-    public IEnumerable<IFinishableBuff> Buffs => _buffs;
+    public IReadOnlyCollection<IFinishableBuff> Buffs => _buffs;
     public IWizard? WizardBuff => _buffs.OfType<IWizard>().SingleOrDefault();
     public IProfile Profile { get; }
     public IUser User { get; }
@@ -84,22 +84,6 @@ internal class Player
 
         Instance!.SetProfile(profile);
         ProfileChanged?.Invoke(profile);
-    }
-
-    public List<ICloneableBuff<IBuff>> CloneBuffs(IEnumerable<Type>? exclusions = null, Player? player = null)
-    {
-        return Buffs
-            .Where(x => x is ICloneableBuff<IBuff> && exclusions?.All(y => y.IsInstanceOfType(x)) != true)
-            .Cast<ICloneableBuff<IBuff>>()
-            .Select(x => (ICloneableBuff<IBuff>)x.Clone(player ?? this))
-            .ToList();
-    }
-
-    public void RemoveAllBuffs()
-    {
-        _buffs
-            .ToList()
-            .ForEach(x => x.ExternalFinish());
     }
 
     public void SetWeaponsData(WeaponsData weaponsData)

@@ -63,7 +63,7 @@ internal class RestoreMagic : NonAreaMagicBase
         var speedBoostTime = wizardInstance.GetSpeedBoostTime();
         var health = wizardInstance.GetHealth();
         var isBurning = wizardInstance.IsBurning;
-        var buffs = Wizard.CloneBuffs([typeof(RestoreWizard)]);
+        var buffs = _buffsService.CloneBuffs(Wizard, [typeof(RestoreWizard)]);
         var weaponsData = _weaponPowerupsService.CreateWeaponsDataCopy(Wizard);
 
 #if DEBUG
@@ -95,7 +95,7 @@ internal class RestoreMagic : NonAreaMagicBase
             wizardInstance.SetMaxFire();
         }
 
-        Wizard.RemoveAllBuffs();
+        _buffsService.ForceFinishAllBuffs(Wizard);
         foreach (var buff in buffs)
         {
             _buffsService.TryAddBuff(buff, Wizard);

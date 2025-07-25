@@ -58,7 +58,7 @@ internal class PlayerDeathsWatcher : IPlayerDeathsWatcher
             return;
 
         _players.Remove(playerInstance.UniqueId);
-        _buffsService.RemoveAllBuffs(player);
+        _buffsService.ForceFinishAllBuffs(player);
 
         if (player.IsFake() && args.Removed)
         {

@@ -1,8 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Autofac;
+using LuckyBlocks.Mediator;
 using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
 using LuckyBlocks.Utils;
+using Mediator;
 using OneOf;
 using OneOf.Types;
 using Serilog;
@@ -27,13 +29,16 @@ internal class IdentityService : IIdentityService
     private readonly IPlayersRepository _playersRepository;
     private readonly IGame _game;
     private readonly ILogger _logger;
+    private readonly IMediator _mediator;
     private readonly IExtendedEvents _extendedEvents;
 
-    public IdentityService(IPlayersRepository playersRepository, IGame game, ILogger logger, ILifetimeScope scope)
+    public IdentityService(IPlayersRepository playersRepository, IGame game, ILogger logger, IMediator mediator,
+        ILifetimeScope scope)
     {
         _playersRepository = playersRepository;
         _game = game;
         _logger = logger;
+        _mediator = mediator;
         var thisScope = scope.BeginLifetimeScope();
         _extendedEvents = thisScope.Resolve<IExtendedEvents>();
     }
@@ -112,11 +117,14 @@ internal class IdentityService : IIdentityService
     private void RegisterUser(int userId)
     {
         var validationResult = _playersRepository.ValidateUser(userId);
-        if (!validationResult.IsT0)
+        if (!validationResult.TryPickT0(out var player, out _))
         {
             _logger.Error("Failed to register user with id '{UserId}': {Message}", userId, validationResult.AsT1);
             return;
         }
+
+        var notification = new UserRegisteredNotification(player);
+        _mediator.Publish(notification);
 
         _logger.Debug("Registered user with id '{UserId}'", userId);
     }
