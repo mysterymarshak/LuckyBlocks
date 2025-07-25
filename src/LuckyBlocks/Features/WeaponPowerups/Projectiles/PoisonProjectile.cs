@@ -18,7 +18,7 @@ internal class PoisonProjectile : ProjectilePowerupBase
     private readonly IBuffsService _buffsService;
     private readonly BuffConstructorArgs _buffConstructorArgs;
     private readonly IEffectsPlayer _effectsPlayer;
-    private readonly PeriodicTimer<IProjectile> _periodicTimer;
+    private readonly PeriodicTimer _periodicTimer;
     private readonly PowerupConstructorArgs _args;
 
     public PoisonProjectile(IProjectile projectile, IExtendedEvents extendedEvents, PowerupConstructorArgs args) : base(
@@ -29,8 +29,8 @@ internal class PoisonProjectile : ProjectilePowerupBase
         _buffsService = args.BuffsService;
         _buffConstructorArgs = args.BuffConstructorArgs;
         _effectsPlayer = args.EffectsPlayer;
-        _periodicTimer = new PeriodicTimer<IProjectile>(TimeSpan.FromMilliseconds(50), TimeBehavior.TimeModifier,
-            PlayEffect, x => x.IsRemoved, null, projectile, ExtendedEvents);
+        _periodicTimer = new PeriodicTimer(TimeSpan.FromMilliseconds(50), TimeBehavior.TimeModifier, PlayPoisonEffect,
+            null, int.MaxValue, ExtendedEvents);
         _args = args;
     }
 
@@ -63,8 +63,8 @@ internal class PoisonProjectile : ProjectilePowerupBase
         _periodicTimer.Stop();
     }
 
-    private void PlayEffect(IProjectile projectile)
+    private void PlayPoisonEffect()
     {
-        _effectsPlayer.PlayEffect(EffectName.AcidSplash, projectile.Position);
+        _effectsPlayer.PlayEffect(EffectName.AcidSplash, Projectile.Position);
     }
 }

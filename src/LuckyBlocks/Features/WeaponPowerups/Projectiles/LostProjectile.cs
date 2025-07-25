@@ -26,7 +26,7 @@ internal class LostProjectile : ProjectilePowerupBase
     private readonly IGame _game;
     private readonly IEffectsPlayer _effectsPlayer;
     private readonly PowerupConstructorArgs _args;
-    private readonly PeriodicTimer<IProjectile> _periodicTimer;
+    private readonly PeriodicTimer _periodicTimer;
 
     public LostProjectile(IProjectile projectile, IExtendedEvents extendedEvents, PowerupConstructorArgs args) :
         base(projectile, extendedEvents, args)
@@ -34,8 +34,8 @@ internal class LostProjectile : ProjectilePowerupBase
         _game = args.Game;
         _effectsPlayer = args.EffectsPlayer;
         _args = args;
-        _periodicTimer = new PeriodicTimer<IProjectile>(TimeSpan.FromMilliseconds(50), TimeBehavior.TimeModifier,
-            PlayLostEffect, x => x.IsRemoved, null, projectile, ExtendedEvents);
+        _periodicTimer = new PeriodicTimer(TimeSpan.FromMilliseconds(50), TimeBehavior.TimeModifier, PlayLostEffect,
+            null, int.MaxValue, ExtendedEvents);
         _spawnPoints ??= _game.GetObjectsByName("SpawnPlayer");
     }
 
@@ -46,10 +46,13 @@ internal class LostProjectile : ProjectilePowerupBase
 
     protected override void OnRunInternal()
     {
-        var spawnPoint = _spawnPoints!.GetRandomElement();
+        if (!IsCloned)
+        {
+            var spawnPoint = _spawnPoints!.GetRandomElement();
 
-        Projectile.Position = spawnPoint.GetWorldPosition();
-        Projectile.Direction = GetProjectileDirection();
+            Projectile.Position = spawnPoint.GetWorldPosition();
+            Projectile.Direction = GetProjectileDirection();  
+        }
 
         _periodicTimer.Start();
     }
@@ -85,11 +88,11 @@ internal class LostProjectile : ProjectilePowerupBase
             .CollisionVector;
     }
 
-    private void PlayLostEffect(IProjectile projectile)
+    private void PlayLostEffect()
     {
         for (var i = 0; i < 3; i++)
         {
-            _effectsPlayer.PlayLostEffect(projectile.Position);
+            _effectsPlayer.PlayLostEffect(Projectile.Position);
         }
     }
 }

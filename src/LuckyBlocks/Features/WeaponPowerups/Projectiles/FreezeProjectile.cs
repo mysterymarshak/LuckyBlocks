@@ -20,7 +20,7 @@ internal class FreezeProjectile : ProjectilePowerupBase
     private readonly IIdentityService _identityService;
     private readonly IBuffsService _buffsService;
     private readonly BuffConstructorArgs _buffConstructorArgs;
-    private readonly PeriodicTimer<IProjectile> _periodicTimer;
+    private readonly PeriodicTimer _periodicTimer;
     private readonly PowerupConstructorArgs _args;
 
     public FreezeProjectile(IProjectile projectile, IExtendedEvents extendedEvents, PowerupConstructorArgs args) : base(
@@ -31,8 +31,8 @@ internal class FreezeProjectile : ProjectilePowerupBase
         _identityService = args.IdentityService;
         _buffsService = args.BuffsService;
         _buffConstructorArgs = args.BuffConstructorArgs;
-        _periodicTimer = new PeriodicTimer<IProjectile>(TimeSpan.FromMilliseconds(50), TimeBehavior.TimeModifier,
-            PlayFreezeEffect, x => x.IsRemoved, null, projectile, ExtendedEvents);
+        _periodicTimer = new PeriodicTimer(TimeSpan.FromMilliseconds(50), TimeBehavior.TimeModifier, PlayFreezeEffect,
+            null, int.MaxValue, ExtendedEvents);
         _args = args;
     }
 
@@ -65,8 +65,8 @@ internal class FreezeProjectile : ProjectilePowerupBase
         _periodicTimer.Stop();
     }
 
-    private void PlayFreezeEffect(IProjectile projectile)
+    private void PlayFreezeEffect()
     {
-        _effectsPlayer.PlayEffect(EffectName.Electric, projectile.Position);
+        _effectsPlayer.PlayEffect(EffectName.Electric, Projectile.Position);
     }
 }
