@@ -20,6 +20,8 @@ internal abstract class BulletsPowerupBase : UsablePowerupBase<Firearm>
         protected set => _usesLeft = value;
     }
 
+    protected virtual bool CountShotgunBulletsIndependently => true;
+
     private int? _usesLeft;
 
     protected BulletsPowerupBase(Firearm firearm, PowerupConstructorArgs args) : base(args)
@@ -38,9 +40,23 @@ internal abstract class BulletsPowerupBase : UsablePowerupBase<Firearm>
 
         // _usesLeft = Math.Min(UsesLeft, Weapon.TotalAmmo + projectiles.Count);
 
-        foreach (var projectile in projectiles.Take(UsesLeft))
+        var isShotgun = Weapon is Shotgun;
+        var count = isShotgun
+            ? (CountShotgunBulletsIndependently ? UsesLeft : UsesLeft * ((Shotgun)Weapon).BulletsPerShot)
+            : UsesLeft;
+
+        foreach (var projectile in projectiles.Take(count))
         {
             OnFireInternal(playerInstance, projectile);
+
+            if (!isShotgun || isShotgun && CountShotgunBulletsIndependently)
+            {
+                _usesLeft--;
+            }
+        }
+
+        if (isShotgun && !CountShotgunBulletsIndependently)
+        {
             _usesLeft--;
         }
     }
