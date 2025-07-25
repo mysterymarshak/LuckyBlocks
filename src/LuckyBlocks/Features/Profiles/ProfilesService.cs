@@ -4,7 +4,6 @@ using System.Linq;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Buffs.Durable;
 using LuckyBlocks.Features.Identity;
-using Serilog;
 using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Features.Profiles;

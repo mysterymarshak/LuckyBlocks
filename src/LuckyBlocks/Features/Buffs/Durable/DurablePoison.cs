@@ -1,7 +1,6 @@
 using System;
 using LuckyBlocks.Data.Args;
 using LuckyBlocks.Exceptions;
-using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.Immunity;
 using LuckyBlocks.Features.Notifications;

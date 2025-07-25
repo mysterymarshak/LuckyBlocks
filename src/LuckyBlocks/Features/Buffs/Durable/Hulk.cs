@@ -1,6 +1,5 @@
 ﻿using System;
 using LuckyBlocks.Data.Args;
-using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.PlayerModifiers;
 using LuckyBlocks.Features.Profiles;

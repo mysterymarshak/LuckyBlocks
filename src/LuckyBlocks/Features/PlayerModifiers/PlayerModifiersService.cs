@@ -1,7 +1,5 @@
 ﻿using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Identity;
-using LuckyBlocks.Reflection;
-using Serilog;
 using SFDPlayerModifiers = SFDGameScriptInterface.PlayerModifiers;
 
 namespace LuckyBlocks.Features.PlayerModifiers;

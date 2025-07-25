@@ -6,7 +6,6 @@ using LuckyBlocks.Utils;
 using SFDGameScriptInterface;
 using System.Collections.Generic;
 using LuckyBlocks.Data.Weapons;
-using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Immunity;
 using LuckyBlocks.Features.Profiles;
 

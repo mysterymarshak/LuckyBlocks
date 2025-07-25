@@ -69,6 +69,7 @@ internal abstract class WizardBase : FinishableBuffBase, IWizard
 
         ExtendedEvents.HookOnPlayerMeleeAction(PlayerInstance!, OnMeleeAction, EventHookMode.Default);
 
+        // todo: decoy wizard dialogue after time revert shouldnt be displayed if there're decoys
         ShowDialogue(Name.ToUpper(), TimeSpan.FromSeconds(3), BuffColor, default, default, true);
         ShowChatMessage("[ALT + A] TO USE MAGIC");
         ShowCastsCount();
