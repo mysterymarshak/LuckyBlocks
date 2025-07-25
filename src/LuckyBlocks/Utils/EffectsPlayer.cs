@@ -9,6 +9,7 @@ internal interface IEffectsPlayer
     void PlayShakeEffect(float intensity, TimeSpan duration);
     void PlayShakeSoundEffect();
     void PlayHandGleamEffect(IPlayer playerInstance);
+    void PlayLostEffect(Vector2 sourcePosition);
     void PlaySoundEffect(string effectName, Vector2 position);
     void PlayEffect(string effectName, Vector2 position);
     void PlayEffect(string effectName, Vector2 position, params object[] args);
@@ -44,6 +45,13 @@ internal class EffectsPlayer : IEffectsPlayer
         var effectPosition = playerInstance.GetWorldPosition() + new Vector2(0, 9) +
                              playerInstance.GetFaceDirection() * new Vector2(12, 0);
         PlayEffect(EffectName.ItemGleam, effectPosition);
+    }
+
+    public void PlayLostEffect(Vector2 sourcePosition)
+    {
+        PlayEffect(EffectName.CustomFloatText,
+            sourcePosition + new Vector2(SharedRandom.Instance.Next(-7, 7), SharedRandom.Instance.Next(-7, 7)), "?",
+            ExtendedColors.Lost, 250f, 1f, true);
     }
 
     public void PlaySoundEffect(string effectName, Vector2 position)

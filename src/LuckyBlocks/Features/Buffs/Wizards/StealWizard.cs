@@ -90,7 +90,8 @@ internal class StealWizard : WizardBase, IImmunityFlagsIndicatorBuff
     }
 
     protected override bool CanUseMagic() => _identityService.GetAlivePlayers(false)
-        .Any(x => x != Player && x.HasAnyWeapon());
+        .Any(x => x != Player && x.HasAnyWeapon() &&
+                  !x.GetImmunityFlags().HasFlag<ImmunityFlag>(ImmunityFlag.ImmunityToSteal));
 
     protected override IFinishCondition<IMagic> OnUseMagic()
     {

@@ -146,7 +146,7 @@ internal class StealMagic : NonAreaMagicBase
     }
 
     private List<IPlayer> GetPlayers() => _identityService.GetAlivePlayers(false)
-        .Where(x => x.Instance != Wizard.Instance && x.WeaponsData.HasAnyWeapon() &&
+        .Where(x => x != Wizard && x.HasAnyWeapon() &&
                     !x.GetImmunityFlags().HasFlag<ImmunityFlag>(ImmunityFlag.ImmunityToSteal))
         .Select(x => x.Instance!)
         .OrderBy(x => x.GetWorldPosition().X)
