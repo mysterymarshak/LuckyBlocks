@@ -6,17 +6,11 @@ using SFDGameScriptInterface;
 namespace LuckyBlocks.Loot.Attributes;
 
 [AttributeUsage(AttributeTargets.Field)]
-internal abstract class ItemAttribute : Attribute
-{
-}
+internal abstract class ItemAttribute : Attribute;
 
-internal class AlivePlayersMoreThanOneAttribute : ItemAttribute
-{
-}
+internal class AlivePlayersMoreThanOneAttribute : ItemAttribute;
 
-internal class AlwaysAttribute : ItemAttribute
-{
-}
+internal class AlwaysAttribute : ItemAttribute;
 
 internal class AnyPlayerHaveAnyWeaponAttribute : ItemAttribute
 {
@@ -24,21 +18,15 @@ internal class AnyPlayerHaveAnyWeaponAttribute : ItemAttribute
 
     public AnyPlayerHaveAnyWeaponAttribute(bool exceptActivator = false)
     {
-        exceptActivator = exceptActivator;
+        ExceptActivator = exceptActivator;
     }
 }
 
-internal class BarrelExistsAttribute : ItemAttribute
-{
-}
+internal class BarrelExistsAttribute : ItemAttribute;
 
-internal class DeadPlayerExistsAttribute : ItemAttribute
-{
-}
+internal class DeadPlayerExistsAttribute : ItemAttribute;
 
-internal class DisabledAttribute : ItemAttribute
-{
-}
+internal class DisabledAttribute : ItemAttribute;
 
 internal class IncompatibleWithBuffsAttribute : ItemAttribute
 {
@@ -48,30 +36,20 @@ internal class IncompatibleWithBuffsAttribute : ItemAttribute
         => Types = buffs ?? Enumerable.Empty<Type>();
 }
 
-internal class LuckyBlockDropChanceCanBeIncreasedAttribute : ItemAttribute
-{
-}
+internal class LuckyBlockDropChanceCanBeIncreasedAttribute : ItemAttribute;
 
-internal class OnlyPlayerAttribute : ItemAttribute
-{
-}
+internal class OnlyPlayerAttribute : ItemAttribute;
 
-internal class PlayerIsNotFullHpAttribute : ItemAttribute
-{
-}
+internal class PlayerIsNotFullHpAttribute : ItemAttribute;
 
 internal class PlayerIsNotOtherWizardAttribute : ItemAttribute
 {
     public required Type SourceWizard { get; set; }
 }
 
-internal class UnusedAttribute : ItemAttribute
-{
-}
+internal class UnusedAttribute : ItemAttribute;
 
-internal class PlayerHasAnyFirearmAttribute : ItemAttribute
-{
-}
+internal class PlayerHasAnyFirearmAttribute : ItemAttribute;
 
 internal class PlayerHasGotWeaponsAttribute : ItemAttribute
 {
@@ -117,3 +95,5 @@ internal class WeightAttribute : ItemAttribute
     public WeightAttribute(float weight)
         => Weight = weight;
 }
+
+internal class MagicIsAllowedAttribute : ItemAttribute;

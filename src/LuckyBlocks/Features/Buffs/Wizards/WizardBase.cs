@@ -31,6 +31,7 @@ internal abstract class WizardBase : FinishableBuffBase, IWizard
     public bool IsCloned { get; private set; }
 
     private readonly IEffectsPlayer _effectsPlayer;
+    private readonly IMagicService _magicService;
     private readonly WizardFinishCondition _wizardFinishCondition;
     private readonly int _initialCastsLeft;
 
@@ -41,6 +42,7 @@ internal abstract class WizardBase : FinishableBuffBase, IWizard
     {
         _effectsPlayer = args.EffectsPlayer;
         _wizardFinishCondition = wizardFinishCondition;
+        _magicService = args.MagicService;
         _initialCastsLeft = castsLeft;
         CastsLeft = -1;
     }
@@ -116,7 +118,7 @@ internal abstract class WizardBase : FinishableBuffBase, IWizard
     {
         var playerInstance = Player.Instance!;
 
-        if (!CanUseMagic() || Player.IsFake())
+        if (!CanUseMagic() || Player.IsFake() || !_magicService.IsMagicAllowed)
         {
             ShowChatMessage("You can't use magic now", ExtendedColors.ImperialRed);
             return;

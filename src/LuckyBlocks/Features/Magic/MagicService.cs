@@ -17,13 +17,17 @@ namespace LuckyBlocks.Features.Magic;
 
 internal interface IMagicService
 {
+    bool IsMagicAllowed { get; }
     IFinishCondition<IMagic> Cast<T>(T magic) where T : IMagic;
     MagicServiceState CloneState();
     void RestoreState(MagicServiceState state);
+    void ProhibitMagic(TimeSpan duration);
 }
 
 internal class MagicService : IMagicService
 {
+    public bool IsMagicAllowed { get; private set; } = true;
+
     private readonly IGame _game;
     private readonly ILogger _logger;
     private readonly ITimeProvider _timeProvider;
@@ -31,6 +35,8 @@ internal class MagicService : IMagicService
     private readonly List<IMagic> _magics = [];
     private readonly List<IAreaMagic> _areaMagics = [];
     private readonly Dictionary<IMagic, IEventSubscription> _deathSubscriptions = new();
+
+    private Timer? _magicProhibitionTimer;
 
     public MagicService(IGame game, ILogger logger, ITimeProvider timeProvider, ILifetimeScope lifetimeScope)
     {
@@ -106,12 +112,13 @@ internal class MagicService : IMagicService
         _logger.Debug("Cloned magics: {ClonedMagics}", clonedMagics.Select(x => $"{x.Wizard.Name}: {x.Name}").ToList());
 #endif
 
-        return new MagicServiceState(clonedMagics);
+        return new MagicServiceState(clonedMagics, IsMagicAllowed, _magicProhibitionTimer?.TimeLeft ?? TimeSpan.Zero);
     }
 
     public void RestoreState(MagicServiceState state)
     {
         RemoveAllMagics();
+        _magicProhibitionTimer?.Stop();
 
         foreach (var magic in state.Magics)
         {
@@ -120,7 +127,28 @@ internal class MagicService : IMagicService
             _logger.Debug("{MagicName} restored for {WizardName}", magic.Name, magic.Wizard.Name);
         }
 
+        if (!state.IsMagicAllowed)
+        {
+            ProhibitMagic(state.MagicProhibitionTime);
+        }
+
         _logger.Debug("Magic service state restored");
+    }
+
+    public void ProhibitMagic(TimeSpan duration)
+    {
+        IsMagicAllowed = false;
+
+        _magicProhibitionTimer = new Timer(duration, TimeBehavior.TimeModifier, AllowMagic, _extendedEvents);
+        _magicProhibitionTimer.Start();
+
+        _logger.Debug("Magic usage is prohibited for {Seconds}s", duration.TotalSeconds);
+    }
+
+    private void AllowMagic()
+    {
+        IsMagicAllowed = true;
+        _logger.Debug("Magic usage is allowed");
     }
 
     private void RegisterAreaMagic(IAreaMagic areaMagic)

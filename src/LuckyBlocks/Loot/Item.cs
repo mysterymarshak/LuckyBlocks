@@ -1,4 +1,5 @@
 ﻿using LuckyBlocks.Features.Buffs.Durable;
+using LuckyBlocks.Features.Buffs.Finishable;
 using LuckyBlocks.Features.Buffs.Wizards;
 using LuckyBlocks.Features.WeaponPowerups.Bullets;
 using LuckyBlocks.Loot.Attributes;
@@ -142,7 +143,7 @@ internal enum Item
     [AlivePlayersMoreThanOne]
     [Weight(0.5f / 2)]
     [AnyPlayerHaveAnyWeapon(true)]
-    RemoveWeaponsExceptPlayer,
+    RemoveWeaponsExceptActivator,
 
     [Weight(0.5f / 2)]
     [AnyPlayerHaveAnyWeapon]
@@ -166,5 +167,10 @@ internal enum Item
     TimeRevertWizard,
 
     [OnlyPlayer]
-    WetHands
+    WetHands,
+
+    [OnlyPlayer]
+    [NoOneHaveBuff(typeof(TheFool))]
+    [MagicIsAllowed]
+    TheFool
 }

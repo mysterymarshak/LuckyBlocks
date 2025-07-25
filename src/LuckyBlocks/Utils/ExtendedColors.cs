@@ -20,4 +20,5 @@ internal static class ExtendedColors
     public static readonly Color LightWater = new(54, 105, 213);
     public static readonly Color ChatBlue = new(18, 96, 204);
     public static readonly Color TotemOfUndying = new(243, 222, 147);
+    public static readonly Color TheFool = new(247, 217, 2);
 }

@@ -2,6 +2,7 @@
 using LuckyBlocks.Data.Args;
 using LuckyBlocks.Features.Buffs;
 using LuckyBlocks.Features.Buffs.Durable;
+using LuckyBlocks.Features.Buffs.Finishable;
 using LuckyBlocks.Features.Buffs.Instant;
 using LuckyBlocks.Features.Buffs.Wizards;
 using LuckyBlocks.Features.Identity;
@@ -85,11 +86,12 @@ internal class LootFactory : ILootFactory
         Item.TotemOfUndying => CreateWrappedBuff<TotemOfUndying>(player, Item.TotemOfUndying),
         Item.WindWizard => CreateWrappedBuff<WindWizard>(player, Item.WindWizard),
         Item.TimeStopWizard => CreateWrappedBuff<TimeStopWizard>(player, Item.TimeStopWizard),
-        Item.RemoveWeaponsExceptPlayer => new RemoveWeaponsExceptPlayer(player.Instance, _lootConstructorArgs),
+        Item.RemoveWeaponsExceptActivator => new RemoveWeaponsExceptPlayer(player.Instance, _lootConstructorArgs),
         Item.RestoreWizard => CreateWrappedBuff<RestoreWizard>(player, Item.RestoreWizard),
         Item.StealWizard => CreateWrappedBuff<StealWizard>(player, Item.StealWizard),
         Item.TimeRevertWizard => CreateWrappedBuff<TimeRevertWizard>(player, Item.TimeRevertWizard),
         Item.WetHands => CreateWrappedBuff<WetHands>(player, Item.WetHands),
+        Item.TheFool => CreateWrappedBuff<TheFool>(player, Item.TheFool),
         _ => new ArgumentOutOfRangeException(nameof(item))
     };
 

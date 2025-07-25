@@ -5,6 +5,7 @@ using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Buffs.Wizards;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.LuckyBlocks;
+using LuckyBlocks.Features.Magic;
 using LuckyBlocks.Features.PlayerModifiers;
 using LuckyBlocks.Features.WeaponPowerups;
 using LuckyBlocks.Utils;
@@ -26,7 +27,7 @@ internal class AttributesChecker : IAttributesChecker
 
     public AttributesChecker(IIdentityService identityService, ISpawnChanceService spawnChanceService,
         IWeaponPowerupsService weaponPowerupsService, IPlayerModifiersService playerModifiersService,
-        IComparer<ItemAttribute> attributesComparer, IGame game)
+        IComparer<ItemAttribute> attributesComparer, IMagicService magicService, IGame game)
     {
         _attributesComparer = attributesComparer;
 
@@ -64,7 +65,7 @@ internal class AttributesChecker : IAttributesChecker
         bool AnyPlayerHaveAnyWeaponAttributeCheck(ItemAttribute attribute, OneOf<Player, Unknown> player)
         {
             var typedAttribute = (attribute as AnyPlayerHaveAnyWeaponAttribute)!;
-            
+
             return identityService.GetAlivePlayers(false)
                 .Where(x => !typedAttribute.ExceptActivator || x != player.AsT0)
                 .Any(x => x.HasAnyWeapon());
@@ -128,6 +129,11 @@ internal class AttributesChecker : IAttributesChecker
             return identityService.GetAlivePlayers().All(x => !x.HasBuff(type) || x == player.AsT0);
         }
 
+        bool MagicIsAllowedAttributeCheck(ItemAttribute attribute, OneOf<Player, Unknown> player)
+        {
+            return magicService.IsMagicAllowed;
+        }
+
         _checks = new Dictionary<Type, Func<ItemAttribute, OneOf<Player, Unknown>, bool>>
         {
             [typeof(UnusedAttribute)] = (_, _) => false,
@@ -146,7 +152,8 @@ internal class AttributesChecker : IAttributesChecker
             [typeof(PlayerIsNotOtherWizardAttribute)] = PlayerIsNotOtherWizardAttributeCheck,
             [typeof(ModifiedModifiersAttribute)] = ModifiedModifiersAttributeCheck,
             [typeof(CantBeAppliedIfAlreadyExists)] = CantBeAppliedIfAlreadyExistsAttributeCheck,
-            [typeof(NoOneHaveBuffAttribute)] = NoOneHaveBuffAttributeCheck
+            [typeof(NoOneHaveBuffAttribute)] = NoOneHaveBuffAttributeCheck,
+            [typeof(MagicIsAllowedAttribute)] = MagicIsAllowedAttributeCheck
         };
     }
 

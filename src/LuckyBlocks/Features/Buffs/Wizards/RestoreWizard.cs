@@ -71,10 +71,7 @@ internal class RestoreWizard : WizardBase
     {
         _magic!.StateSave -= OnStateSaved;
 
-        var playerInstance = Player.Instance!;
-        var effectPosition = playerInstance.GetWorldPosition() + new Vector2(0, 9) +
-                             playerInstance.GetFaceDirection() * new Vector2(12, 0);
-        _effectsPlayer.PlayEffect(EffectName.ItemGleam, effectPosition);
+        _effectsPlayer.PlayHandGleamEffect(PlayerInstance!);
 
         _stateSaved = true;
         ShowChatMessage("You saved your state");

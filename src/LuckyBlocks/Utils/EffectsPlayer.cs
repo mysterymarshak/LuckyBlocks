@@ -8,6 +8,7 @@ internal interface IEffectsPlayer
     void PlaySloMoEffect(TimeSpan slowMoDuration);
     void PlayShakeEffect(float intensity, TimeSpan duration);
     void PlayShakeSoundEffect();
+    void PlayHandGleamEffect(IPlayer playerInstance);
     void PlaySoundEffect(string effectName, Vector2 position);
     void PlayEffect(string effectName, Vector2 position);
     void PlayEffect(string effectName, Vector2 position, params object[] args);
@@ -38,6 +39,13 @@ internal class EffectsPlayer : IEffectsPlayer
         _game.PlaySound("Wings", Vector2.Zero, 1f);
     }
 
+    public void PlayHandGleamEffect(IPlayer playerInstance)
+    {
+        var effectPosition = playerInstance.GetWorldPosition() + new Vector2(0, 9) +
+                             playerInstance.GetFaceDirection() * new Vector2(12, 0);
+        PlayEffect(EffectName.ItemGleam, effectPosition);
+    }
+
     public void PlaySoundEffect(string effectName, Vector2 position)
     {
         _game.PlaySound(effectName, position, 1f);
@@ -53,7 +61,7 @@ internal class EffectsPlayer : IEffectsPlayer
     {
         _game.PlayEffect(effectName, position);
     }
-    
+
     public void PlayEffect(string effectName, Vector2 position, params object[] args)
     {
         _game.PlayEffect(effectName, position, args);

@@ -7,7 +7,7 @@ using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
 using LuckyBlocks.Utils;
 using SFDGameScriptInterface;
 
-namespace LuckyBlocks.Features.Buffs.Durable;
+namespace LuckyBlocks.Features.Buffs.Finishable;
 
 internal class TotemOfUndying : FinishableBuffBase, ICloneableBuff<IFinishableBuff>, IImmunityFlagsIndicatorBuff
 {

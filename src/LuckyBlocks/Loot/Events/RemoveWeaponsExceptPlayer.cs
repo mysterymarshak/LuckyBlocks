@@ -8,7 +8,7 @@ namespace LuckyBlocks.Loot.Events;
 
 internal class RemoveWeaponsExceptPlayer : GameEventWithSlowMoBase
 {
-    public override Item Item => Item.RemoveWeaponsExceptPlayer;
+    public override Item Item => Item.RemoveWeaponsExceptActivator;
     public override string Name => "Remove weapons";
 
     protected override TimeSpan SlowMoDuration => TimeSpan.FromMilliseconds(1500);
