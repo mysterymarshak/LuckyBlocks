@@ -36,7 +36,9 @@ internal class TheFool : FinishableBuffBase, ICloneableBuff<IFinishableBuff>
     public override void Run()
     {
         ExtendedEvents.HookOnKeyInput(OnKeyInput, EventHookMode.Default);
+        
         ShowDialogue("The Fool", TimeSpan.FromSeconds(3));
+        ShowChatMessage($"[ALT + D] to prohibit magic usage for {MagicProhibitionTime.TotalSeconds}s");
     }
 
     private void OnKeyInput(Event<IPlayer, VirtualKeyInfo[]> @event)
