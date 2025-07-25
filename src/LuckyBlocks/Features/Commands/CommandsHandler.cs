@@ -3,6 +3,7 @@ using System.Linq;
 using Autofac;
 using Autofac.Util;
 using LuckyBlocks.Data.Args;
+using LuckyBlocks.Data.Weapons;
 using LuckyBlocks.Features.Buffs;
 using LuckyBlocks.Features.Entities;
 using LuckyBlocks.Features.Identity;
@@ -15,6 +16,7 @@ using LuckyBlocks.Features.WeaponPowerups.Melees;
 using LuckyBlocks.Features.WeaponPowerups.ThrownItems;
 using LuckyBlocks.Loot;
 using LuckyBlocks.Loot.Events;
+using LuckyBlocks.Reflection;
 using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
 using LuckyBlocks.Utils;
 using LuckyBlocks.Utils.Watchers;
@@ -139,7 +141,7 @@ internal class CommandsHandler : ICommandsHandler
                     if (buffedPlayer is null)
                         return;
 
-                    var buffType = typeof(CommandsHandler).Assembly
+                    var buffType = typeof(AssemblyMarker).Assembly
                         .GetLoadableTypes()
                         .Where(x => x.GetInterfaces().Any(y => y.Name == nameof(IBuff)))
                         .FirstOrDefault(x => x.Name == buffName);
@@ -188,12 +190,6 @@ internal class CommandsHandler : ICommandsHandler
 
                     break;
                 }
-                case "shuffle":
-                {
-                    var shuffleWeaponsEvent = new ShuffleWeapons(_lootArgs);
-                    shuffleWeaponsEvent.Run();
-                    break;
-                }
                 case "weapons":
                 {
                     var player = string.IsNullOrWhiteSpace(commandArgs)
@@ -203,90 +199,23 @@ internal class CommandsHandler : ICommandsHandler
                     _logger.Debug("Data: {Data}", player.WeaponsData.ToString());
                     break;
                 }
-                case "buffs":
+                case "powerup":
                 {
-                    var player = _identityService.GetPlayerByInstance(playerInstance);
-                    var buffs = player.Buffs;
-                    _logger.Debug("Buffs: '{BuffsCount}' | {Buffs}", buffs.Count(), buffs.Select(x => x.Name).ToList());
+                    var powerupType = typeof(AssemblyMarker).Assembly
+                        .GetLoadableTypes()
+                        .Where(x => x.GetInterfaces().Any(y => typeof(IWeaponPowerup<Weapon>).IsAssignableFrom(y)))
+                        .FirstOrDefault(x => x.Name == commandArgs);
 
-                    break;
-                }
-                case "drawn":
-                {
-                    _logger.Debug("Drawn weapon: {DrawnWeapon}", playerInstance.CurrentWeaponDrawn);
-                    break;
-                }
-                case "test1":
-                {
-                    var revolver = _game.SpawnWeaponItem(WeaponItem.REVOLVER, playerInstance.GetWorldPosition(), true);
-                    var weapon = _weaponsDataWatcher.RegisterWeapon(revolver);
-                    var infiniteRicochetPowerup =
-                        _powerupFactory.CreatePowerup(weapon, typeof(InfiniteRicochetBullets));
-                    _weaponPowerupsService.AddWeaponPowerup(infiniteRicochetPowerup, weapon);
-                    break;
-                }
-                case "test2":
-                {
-                    var revolver = _game.SpawnWeaponItem(WeaponItem.REVOLVER, playerInstance.GetWorldPosition(), true);
-                    var weapon = _weaponsDataWatcher.RegisterWeapon(revolver);
-                    var tripleRicochetPowerup = _powerupFactory.CreatePowerup(weapon, typeof(TripleRicochetBullets));
-                    _weaponPowerupsService.AddWeaponPowerup(tripleRicochetPowerup, weapon);
-                    break;
-                }
-                case "test3":
-                {
-                    var revolver = _game.SpawnWeaponItem(WeaponItem.REVOLVER, playerInstance.GetWorldPosition(), true);
-                    var weapon = _weaponsDataWatcher.RegisterWeapon(revolver);
-                    var pushPowerup = _powerupFactory.CreatePowerup(weapon, typeof(PushBullets));
-                    _weaponPowerupsService.AddWeaponPowerup(pushPowerup, weapon);
-                    break;
-                }
-                case "test4":
-                {
-                    var grenade = _game.SpawnWeaponItem(WeaponItem.GRENADES, playerInstance.GetWorldPosition(), true);
-                    var weapon = _weaponsDataWatcher.RegisterWeapon(grenade);
-                    var bananaPowerup = _powerupFactory.CreatePowerup(weapon, typeof(BananaGrenades));
-                    _weaponPowerupsService.AddWeaponPowerup(bananaPowerup, weapon);
-                    break;
-                }
-                case "test5":
-                {
-                    var grenade = _game.SpawnWeaponItem(WeaponItem.GRENADES, playerInstance.GetWorldPosition(), true);
-                    var weapon = _weaponsDataWatcher.RegisterWeapon(grenade);
-                    var stickyPowerup = _powerupFactory.CreatePowerup(weapon, typeof(StickyGrenades));
-                    _weaponPowerupsService.AddWeaponPowerup(stickyPowerup, weapon);
-                    break;
-                }
-                case "test6":
-                {
-                    var katana = _game.SpawnWeaponItem(WeaponItem.KATANA, playerInstance.GetWorldPosition(), true);
-                    var weapon = _weaponsDataWatcher.RegisterWeapon(katana);
-                    var flamyPowerup = _powerupFactory.CreatePowerup(weapon, typeof(FlamyKatana));
-                    _weaponPowerupsService.AddWeaponPowerup(flamyPowerup, weapon);
-                    break;
-                }
-                case "test7":
-                {
-                    var revolver = _game.SpawnWeaponItem(WeaponItem.REVOLVER, playerInstance.GetWorldPosition(), true);
-                    var weapon = _weaponsDataWatcher.RegisterWeapon(revolver);
-                    var poisonPowerup = _powerupFactory.CreatePowerup(weapon, typeof(PoisonBullets));
-                    _weaponPowerupsService.AddWeaponPowerup(poisonPowerup, weapon);
-                    break;
-                }
-                case "test8":
-                {
-                    var uzi = _game.SpawnWeaponItem(WeaponItem.UZI, playerInstance.GetWorldPosition(), true);
-                    var weapon = _weaponsDataWatcher.RegisterWeapon(uzi);
-                    var pushPowerup = _powerupFactory.CreatePowerup(weapon, typeof(PushBullets));
-                    _weaponPowerupsService.AddWeaponPowerup(pushPowerup, weapon);
-                    break;
-                }
-                case "test9":
-                {
-                    var sawedOff = _game.SpawnWeaponItem(WeaponItem.SAWED_OFF, playerInstance.GetWorldPosition(), true);
-                    var weapon = _weaponsDataWatcher.RegisterWeapon(sawedOff);
-                    var poisonPowerup = _powerupFactory.CreatePowerup(weapon, typeof(PoisonBullets));
-                    _weaponPowerupsService.AddWeaponPowerup(poisonPowerup, weapon);
+                    _logger.Debug("Type: {Type}", powerupType);
+
+                    if (powerupType is null)
+                        return;
+
+                    var player = _identityService.GetPlayerByInstance(playerInstance);
+                    var drawnWeapon = player.WeaponsData.CurrentWeaponDrawn;
+                    var powerup = _powerupFactory.CreatePowerup(drawnWeapon, powerupType);
+                    _weaponPowerupsService.AddWeaponPowerup(powerup, drawnWeapon);
+
                     break;
                 }
                 case "hp":
