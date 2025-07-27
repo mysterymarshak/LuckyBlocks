@@ -57,7 +57,7 @@ internal class AimProjectile : ProjectilePowerupBase
             return;
         }
 
-        const float minDistanceToPlayer = 14f;
+        const float minDistanceToPlayer = 18f;
 
         var playerPosition = _target.GetWorldPosition() + PlayerPositionOffset;
         var bulletPosition = Projectile.Position;
