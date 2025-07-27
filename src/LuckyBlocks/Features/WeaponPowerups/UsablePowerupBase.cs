@@ -116,7 +116,7 @@ internal abstract class UsablePowerupBase<T> : IUsablePowerup<T> where T : Weapo
     {
     }
 
-    protected virtual void OnFireInternal(IPlayer? player, IEnumerable<IProjectile>? projectilesEnumerable)
+    protected virtual void OnFireInternal(IPlayer player, IEnumerable<IProjectile> projectilesEnumerable)
     {
     }
 

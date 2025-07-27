@@ -31,13 +31,11 @@ internal abstract class BulletsPowerupBase : UsablePowerupBase<Firearm>
 
     public abstract override IWeaponPowerup<Firearm> Clone(Weapon weapon);
 
-    protected override void OnFireInternal(IPlayer? playerInstance, IEnumerable<IProjectile>? projectilesEnumerable)
+    protected override void OnFireInternal(IPlayer playerInstance, IEnumerable<IProjectile> projectilesEnumerable)
     {
-        ArgumentWasNullException.ThrowIfNull(playerInstance);
-        ArgumentWasNullException.ThrowIfNull(projectilesEnumerable);
-
-        var projectiles = projectilesEnumerable.ToList();
-
+        if (Weapon.IsBoobyTrapped)
+            return;
+        
         // _usesLeft = Math.Min(UsesLeft, Weapon.TotalAmmo + projectiles.Count);
 
         var isShotgun = Weapon is Shotgun;
@@ -45,7 +43,7 @@ internal abstract class BulletsPowerupBase : UsablePowerupBase<Firearm>
             ? (CountShotgunBulletsIndependently ? UsesLeft : UsesLeft * ((Shotgun)Weapon).BulletsPerShot)
             : UsesLeft;
 
-        foreach (var projectile in projectiles.Take(count))
+        foreach (var projectile in projectilesEnumerable.Take(count))
         {
             OnFireInternal(playerInstance, projectile);
 

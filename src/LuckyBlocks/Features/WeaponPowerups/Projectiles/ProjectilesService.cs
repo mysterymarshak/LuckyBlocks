@@ -74,7 +74,7 @@ internal class ProjectilesService : IProjectilesService
         }
     }
 
-    private void OnProjectileRemoved(IProjectilePowerup powerup, ProjectileHitArgs hitArgs)
+    private void OnProjectileRemoved(IProjectilePowerup powerup)
     {
         powerup.ProjectileRemove -= OnProjectileRemoved;
 

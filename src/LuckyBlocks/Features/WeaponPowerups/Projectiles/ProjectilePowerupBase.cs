@@ -8,7 +8,7 @@ namespace LuckyBlocks.Features.WeaponPowerups.Projectiles;
 
 internal abstract class ProjectilePowerupBase : IProjectilePowerup
 {
-    public event Action<IProjectilePowerup, ProjectileHitArgs>? ProjectileRemove;
+    public event Action<IProjectilePowerup>? ProjectileRemove;
     public event Action<IProjectilePowerup, ProjectileHitArgs>? ProjectileHit;
 
     public IProjectile Projectile { get; private set; }
@@ -18,6 +18,7 @@ internal abstract class ProjectilePowerupBase : IProjectilePowerup
     protected IExtendedEvents ExtendedEvents { get; }
 
     private IEventSubscription? _hitEventSubscription;
+    private IEventSubscription? _updateEventSubscription;
 
     protected ProjectilePowerupBase(IProjectile projectile, IExtendedEvents extendedEvents, PowerupConstructorArgs args)
     {
@@ -37,12 +38,13 @@ internal abstract class ProjectilePowerupBase : IProjectilePowerup
     public void Run()
     {
         _hitEventSubscription = ExtendedEvents.HookOnProjectileHit(Projectile, OnHit, EventHookMode.Default);
+        _updateEventSubscription = ExtendedEvents.HookOnUpdate(OnUpdate, EventHookMode.Default);
 
         Projectile.Velocity = GetNewProjectileVelocity();
 
         OnRunInternal();
     }
-
+    
     public void MoveTo(IProjectile projectile)
     {
         Projectile = projectile;
@@ -51,8 +53,8 @@ internal abstract class ProjectilePowerupBase : IProjectilePowerup
 
     public void Dispose()
     {
-        Projectile.FlagForRemoval();
         _hitEventSubscription?.Dispose();
+        _updateEventSubscription?.Dispose();
         OnDisposedInternal();
     }
 
@@ -81,11 +83,14 @@ internal abstract class ProjectilePowerupBase : IProjectilePowerup
 
         ProjectileHit?.Invoke(this, args);
         OnHitInternal(args);
-
-        if (args.RemoveFlag)
-        {
-            ProjectileRemove?.Invoke(this, args);
-            Dispose();
-        }
+    }
+    
+    private void OnUpdate(Event<float> @event)
+    {
+        if (!Projectile.IsRemoved)
+            return;
+        
+        ProjectileRemove?.Invoke(this);
+        Dispose();
     }
 }

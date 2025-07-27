@@ -36,6 +36,7 @@ internal record Weapon(WeaponItem WeaponItem, WeaponItemType WeaponItemType)
     public virtual bool IsDrawn => !IsDropped && Owner!.CurrentWeaponDrawn == WeaponItemType;
     public IPlayer? Owner { get; private set; }
     public int ObjectId { get; private set; }
+    public bool IsBoobyTrapped => _powerups?.Any(x => x.GetType() == typeof(BoobyTrapped)) == true;
 
     public IEnumerable<IWeaponPowerup<Weapon>> Powerups
     {

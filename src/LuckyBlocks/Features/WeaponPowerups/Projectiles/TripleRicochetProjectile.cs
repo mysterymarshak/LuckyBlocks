@@ -51,6 +51,6 @@ internal class TripleRicochetProjectile : ProjectilePowerupBase
         _game.SpawnProjectile(projectileItem, hitPosition + bullet1Direction, bullet1Direction);
         _game.SpawnProjectile(projectileItem, hitPosition + bullet2Direction, bullet2Direction);
 
-        Dispose();
+        Projectile.FlagForRemoval();
     }
 }

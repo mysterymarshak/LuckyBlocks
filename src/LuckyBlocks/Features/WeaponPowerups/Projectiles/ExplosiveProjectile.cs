@@ -26,6 +26,6 @@ internal class ExplosiveProjectile : ProjectilePowerupBase
     protected override void OnHitInternal(ProjectileHitArgs args)
     {
         _game.TriggerExplosion(args.HitPosition);
-        Dispose();
+        Projectile.FlagForRemoval();
     }
 }

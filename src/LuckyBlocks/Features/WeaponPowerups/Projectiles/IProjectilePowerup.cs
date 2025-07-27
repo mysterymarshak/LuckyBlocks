@@ -5,7 +5,7 @@ namespace LuckyBlocks.Features.WeaponPowerups.Projectiles;
 
 internal interface IProjectilePowerup
 {
-    event Action<IProjectilePowerup, ProjectileHitArgs>? ProjectileRemove;
+    event Action<IProjectilePowerup>? ProjectileRemove;
     event Action<IProjectilePowerup, ProjectileHitArgs>? ProjectileHit;
     IProjectile Projectile { get; }
     bool IsCloned { get; }
