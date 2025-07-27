@@ -19,7 +19,7 @@ internal class RevertedElevatorAttachmentJoint : RevertedStaticObject
         IElevatorsService elevatorsService, ITimeProvider timeProvider) : base(attachmentJoint)
     {
         _pathJoint = attachmentJoint.GetElevatorPathJoint();
-        _nextPathJoint = _pathJoint.GetNextPathJoint();
+        _nextPathJoint = _pathJoint?.GetNextPathJoint();
         _motorSpeed = attachmentJoint.GetMotorSpeed();
         _elevator = elevatorsService.GetElevator(attachmentJoint);
         _lastArrivalTime = _elevator?.LastArrivalTime ?? 0;
