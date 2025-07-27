@@ -34,7 +34,6 @@ internal class AimProjectile : ProjectilePowerupBase
     protected override ProjectilePowerupBase CloneInternal()
     {
         return new AimProjectile(Projectile, ExtendedEvents, _args) { _target = _target };
-        // what if respawned
     }
 
     protected override void OnRunInternal()
