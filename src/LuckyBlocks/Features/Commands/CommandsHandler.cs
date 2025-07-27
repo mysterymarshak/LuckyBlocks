@@ -175,6 +175,17 @@ internal class CommandsHandler : ICommandsHandler
 
                     break;
                 }
+                case "gib":
+                {
+                    var givenPlayer = _game.GetActiveUsers().FirstOrDefault(x => x.Name == commandArgs)?.GetPlayer();
+                    givenPlayer ??= playerInstance;
+                    if (givenPlayer is null)
+                        return;
+
+                    givenPlayer.Gib();
+                    
+                    break;
+                }
                 case "respawn":
                 {
                     var playerName = commandArgs;
