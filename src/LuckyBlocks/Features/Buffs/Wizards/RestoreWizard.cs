@@ -3,7 +3,6 @@ using LuckyBlocks.Data.Args;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.Magic;
 using LuckyBlocks.Features.Magic.NonAreaMagic;
-using LuckyBlocks.Features.Notifications;
 using LuckyBlocks.Utils;
 using SFDGameScriptInterface;
 

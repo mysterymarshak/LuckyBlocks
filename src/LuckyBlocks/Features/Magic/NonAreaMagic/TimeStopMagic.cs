@@ -6,7 +6,6 @@ using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.Notifications;
 using LuckyBlocks.Features.PlayerModifiers;
 using LuckyBlocks.Features.Time.TimeStop;
-using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
 using LuckyBlocks.Utils;
 using LuckyBlocks.Utils.Timers;
 using SFDGameScriptInterface;
