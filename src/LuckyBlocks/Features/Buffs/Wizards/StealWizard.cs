@@ -103,6 +103,10 @@ internal class StealWizard : WizardBase, IImmunityFlagsIndicatorBuff
         if (_magic is null)
             return;
 
+        _magic.EnterStealMode -= OnStealModeEntered;
+        _magic.Steal -= OnStole;
+        _magic.StealFail -= OnStealFailed;
+
         _cts!.Cancel();
         _cts.Dispose();
         _stealTimeWarningTimer.Stop();
@@ -112,8 +116,6 @@ internal class StealWizard : WizardBase, IImmunityFlagsIndicatorBuff
 
     private void OnStealModeEntered()
     {
-        _magic!.EnterStealMode -= OnStealModeEntered;
-
         _cts = new CancellationTokenSource();
         _isInStealMode = true;
 
@@ -142,15 +144,11 @@ internal class StealWizard : WizardBase, IImmunityFlagsIndicatorBuff
 
     private void OnStole()
     {
-        _magic!.Steal -= OnStole;
-
         ShowDialogue("STOLE!", TimeSpan.FromSeconds(2), BuffColor, ignoreFinish: true);
     }
 
     private void OnStealFailed(string reason)
     {
-        _magic!.StealFail -= OnStealFailed;
-
         ShowDialogue(reason, TimeSpan.FromSeconds(2), BuffColor, ignoreFinish: true);
     }
 

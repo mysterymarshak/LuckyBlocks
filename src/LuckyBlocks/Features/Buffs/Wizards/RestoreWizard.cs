@@ -67,10 +67,17 @@ internal class RestoreWizard : WizardBase
         return _magicService.Cast(_magic!);
     }
 
+    protected override void OnFinishInternal()
+    {
+        if (_magic is null)
+            return;
+
+        _magic.StateSave -= OnStateSaved;
+        _magic.StateRestore -= OnStateRestored;
+    }
+
     private void OnStateSaved()
     {
-        _magic!.StateSave -= OnStateSaved;
-
         _effectsPlayer.PlayHandGleamEffect(PlayerInstance!);
 
         _stateSaved = true;
@@ -80,8 +87,6 @@ internal class RestoreWizard : WizardBase
 
     private void OnStateRestored()
     {
-        _magic!.StateRestore -= OnStateRestored;
-
         ShowDialogue("State restored", TimeSpan.FromMilliseconds(2500), BuffColor);
     }
 }
