@@ -151,10 +151,9 @@ internal class TimeStoppedDynamicObject : TimeStoppedDynamicObjectBase
             if (_timer is not null)
                 return;
 
-            var timer = new RandomPeriodicTimer(TimeSpan.FromMilliseconds(150), TimeSpan.FromMilliseconds(300),
+            _timer = new RandomPeriodicTimer(TimeSpan.FromMilliseconds(150), TimeSpan.FromMilliseconds(300),
                 TimeBehavior.RealTime, () => EffectsPlayer.PlayEffect(EffectName.FireNodeTrailAir, Position),
                 ExtendedEvents);
-            timer.Start();
 
             return;
         }
