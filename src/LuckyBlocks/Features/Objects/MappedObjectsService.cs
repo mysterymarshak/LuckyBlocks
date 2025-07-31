@@ -14,6 +14,7 @@ internal interface IMappedObjectsService
     void UpdateActualObject(int oldUniqueId, IObject? newObject);
     void RemoveMap(int uniqueId);
     bool IsMapped(int uniqueId);
+    void UpdateIfMapped(int uniqueId, IObject? newObject);
 }
 
 internal class MappedObjectsService : IMappedObjectsService
@@ -80,6 +81,14 @@ internal class MappedObjectsService : IMappedObjectsService
     public bool IsMapped(int uniqueId)
     {
         return _mappedObjects.ContainsKey(uniqueId);
+    }
+
+    public void UpdateIfMapped(int uniqueId, IObject? newObject)
+    {
+        if (IsMapped(uniqueId))
+        {
+            UpdateActualObject(uniqueId, newObject);
+        }
     }
 
     private record ObjectMap(List<int> ObjectIds, MappedObject MappedObject)

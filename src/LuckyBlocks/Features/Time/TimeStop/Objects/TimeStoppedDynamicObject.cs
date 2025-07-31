@@ -11,7 +11,7 @@ internal abstract class TimeStoppedDynamicObjectBase : ITimeStoppedEntity
 {
     public Vector2 Position { get; private set; }
 
-    protected IObject Object { get; }
+    protected IObject Object { get; set; }
     protected IGame Game { get; }
     protected IEffectsPlayer EffectsPlayer { get; }
     protected IExtendedEvents ExtendedEvents { get; }
@@ -20,7 +20,6 @@ internal abstract class TimeStoppedDynamicObjectBase : ITimeStoppedEntity
     protected bool IsBurning { get; set; }
 
     private float _angle;
-    private IEventSubscription? _updateEventSubscription;
     private bool _isTimeResumed;
 
     protected TimeStoppedDynamicObjectBase(IObject @object, IGame game, IEffectsPlayer effectsPlayer,
@@ -39,8 +38,6 @@ internal abstract class TimeStoppedDynamicObjectBase : ITimeStoppedEntity
 
         Object.SetLinearVelocity(Vector2.Zero);
         Object.SetAngularVelocity(0f);
-
-        _updateEventSubscription = ExtendedEvents.HookOnUpdate(OnUpdate, EventHookMode.Default);
     }
 
     public void ResumeTime()
@@ -79,11 +76,7 @@ internal abstract class TimeStoppedDynamicObjectBase : ITimeStoppedEntity
     protected virtual void DisposeInternal()
     {
     }
-
-    protected virtual void OnUpdate()
-    {
-    }
-
+    
     private void OnUpdate(Event<float> obj)
     {
         // every-tick position reset works normally only on offline server
@@ -94,12 +87,11 @@ internal abstract class TimeStoppedDynamicObjectBase : ITimeStoppedEntity
         // _object.SetAngularVelocity(0f);
         // _object.SetAngle(_angle);
 
-        OnUpdate();
+        // OnUpdate();
     }
 
     private void Dispose()
     {
-        _updateEventSubscription?.Dispose();
         DisposeInternal();
     }
 }

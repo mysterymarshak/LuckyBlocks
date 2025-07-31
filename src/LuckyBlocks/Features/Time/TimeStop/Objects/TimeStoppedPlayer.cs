@@ -20,6 +20,7 @@ internal class TimeStoppedPlayer : TimeStoppedDynamicObjectBase
     private float _speedBoostTime;
     private IEventSubscription? _damageEventSubscription;
     private IEventSubscription? _meleeActionEventSubscription;
+    private IEventSubscription? _updateEventSubscription;
     private float _delayedDamage;
     private float _meleeHits;
     private bool _isFall;
@@ -46,6 +47,7 @@ internal class TimeStoppedPlayer : TimeStoppedDynamicObjectBase
 
         _damageEventSubscription = ExtendedEvents.HookOnDamage(_playerInstance, OnDamage, EventHookMode.Default);
         _meleeActionEventSubscription = ExtendedEvents.HookOnPlayerMeleeAction(OnMeleeAction, EventHookMode.Default);
+        _updateEventSubscription = ExtendedEvents.HookOnUpdate(OnUpdate, EventHookMode.Default);
     }
 
     protected override void ResumeTimeInternal()
@@ -62,7 +64,14 @@ internal class TimeStoppedPlayer : TimeStoppedDynamicObjectBase
             new SFDGameScriptInterface.PlayerModifiers { MeleeStunImmunity = 1 }, _playerModifiers!);
     }
 
-    protected override void OnUpdate()
+    protected override void DisposeInternal()
+    {
+        _damageEventSubscription?.Dispose();
+        _meleeActionEventSubscription?.Dispose();
+        _prohibitMoveObjects.ForEach(x => x.RemoveDelayed());
+    }
+
+    private void OnUpdate(Event<float> @event)
     {
         if (_playerInstance.GetActiveThrowableWeaponItem() != WeaponItem.NONE)
         {
@@ -71,13 +80,6 @@ internal class TimeStoppedPlayer : TimeStoppedDynamicObjectBase
 
         _playerInstance.SetStrengthBoostTime(_strengthBoostTime);
         _playerInstance.SetSpeedBoostTime(_speedBoostTime);
-    }
-
-    protected override void DisposeInternal()
-    {
-        _damageEventSubscription?.Dispose();
-        _meleeActionEventSubscription?.Dispose();
-        _prohibitMoveObjects.ForEach(x => x.RemoveDelayed());
     }
 
     private void OnDamage(Event<PlayerDamageArgs> @event)
