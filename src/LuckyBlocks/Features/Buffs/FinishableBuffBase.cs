@@ -45,6 +45,8 @@ internal abstract class FinishableBuffBase : IFinishableBuff
     {
         InternalFinish();
     }
+    
+    public virtual string GetExtendedName() => Name;
 
     protected virtual void OnFinishInternal()
     {

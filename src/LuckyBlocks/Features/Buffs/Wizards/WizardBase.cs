@@ -87,6 +87,11 @@ internal abstract class WizardBase : FinishableBuffBase, IWizard
         ShowCastsCount();
     }
 
+    public override string GetExtendedName()
+    {
+        return $"{Name} ({CastsLeft:D})";
+    }
+
     protected abstract WizardBase CloneInternal(Player player);
 
     protected virtual void BindMagicInternal(IMagic magic)

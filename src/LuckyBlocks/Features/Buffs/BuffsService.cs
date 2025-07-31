@@ -163,7 +163,7 @@ internal class BuffsService : IBuffsService
         var message = buffs.Count switch
         {
             0 => "You have no buffs",
-            _ => $"Your buffs: [{string.Join(", ", buffs.Select(x => x.Name))}]"
+            _ => $"Your buffs: [{string.Join(", ", buffs.Select(x => x.GetExtendedName()))}]"
         };
 
         _notificationService.CreateChatNotification(message, Color.White, player.UserIdentifier);

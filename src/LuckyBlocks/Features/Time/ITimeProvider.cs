@@ -6,6 +6,7 @@ internal interface ITimeProvider
 {
     Stopwatch Stopwatch { get; }
     float ElapsedGameTime { get; }
+    float ElapsedRealTime { get; }
     bool IsTimeStopped { get; }
     float ElapsedFromPreviousUpdate { get; }
     float TimeModifier { get; }

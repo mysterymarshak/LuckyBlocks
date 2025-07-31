@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using LuckyBlocks.Data.Args;
 using LuckyBlocks.Exceptions;
 using LuckyBlocks.Features.Identity;
@@ -59,6 +60,11 @@ internal abstract class DurableBuffBase : FinishableBuffBase, IDurableBuff
 
         CreateAndStartTimer();
         OnApplyAgainInternal();
+    }
+
+    public override string GetExtendedName()
+    {
+        return string.Format(CultureInfo.InvariantCulture, "{0} | {1:F2}s", Name, TimeLeft.TotalSeconds);
     }
 
     protected abstract DurableBuffBase CloneInternal(Player player);

@@ -38,7 +38,7 @@ internal class AllKeysPressedStrategy : IStateHandleStrategy
             return false;
         }
 
-        var currentTime = _timeProvider.ElapsedGameTime;
+        var currentTime = _timeProvider.ElapsedRealTime;
         if (TimeSpan.FromMilliseconds(currentTime - _lastTriggerTime) < _resetCooldown)
         {
             return false;

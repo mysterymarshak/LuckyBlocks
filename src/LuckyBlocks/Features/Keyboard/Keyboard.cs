@@ -97,7 +97,7 @@ internal class Keyboard
             if (!_watchingKeys.TryGetValue(keyInput.Key, out var watchingKey))
                 continue;
 
-            watchingKey.UpdateFromEvent(keyInput, _timeProvider.ElapsedGameTime);
+            watchingKey.UpdateFromEvent(keyInput, _timeProvider.ElapsedRealTime);
         }
 
         foreach (var subscription in _subscriptions.Values)

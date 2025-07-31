@@ -11,6 +11,7 @@ internal class TimeProvider : ITimeProvider
 {
     public Stopwatch Stopwatch { get; }
     public float ElapsedGameTime { get; private set; }
+    public float ElapsedRealTime => _game.TotalElapsedRealTime;
     public bool IsTimeStopped => _timeStopService.IsTimeStopped;
     public float ElapsedFromPreviousUpdate { get; private set; }
     public float TimeModifier => GameSlowMoModifier * (_timeStopService.IsTimeStopped ? 0 : 1);

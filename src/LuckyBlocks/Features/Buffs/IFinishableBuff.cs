@@ -8,4 +8,5 @@ internal interface IFinishableBuff : IBuff
     Color ChatColor { get; }
     IFinishCondition<IFinishableBuff> WhenFinish { get; }
     void ExternalFinish();
+    string GetExtendedName();
 }
