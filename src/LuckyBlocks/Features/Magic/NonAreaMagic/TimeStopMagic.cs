@@ -57,7 +57,6 @@ internal class TimeStopMagic : NonAreaMagicBase
         _notificationService.CreateDialogueNotification("TOKI WO TOMARE!", Color.Yellow, _timeStopService.TimeStopDelay,
             wizardInstance, realTime: true);
 
-        ExtendedEvents.HookOnDead(wizardInstance, OnDead, EventHookMode.Default);
         Awaiter.Start(OnTimeStop, _timeStopService.TimeStopDelay, _timeStoppingCts.Token);
     }
 
@@ -68,6 +67,12 @@ internal class TimeStopMagic : NonAreaMagicBase
 
     protected override void OnFinishInternal()
     {
+        if (WizardInstance!.IsValid() == false || WizardInstance!.IsDead)
+        {
+            RemoveTimeStopEffect();
+            ForceResumeTime();
+        }
+
         Dispose();
     }
 
@@ -123,12 +128,6 @@ internal class TimeStopMagic : NonAreaMagicBase
         RemoveBoostsFromWizard();
 
         Awaiter.Start(ExternalFinish, _timeStopService.TimeStopDelay);
-    }
-
-    private void OnDead(Event @event)
-    {
-        RemoveTimeStopEffect();
-        ForceResumeTime();
     }
 
     private void RemoveTimeStopEffect()
