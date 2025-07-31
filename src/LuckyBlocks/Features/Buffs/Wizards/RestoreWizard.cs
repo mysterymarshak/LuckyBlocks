@@ -40,7 +40,7 @@ internal class RestoreWizard : WizardBase
         _magic = restoreMagic;
 
         _magic.StateRestore += OnStateRestored;
-        ShowChatMessage("[ALT + A] for restore saved state");
+        ShowChatMessage("Use magic again for restore saved state");
 
         // if there is a magic for bind => magic casted => state saved
     }
@@ -75,7 +75,7 @@ internal class RestoreWizard : WizardBase
     {
         _stateSaved = true;
         ShowChatMessage("You saved your state");
-        ShowChatMessage("[ALT + A] for restore");
+        ShowChatMessage("Use magic again for restore");
     }
 
     private void OnStateRestored()
