@@ -251,6 +251,7 @@ internal class TimeRevertMagic : NonAreaMagicBase
 
     private void RevertTime()
     {
+        _cts!.Cancel();
         _keyInputSubscription?.Dispose();
         _game.RunCommand("/slomo 1");
         _timeStopService.ForceResumeTime(OnTimeResumed);
