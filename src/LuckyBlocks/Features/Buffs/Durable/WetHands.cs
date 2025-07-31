@@ -19,7 +19,7 @@ internal class WetHands : DurableRepressibleByImmunityFlagsBuffBase
     public override Color BuffColor => ExtendedColors.Water;
     public override Color ChatColor => ExtendedColors.LightWater;
 
-    private const double SlippingChance = 0.1;
+    private const double SlippingChance = 0.25;
 
     private readonly IProfilesService _profileService;
     private readonly IEffectsPlayer _effectsPlayer;
