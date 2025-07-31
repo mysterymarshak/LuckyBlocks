@@ -107,8 +107,8 @@ internal class StealWizard : WizardBase, IImmunityFlagsIndicatorBuff
         _magic.Steal -= OnStole;
         _magic.StealFail -= OnStealFailed;
 
-        _cts!.Cancel();
-        _cts.Dispose();
+        _cts?.Cancel();
+        _cts?.Dispose();
         _stealTimeWarningTimer.Stop();
         _stealTimer.Stop();
         _magic.ExternalFinish();
