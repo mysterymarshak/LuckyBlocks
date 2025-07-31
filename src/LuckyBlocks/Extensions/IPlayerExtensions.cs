@@ -42,131 +42,13 @@ internal static class IPlayerExtensions
         weaponsData = new UnsafeWeaponsData(player);
     }
 
-    public static void SetWeapons(this IPlayer playerInstance, in UnsafeWeaponsData weaponsData, bool forceSet = false)
+    public static void RemoveAllWeapons(this IPlayer playerInstance)
     {
-        if (forceSet)
-        {
-            if (!weaponsData.MeleeWeapon.IsInvalid)
-            {
-                playerInstance.GiveWeaponItem(weaponsData.MeleeWeapon.WeaponItem);
-                playerInstance.SetCurrentMeleeDurability(weaponsData.MeleeWeapon.CurrentDurability);
-            }
-
-            if (!weaponsData.MeleeWeaponTemp.IsInvalid)
-            {
-                playerInstance.GiveWeaponItem(weaponsData.MeleeWeaponTemp.WeaponItem);
-                playerInstance.SetCurrentMeleeMakeshiftDurability(weaponsData.MeleeWeaponTemp.CurrentDurability);
-            }
-
-            if (!weaponsData.SecondaryWeapon.IsInvalid)
-            {
-                playerInstance.GiveWeaponItem(weaponsData.SecondaryWeapon.WeaponItem);
-                playerInstance.SetCurrentSecondaryWeaponAmmo(weaponsData.SecondaryWeapon.CurrentAmmo,
-                    weaponsData.SecondaryWeapon.CurrentSpareMags,
-                    weaponsData.SecondaryWeapon.ProjectilePowerupData.ProjectilePowerup);
-            }
-
-            if (!weaponsData.PrimaryWeapon.IsInvalid)
-            {
-                playerInstance.GiveWeaponItem(weaponsData.PrimaryWeapon.WeaponItem);
-                playerInstance.SetCurrentPrimaryWeaponAmmo(weaponsData.PrimaryWeapon.CurrentAmmo,
-                    weaponsData.PrimaryWeapon.CurrentSpareMags,
-                    weaponsData.PrimaryWeapon.ProjectilePowerupData.ProjectilePowerup);
-            }
-
-            if (!weaponsData.ThrowableItem.IsInvalid)
-            {
-                playerInstance.GiveWeaponItem(weaponsData.ThrowableItem.WeaponItem);
-                playerInstance.SetCurrentThrownItemAmmo(weaponsData.ThrowableItem.CurrentAmmo);
-            }
-
-            if (!weaponsData.PowerupItem.IsInvalid)
-            {
-                playerInstance.GiveWeaponItem(weaponsData.PowerupItem.WeaponItem);
-            }
-
-            return;
-        }
-
-        playerInstance.GetUnsafeWeaponsData(out var currentWeaponsData);
-
-        if (currentWeaponsData.MeleeWeapon != weaponsData.MeleeWeapon)
-        {
-            playerInstance.RemoveWeaponItemType(currentWeaponsData.MeleeWeapon.WeaponItemType);
-
-            if (!weaponsData.MeleeWeapon.IsInvalid)
-            {
-                playerInstance.GiveWeaponItem(weaponsData.MeleeWeapon.WeaponItem);
-                playerInstance.SetCurrentMeleeDurability(weaponsData.MeleeWeapon.CurrentDurability);
-            }
-        }
-
-        if (currentWeaponsData.MeleeWeaponTemp != weaponsData.MeleeWeaponTemp)
-        {
-            playerInstance.RemoveWeaponItemType(currentWeaponsData.MeleeWeaponTemp.WeaponItemType);
-
-            if (!weaponsData.MeleeWeaponTemp.IsInvalid)
-            {
-                playerInstance.GiveWeaponItem(weaponsData.MeleeWeaponTemp.WeaponItem);
-                playerInstance.SetCurrentMeleeMakeshiftDurability(weaponsData.MeleeWeaponTemp.CurrentDurability);
-            }
-        }
-
-        if (currentWeaponsData.SecondaryWeapon != weaponsData.SecondaryWeapon)
-        {
-            playerInstance.RemoveWeaponItemType(currentWeaponsData.SecondaryWeapon.WeaponItemType);
-
-            if (!weaponsData.SecondaryWeapon.IsInvalid)
-            {
-                playerInstance.GiveWeaponItem(weaponsData.SecondaryWeapon.WeaponItem);
-                playerInstance.SetCurrentSecondaryWeaponAmmo(weaponsData.SecondaryWeapon.CurrentAmmo,
-                    weaponsData.SecondaryWeapon.CurrentSpareMags,
-                    weaponsData.SecondaryWeapon.ProjectilePowerupData.ProjectilePowerup);
-            }
-        }
-
-        if (currentWeaponsData.PrimaryWeapon != weaponsData.PrimaryWeapon)
-        {
-            playerInstance.RemoveWeaponItemType(currentWeaponsData.PrimaryWeapon.WeaponItemType);
-
-            if (!weaponsData.PrimaryWeapon.IsInvalid)
-            {
-                playerInstance.GiveWeaponItem(weaponsData.PrimaryWeapon.WeaponItem);
-                playerInstance.SetCurrentPrimaryWeaponAmmo(weaponsData.PrimaryWeapon.CurrentAmmo,
-                    weaponsData.PrimaryWeapon.CurrentSpareMags,
-                    weaponsData.PrimaryWeapon.ProjectilePowerupData.ProjectilePowerup);
-            }
-        }
-
-        if (currentWeaponsData.ThrowableItem != weaponsData.ThrowableItem)
-        {
-            playerInstance.RemoveWeaponItemType(currentWeaponsData.ThrowableItem.WeaponItemType);
-
-            if (!weaponsData.ThrowableItem.IsInvalid)
-            {
-                playerInstance.GiveWeaponItem(weaponsData.ThrowableItem.WeaponItem);
-                playerInstance.SetCurrentThrownItemAmmo(weaponsData.ThrowableItem.CurrentAmmo);
-            }
-        }
-
-        if (currentWeaponsData.PowerupItem != weaponsData.PowerupItem)
-        {
-            playerInstance.RemoveWeaponItemType(currentWeaponsData.PowerupItem.WeaponItemType);
-
-            if (!weaponsData.PowerupItem.IsInvalid)
-            {
-                playerInstance.GiveWeaponItem(weaponsData.PowerupItem.WeaponItem);
-            }
-        }
-    }
-
-    public static void RemoveAllWeapons(this IPlayer player)
-    {
-        player.RemoveWeaponItemType(WeaponItemType.Melee);
-        player.RemoveWeaponItemType(WeaponItemType.Handgun);
-        player.RemoveWeaponItemType(WeaponItemType.Rifle);
-        player.RemoveWeaponItemType(WeaponItemType.Thrown);
-        player.RemoveWeaponItemType(WeaponItemType.Powerup);
+        playerInstance.RemoveWeaponItemType(WeaponItemType.Melee);
+        playerInstance.RemoveWeaponItemType(WeaponItemType.Handgun);
+        playerInstance.RemoveWeaponItemType(WeaponItemType.Rifle);
+        playerInstance.RemoveWeaponItemType(WeaponItemType.Thrown);
+        playerInstance.RemoveWeaponItemType(WeaponItemType.Powerup);
     }
 
     public static void SetAmmoFromWeapon(this IPlayer playerInstance, Weapon weapon)
@@ -181,35 +63,47 @@ internal static class IPlayerExtensions
         }
     }
 
-    public static void SetAmmo(this IPlayer player, Firearm firearm, int ammo, int mags)
+    public static void SetAmmo(this IPlayer playerInstance, Firearm firearm, int ammo, int mags)
     {
         switch (firearm.WeaponItemType)
         {
             case WeaponItemType.Rifle:
-                player.SetCurrentPrimaryWeaponAmmo(ammo, mags, firearm.ProjectilePowerupData.ProjectilePowerup);
+                playerInstance.SetCurrentPrimaryWeaponAmmo(ammo, mags, firearm.ProjectilePowerupData.ProjectilePowerup);
                 break;
             case WeaponItemType.Handgun:
-                player.SetCurrentSecondaryWeaponAmmo(ammo, mags, firearm.ProjectilePowerupData.ProjectilePowerup);
+                playerInstance.SetCurrentSecondaryWeaponAmmo(ammo, mags,
+                    firearm.ProjectilePowerupData.ProjectilePowerup);
                 break;
         }
     }
 
-    public static void SetAmmo(this IPlayer player, Firearm firearm, int totalAmmo)
+    public static void SetAmmo(this IPlayer playerInstance, Firearm firearm, int totalAmmo)
     {
         switch (firearm.WeaponItemType)
         {
             case WeaponItemType.Rifle:
-                player.SetCurrentPrimaryWeaponAmmo(totalAmmo);
+                playerInstance.SetCurrentPrimaryWeaponAmmo(totalAmmo);
                 break;
             case WeaponItemType.Handgun:
-                player.SetCurrentSecondaryWeaponAmmo(totalAmmo);
+                playerInstance.SetCurrentSecondaryWeaponAmmo(totalAmmo);
                 break;
         }
     }
 
     // triggers WeaponRemoved event on next tick
-    public static void SetAmmo(this IPlayer player, Throwable throwable, int ammo)
+    public static void SetAmmo(this IPlayer playerInstance, Throwable throwable, int ammo)
     {
-        player.SetCurrentThrownItemAmmo(ammo);
+        playerInstance.SetCurrentThrownItemAmmo(ammo);
+    }
+
+    public static Vector2 GetHandPosition(this IPlayer playerInstance)
+    {
+        var faceDirection = playerInstance.GetFaceDirection();
+        return playerInstance.GetWorldPosition() + playerInstance switch
+        {
+            { IsMeleeAttacking: true } => new Vector2(0, 9) + faceDirection * new Vector2(12, 0),
+            { IsBlocking: true } => new Vector2(0, 9) + faceDirection * new Vector2(8, 0),
+            _ => new Vector2(0, 5) + faceDirection * new Vector2(10, 0)
+        };
     }
 }

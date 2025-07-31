@@ -122,16 +122,21 @@ internal abstract class WizardBase : FinishableBuffBase, IWizard
     private void UseMagic()
     {
         var playerInstance = Player.Instance!;
+        var position = playerInstance.GetWorldPosition();
 
         if (!CanUseMagic() || Player.IsFake() || !_magicService.IsMagicAllowed)
         {
+            _effectsPlayer.PlaySoundEffect("BreakGlassSmall", position);
+            _effectsPlayer.PlayEffect("DestroyGlass", playerInstance.GetHandPosition());
             ShowChatMessage("You can't use magic now", ExtendedColors.ImperialRed);
+
             return;
         }
 
+        _effectsPlayer.PlayHandGleamEffect(playerInstance);
         if (ShouldPlayUseSound())
         {
-            _effectsPlayer.PlaySoundEffect("BarrelExplode", playerInstance.GetWorldPosition());
+            _effectsPlayer.PlaySoundEffect("BarrelExplode", position);
         }
 
         var whenFinish = OnUseMagic();

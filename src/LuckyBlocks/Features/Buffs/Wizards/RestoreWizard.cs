@@ -16,8 +16,6 @@ internal class RestoreWizard : WizardBase
     public override Color BuffColor => ExtendedColors.Amethyst;
 
     private readonly IMagicFactory _magicFactory;
-    private readonly INotificationService _notificationService;
-    private readonly IEffectsPlayer _effectsPlayer;
     private readonly BuffConstructorArgs _args;
     private readonly IMagicService _magicService;
 
@@ -29,8 +27,6 @@ internal class RestoreWizard : WizardBase
     {
         _magicService = args.MagicService;
         _magicFactory = args.MagicFactory;
-        _notificationService = args.NotificationService;
-        _effectsPlayer = args.EffectsPlayer;
         _args = args;
     }
 
@@ -78,8 +74,6 @@ internal class RestoreWizard : WizardBase
 
     private void OnStateSaved()
     {
-        _effectsPlayer.PlayHandGleamEffect(PlayerInstance!);
-
         _stateSaved = true;
         ShowChatMessage("You saved your state");
         ShowChatMessage("[ALT + A] for restore");

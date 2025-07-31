@@ -1,4 +1,5 @@
 ﻿using System;
+using LuckyBlocks.Extensions;
 using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Utils;
@@ -42,8 +43,7 @@ internal class EffectsPlayer : IEffectsPlayer
 
     public void PlayHandGleamEffect(IPlayer playerInstance)
     {
-        var effectPosition = playerInstance.GetWorldPosition() + new Vector2(0, 9) +
-                             playerInstance.GetFaceDirection() * new Vector2(12, 0);
+        var effectPosition = playerInstance.GetHandPosition();
         PlayEffect(EffectName.ItemGleam, effectPosition);
     }
 
