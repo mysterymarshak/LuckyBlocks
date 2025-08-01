@@ -26,6 +26,7 @@ internal class FunWeaponLoot : PowerUppedWeaponBase
     [
         new(WeaponItem.BOW, [typeof(PushBullets), typeof(InfiniteRicochetBullets)]),
         new(WeaponItem.BOW, [typeof(InfiniteRicochetBullets)]),
+        new(WeaponItem.GRENADE_LAUNCHER, [typeof(PushBullets), typeof(InfiniteRicochetBullets)]),
         new(WeaponItem.GRENADE_LAUNCHER, [typeof(InfiniteRicochetBullets)]),
         new(WeaponItem.BAZOOKA, [typeof(InfiniteRicochetBullets)]),
         new(WeaponItem.FLAREGUN, [typeof(InfiniteRicochetBullets), typeof(PushBullets)]),
