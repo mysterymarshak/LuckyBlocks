@@ -305,37 +305,41 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
     {
         try
         {
-            var handledWeapons = new Dictionary<int, List<ProjectileItem>>();
+            var playerShootEvents = @event.Args
+                .GroupBy(x => x.InitialOwnerPlayerID)
+                .Select(x => new
+                {
+                    PlayerInstance = _game.GetPlayer(x.Key),
+                    ProjectilesByItem = x.GroupBy(y => y.ProjectileItem)
+                });
 
-            foreach (var projectile in @event.Args)
+            foreach (var playerShootEvent in playerShootEvents)
             {
-                var playerId = projectile.InitialOwnerPlayerID;
-                var playerInstance = _game.GetPlayer(playerId);
+                var playerInstance = playerShootEvent.PlayerInstance;
                 if (playerInstance?.IsValid() != true)
                     continue;
 
-                if (!handledWeapons.TryGetValue(playerId, out var weapons))
-                {
-                    weapons = [];
-                    handledWeapons.Add(playerId, weapons);
-                }
-
-                if (weapons.Contains(projectile.ProjectileItem))
-                    continue;
-
-                weapons.Add(projectile.ProjectileItem);
-
                 var player = _identityService.GetPlayerByInstance(playerInstance);
                 var weaponsData = player.WeaponsData;
-                var shotWeapon =
-                    weaponsData.GetWeaponByType(((WeaponItem)(int)projectile.ProjectileItem).GetWeaponItemType(),
-                        false);
 
-                player.UpdateWeaponData(shotWeapon.WeaponItemType);
-                shotWeapon.RaiseEvent(WeaponEvent.Fired, playerInstance, @event.Args);
+                foreach (var projectilesByItem in playerShootEvent.ProjectilesByItem)
+                {
+                    var projectileItem = projectilesByItem.Key;
+                    var shotWeapon =
+                        weaponsData.GetWeaponByType(((WeaponItem)(int)projectileItem).GetWeaponItemType(), false);
 
-                Logger.Debug("Shoot with weapon {WeaponItem}, player: {Player}, ammo left: {AmmoLeft}",
-                    projectile.ProjectileItem, player.Name, (shotWeapon as Firearm)!.CurrentAmmo);
+                    if (shotWeapon.IsInvalid)
+                    {
+                        Logger.Warning("Invalid shot weapon {Weapon} ({PlayerName}); projectile: {Projectile}", shotWeapon, player.Name, projectileItem);
+                        continue;
+                    }
+                    
+                    player.UpdateWeaponData(shotWeapon.WeaponItemType);
+                    shotWeapon.RaiseEvent(WeaponEvent.Fired, playerInstance, projectilesByItem.Select(x => x));
+
+                    Logger.Debug("Shoot with weapon {WeaponItem}, player: {Player}, ammo left: {AmmoLeft}",
+                        projectileItem, player.Name, (shotWeapon as Firearm)!.CurrentAmmo);
+                }
             }
         }
         catch (Exception exception)
