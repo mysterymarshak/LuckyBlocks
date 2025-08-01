@@ -59,7 +59,7 @@ internal class PlayerHasGotWeaponsAttribute : ItemAttribute
         => WeaponItems = weaponItems ?? Enumerable.Empty<WeaponItem>();
 }
 
-internal class IncompatibleWithSomePowerupsAttribute : ItemAttribute
+internal class IncompatibleWithPowerupsAttribute : ItemAttribute
 {
     public required Type SourcePowerup { get; set; }
 }
@@ -72,11 +72,11 @@ internal class ModifiedModifiersAttribute : ItemAttribute
         => PlayerModifiers = (PlayerModifiers)buff.GetField(playerModifiersFieldName).GetValue(default);
 }
 
-internal class CantBeAppliedIfAlreadyExists : ItemAttribute
+internal class PlayerDoesNotHaveBuff : ItemAttribute
 {
     public Type BuffType { get; private set; }
 
-    public CantBeAppliedIfAlreadyExists(Type buffType)
+    public PlayerDoesNotHaveBuff(Type buffType)
         => BuffType = buffType;
 }
 

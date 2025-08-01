@@ -100,7 +100,7 @@ internal class AttributesChecker : IAttributesChecker
         bool IncompatibleWithPowerupsAttributeCheck(ItemAttribute attribute, OneOf<Player, Unknown> player)
         {
             var playerInstance = player.AsT0.Instance;
-            var typedAttribute = (attribute as IncompatibleWithSomePowerupsAttribute)!;
+            var typedAttribute = (attribute as IncompatibleWithPowerupsAttribute)!;
 
             return weaponPowerupsService.CanAddWeaponPowerup(playerInstance, typedAttribute.SourcePowerup);
         }
@@ -117,9 +117,9 @@ internal class AttributesChecker : IAttributesChecker
             return !playerModifiersService.IsConflictedWith(player.AsT0, attributeModifiers);
         }
 
-        bool CantBeAppliedIfAlreadyExistsAttributeCheck(ItemAttribute attribute, OneOf<Player, Unknown> player)
+        bool PlayerDoesNotHaveBuffAttributeCheck(ItemAttribute attribute, OneOf<Player, Unknown> player)
         {
-            var type = (attribute as CantBeAppliedIfAlreadyExists)!.BuffType;
+            var type = (attribute as PlayerDoesNotHaveBuff)!.BuffType;
             return player.AsT0.Buffs.All(x => x.GetType() != type);
         }
 
@@ -148,10 +148,10 @@ internal class AttributesChecker : IAttributesChecker
             [typeof(IncompatibleWithBuffsAttribute)] = IncompatibleWithBuffsAttributeCheck,
             [typeof(PlayerHasAnyFirearmAttribute)] = PlayerHasAnyFirearmAttributeCheck,
             [typeof(PlayerHasGotWeaponsAttribute)] = PlayerHasGotWeaponsAttributeCheck,
-            [typeof(IncompatibleWithSomePowerupsAttribute)] = IncompatibleWithPowerupsAttributeCheck,
+            [typeof(IncompatibleWithPowerupsAttribute)] = IncompatibleWithPowerupsAttributeCheck,
             [typeof(PlayerIsNotOtherWizardAttribute)] = PlayerIsNotOtherWizardAttributeCheck,
             [typeof(ModifiedModifiersAttribute)] = ModifiedModifiersAttributeCheck,
-            [typeof(CantBeAppliedIfAlreadyExists)] = CantBeAppliedIfAlreadyExistsAttributeCheck,
+            [typeof(PlayerDoesNotHaveBuff)] = PlayerDoesNotHaveBuffAttributeCheck,
             [typeof(NoOneHaveBuffAttribute)] = NoOneHaveBuffAttributeCheck,
             [typeof(MagicIsAllowedAttribute)] = MagicIsAllowedAttributeCheck
         };

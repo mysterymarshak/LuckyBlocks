@@ -19,7 +19,7 @@ internal enum Item
     LegendaryWeapon,
 
     Explosion,
-    
+
     [OnlyPlayer]
     [PlayerIsNotFullHp]
     FullHp,
@@ -89,32 +89,32 @@ internal enum Item
 
     [OnlyPlayer]
     [PlayerHasAnyFirearm]
-    [IncompatibleWithSomePowerups(SourcePowerup = typeof(ExplosiveBullets))]
+    [IncompatibleWithPowerups(SourcePowerup = typeof(ExplosiveBullets))]
     ExplosiveBullets,
 
     [OnlyPlayer]
     [PlayerHasAnyFirearm]
-    [IncompatibleWithSomePowerups(SourcePowerup = typeof(TripleRicochetBullets))]
+    [IncompatibleWithPowerups(SourcePowerup = typeof(TripleRicochetBullets))]
     TripleRicochetBullets,
 
     [OnlyPlayer]
     [PlayerHasAnyFirearm]
-    [IncompatibleWithSomePowerups(SourcePowerup = typeof(FreezeBullets))]
+    [IncompatibleWithPowerups(SourcePowerup = typeof(FreezeBullets))]
     FreezeBullets,
 
     [OnlyPlayer]
     [PlayerHasAnyFirearm]
-    [IncompatibleWithSomePowerups(SourcePowerup = typeof(PushBullets))]
+    [IncompatibleWithPowerups(SourcePowerup = typeof(PushBullets))]
     PushBullets,
 
     [OnlyPlayer]
     [PlayerHasAnyFirearm]
-    [IncompatibleWithSomePowerups(SourcePowerup = typeof(AimBullets))]
+    [IncompatibleWithPowerups(SourcePowerup = typeof(AimBullets))]
     AimBullets,
 
     [OnlyPlayer]
     [PlayerHasAnyFirearm]
-    [IncompatibleWithSomePowerups(SourcePowerup = typeof(InfiniteRicochetBullets))]
+    [IncompatibleWithPowerups(SourcePowerup = typeof(InfiniteRicochetBullets))]
     InfiniteRicochetBullets,
 
     [OnlyPlayer]
@@ -123,7 +123,7 @@ internal enum Item
     DecoyWizard,
 
     [OnlyPlayer]
-    [CantBeAppliedIfAlreadyExists(typeof(TotemOfUndying))]
+    [PlayerDoesNotHaveBuff(typeof(TotemOfUndying))]
     TotemOfUndying,
 
     [OnlyPlayer]
@@ -136,7 +136,7 @@ internal enum Item
 
     [OnlyPlayer]
     [PlayerHasAnyFirearm]
-    [IncompatibleWithSomePowerups(SourcePowerup = typeof(PoisonBullets))]
+    [IncompatibleWithPowerups(SourcePowerup = typeof(PoisonBullets))]
     PoisonBullets,
 
     [OnlyPlayer]
@@ -150,12 +150,12 @@ internal enum Item
     RemoveWeapons,
 
     [OnlyPlayer]
-    [CantBeAppliedIfAlreadyExists(typeof(RestoreWizard))]
+    [PlayerDoesNotHaveBuff(typeof(RestoreWizard))]
     [PlayerIsNotOtherWizard(SourceWizard = typeof(RestoreWizard))]
     RestoreWizard,
 
     [OnlyPlayer]
-    [CantBeAppliedIfAlreadyExists(typeof(StealWizard))]
+    [PlayerDoesNotHaveBuff(typeof(StealWizard))]
     [PlayerIsNotOtherWizard(SourceWizard = typeof(StealWizard))]
     StealWizard,
 
