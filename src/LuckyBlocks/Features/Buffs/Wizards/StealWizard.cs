@@ -7,7 +7,6 @@ using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.Immunity;
 using LuckyBlocks.Features.Magic;
 using LuckyBlocks.Features.Magic.NonAreaMagic;
-using LuckyBlocks.Features.Notifications;
 using LuckyBlocks.Utils;
 using LuckyBlocks.Utils.Timers;
 using SFDGameScriptInterface;

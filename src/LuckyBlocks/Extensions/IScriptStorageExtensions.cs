@@ -1,4 +1,3 @@
-using System;
 using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Extensions;
