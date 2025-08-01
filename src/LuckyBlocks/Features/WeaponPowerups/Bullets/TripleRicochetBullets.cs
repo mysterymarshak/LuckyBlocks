@@ -17,7 +17,7 @@ internal class TripleRicochetBullets : BulletsPowerupBase
     private static readonly List<Type> _incompatiblePowerups =
     [
         typeof(ExplosiveBullets), typeof(FreezeBullets), typeof(InfiniteRicochetBullets),
-        typeof(AimBullets), typeof(PushBullets)
+        typeof(AimBullets), typeof(PushBullets), typeof(PoisonBullets)
     ];
 
     private readonly IProjectilesService _projectilesService;

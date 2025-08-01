@@ -14,7 +14,8 @@ internal class PushBullets : BulletsPowerupBase
 
     protected override IEnumerable<Type> IncompatiblePowerups => _incompatiblePowerups;
 
-    private static readonly List<Type> _incompatiblePowerups = [typeof(TripleRicochetBullets), typeof(FreezeBullets)];
+    private static readonly List<Type> _incompatiblePowerups =
+        [typeof(TripleRicochetBullets), typeof(FreezeBullets), typeof(PoisonBullets)];
 
     private readonly IProjectilesService _projectilesService;
     private readonly PowerupConstructorArgs _args;
