@@ -47,6 +47,13 @@ internal class PushProjectile : ProjectilePowerupBase
         var max = new Vector2(position.X + diagonalHalf, position.Y + diagonalHalf);
         var area = new Area(min, max);
 
+#if DEBUG
+        if (_game.IsEditorTest)
+        {
+            _game.DrawArea(area, Color.Red);
+        }
+#endif
+
         var objects = _game
             .GetObjectsByArea(area)
             .Where(x => x.GetBodyType() != BodyType.Static);
