@@ -48,7 +48,7 @@ internal class StrongMan : DurableBuffBase, IImmunityFlagsIndicatorBuff
 
         PlayerInstance!.SetStrengthBoostTime((float)TimeLeft.TotalMilliseconds);
 
-        ShowChatMessage($"You are strong again for {TimeLeft.TotalSeconds}s");
+        ShowApplyAgainChatMessage("strong");
     }
 
     protected override void OnFinishInternal()

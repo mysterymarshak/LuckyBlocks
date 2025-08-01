@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Threading;
 using LuckyBlocks.Data.Args;
 using LuckyBlocks.Extensions;
@@ -44,7 +45,7 @@ internal class Freeze : DurableRepressibleByImmunityFlagsBuffBase
     protected override void OnApplyAgainInternal()
     {
         UpdateDialogue();
-        ShowChatMessage($"You're frozen again for {TimeLeft.TotalSeconds}s");
+        ShowApplyAgainChatMessage("frozen");
     }
 
     protected override void OnFinishInternal()

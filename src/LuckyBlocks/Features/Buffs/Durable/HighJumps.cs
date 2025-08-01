@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using LuckyBlocks.Data.Args;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.Immunity;
@@ -52,7 +53,7 @@ internal class HighJumps : DurableBuffBase, IImmunityFlagsIndicatorBuff
     protected override void OnApplyAgainInternal()
     {
         UpdateDialogue();
-        ShowChatMessage($"You are a strong-legs man again for {TimeLeft.TotalSeconds}s");
+        ShowApplyAgainChatMessage("a strong-legs man");
     }
 
     private void EnableBuff()

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using LuckyBlocks.Data.Args;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.PlayerModifiers;
@@ -63,7 +64,7 @@ internal class Hulk : DurableBuffBase
 
         PlayerInstance!.SetStrengthBoostTime((float)TimeLeft.TotalMilliseconds);
 
-        ShowChatMessage($"You are a hulk again for {TimeLeft.TotalSeconds}s");
+        ShowApplyAgainChatMessage("a hulk");
     }
 
     protected override void OnFinishInternal()

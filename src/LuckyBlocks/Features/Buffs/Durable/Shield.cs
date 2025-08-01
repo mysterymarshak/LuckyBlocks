@@ -53,7 +53,7 @@ internal class Shield : DurableBuffBase, IImmunityFlagsIndicatorBuff
     protected override void OnApplyAgainInternal()
     {
         UpdateDialogue();
-        ShowChatMessage($"You are under the shield again for {TimeLeft.TotalSeconds}s");
+        ShowApplyAgainChatMessage("under the shield");
     }
 
     protected override void OnFinishInternal()

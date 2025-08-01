@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using LuckyBlocks.Data.Args;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.PlayerModifiers;
@@ -46,11 +47,11 @@ internal class Dwarf : DurableBuffBase
         EnableBuff();
         UpdateDialogue();
     }
-
+    
     protected override void OnApplyAgainInternal()
     {
         UpdateDialogue();
-        ShowChatMessage($"You're a dwarf again for {TimeLeft.TotalSeconds}s");
+        ShowApplyAgainChatMessage("a dwarf");
     }
 
     protected override void OnFinishInternal()

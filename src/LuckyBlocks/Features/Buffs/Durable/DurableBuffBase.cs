@@ -78,6 +78,12 @@ internal abstract class DurableBuffBase : FinishableBuffBase, IDurableBuff
         ShowDialogue(message, displayTime ?? TimeLeft, color ?? BuffColor, givenPlayerInstance ?? PlayerInstance,
             ignoreDeath, realTime);
     }
+    
+    protected void ShowApplyAgainChatMessage(string whoYouAreMessage)
+    {
+        ShowChatMessage(string.Format(CultureInfo.InvariantCulture, "You are {0} again for {1:F2}s", whoYouAreMessage,
+            TimeLeft.TotalSeconds));
+    }
 
     private void CreateAndStartTimer()
     {

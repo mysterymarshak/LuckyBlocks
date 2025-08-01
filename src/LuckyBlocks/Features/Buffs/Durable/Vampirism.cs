@@ -82,7 +82,7 @@ internal class Vampirism : DurableBuffBase
     protected override void OnApplyAgainInternal()
     {
         UpdateDialogue();
-        ShowChatMessage($"You're blood sucker again for {TimeLeft.TotalSeconds}s");
+        ShowApplyAgainChatMessage("blood sucker");
     }
 
     protected override void OnFinishInternal()

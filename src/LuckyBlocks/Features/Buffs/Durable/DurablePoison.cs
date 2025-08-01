@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using LuckyBlocks.Data.Args;
 using LuckyBlocks.Exceptions;
 using LuckyBlocks.Features.Identity;
@@ -43,7 +44,6 @@ internal class DurablePoison : DurableRepressibleByImmunityFlagsBuffBase
     protected override void OnRunInternal()
     {
         ShowPersistentDialogue("POISONED");
-        ShowChatMessage();
 
         _profilesService.RequestProfileChanging<DurablePoison>(Player);
 
@@ -53,7 +53,7 @@ internal class DurablePoison : DurableRepressibleByImmunityFlagsBuffBase
 
     protected override void OnApplyAgainInternal()
     {
-        ShowChatMessage();
+        ShowApplyAgainChatMessage("poisoned");
     }
 
     protected override void OnFinishInternal()
@@ -71,10 +71,5 @@ internal class DurablePoison : DurableRepressibleByImmunityFlagsBuffBase
 
         _notificationService.CreateTextNotification($"-{damage}", ExtendedColors.SwampGreen,
             TimeSpan.FromMilliseconds(1000), PlayerInstance);
-    }
-
-    private void ShowChatMessage()
-    {
-        ShowChatMessage($"You are poisoned for {TimeLeft.TotalSeconds}s");
     }
 }

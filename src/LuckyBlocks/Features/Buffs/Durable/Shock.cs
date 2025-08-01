@@ -65,7 +65,7 @@ internal class Shock : DurableRepressibleByImmunityFlagsBuffBase, IDelayedImmuni
     {
         UpdateDialogue(_fakePlayer!, true);
         CreateAndStartShockDamageTimer();
-        ShowChatMessage($"You're shocked again for {TimeLeft.TotalSeconds}s");
+        ShowApplyAgainChatMessage("shocked");
     }
 
     protected override void OnFinishInternal()

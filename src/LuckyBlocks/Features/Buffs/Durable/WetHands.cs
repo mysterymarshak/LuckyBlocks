@@ -51,7 +51,7 @@ internal class WetHands : DurableRepressibleByImmunityFlagsBuffBase
     protected override void OnApplyAgainInternal()
     {
         ShowWetDialogue("WET AGAIN :(");
-        ShowChatMessage($"Your hands are wet for {TimeLeft.TotalSeconds}s");
+        ShowApplyAgainChatMessage("slippy man");
     }
 
     protected override void OnFinishInternal()
