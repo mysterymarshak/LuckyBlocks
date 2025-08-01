@@ -1,21 +1,20 @@
 ﻿using System;
+using System.Globalization;
 using System.Linq;
 using Autofac;
 using Autofac.Util;
 using LuckyBlocks.Data.Args;
 using LuckyBlocks.Data.Weapons;
 using LuckyBlocks.Features.Buffs;
+using LuckyBlocks.Features.Configuration;
 using LuckyBlocks.Features.Entities;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.LuckyBlocks;
+using LuckyBlocks.Features.Notifications;
 using LuckyBlocks.Features.Objects;
 using LuckyBlocks.Features.Time.TimeRevert;
 using LuckyBlocks.Features.WeaponPowerups;
-using LuckyBlocks.Features.WeaponPowerups.Bullets;
-using LuckyBlocks.Features.WeaponPowerups.Melees;
-using LuckyBlocks.Features.WeaponPowerups.ThrownItems;
 using LuckyBlocks.Loot;
-using LuckyBlocks.Loot.Events;
 using LuckyBlocks.Reflection;
 using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
 using LuckyBlocks.Utils;
@@ -49,6 +48,8 @@ internal class CommandsHandler : ICommandsHandler
     private readonly ISnapshotCreator _snapshotCreator;
     private readonly ISpawnChanceService _spawnChanceService;
     private readonly IEffectsPlayer _effectsPlayer;
+    private readonly INotificationService _notificationService;
+    private readonly IConfigurationService _configurationService;
     private readonly IExtendedEvents _extendedEvents;
 
     public CommandsHandler(ILuckyBlocksService luckyBlocksService, IIdentityService identityService,
@@ -56,7 +57,8 @@ internal class CommandsHandler : ICommandsHandler
         LootConstructorArgs lootArgs, IGame game, ILogger logger, IWeaponPowerupsService weaponPowerupsService,
         ILifetimeScope lifetimeScope, IWeaponsDataWatcher weaponsDataWatcher, ITimeRevertService timeRevertService,
         IMappedObjectsService mappedObjectsService, IEntitiesService entitiesService, ISnapshotCreator snapshotCreator,
-        ISpawnChanceService spawnChanceService, IEffectsPlayer effectsPlayer)
+        ISpawnChanceService spawnChanceService, IEffectsPlayer effectsPlayer, INotificationService notificationService,
+        IConfigurationService configurationService)
     {
         _luckyBlocksService = luckyBlocksService;
         _identityService = identityService;
@@ -75,6 +77,8 @@ internal class CommandsHandler : ICommandsHandler
         _snapshotCreator = snapshotCreator;
         _spawnChanceService = spawnChanceService;
         _effectsPlayer = effectsPlayer;
+        _notificationService = notificationService;
+        _configurationService = configurationService;
         _extendedEvents = lifetimeScope.BeginLifetimeScope().Resolve<IExtendedEvents>();
     }
 
@@ -91,6 +95,7 @@ internal class CommandsHandler : ICommandsHandler
         var command = args.Command.ToLower();
         var commandArgs = args.CommandArguments;
         var user = args.User;
+        var userIdentifier = user.UserIdentifier;
         var playerInstance = user.GetPlayer();
         var position = playerInstance?.GetWorldPosition() ?? Vector2.Zero;
 
@@ -101,18 +106,99 @@ internal class CommandsHandler : ICommandsHandler
         {
             switch (command["lb_".Length..])
             {
+                case "help":
+                {
+                    var configuration = _configurationService.GetConfiguration<FullConfiguration>();
+
+                    Reply("Lucky Blocks settings:", userIdentifier);
+                    Reply(
+                        $"/lb_use_manual_chance {(configuration.IsManualSpawnChance ? 1 : 0)} [0/1] {{ also /lb_umc }}",
+                        userIdentifier);
+                    Reply(
+                        string.Format(CultureInfo.InvariantCulture, "/lb_manual_chance {0} [0-100] {{ also /lb_mc }}",
+                            configuration.SpawnChance * 100),
+                        userIdentifier);
+
+                    break;
+                }
+                case "use_manual_chance":
+                case "umc":
+                {
+                    if (!int.TryParse(commandArgs, out var value) || value is < 0 or > 1)
+                    {
+                        Reply("You should pass valid integer as parameter", userIdentifier, ExtendedColors.ImperialRed);
+                        Reply($"0 - Use default spawn chance ({FullConfiguration.SpawnChanceDefault * 100}%)",
+                            userIdentifier);
+                        Reply("1 - Use manual spawn chance", userIdentifier);
+
+                        break;
+                    }
+
+                    var configuration = _configurationService.GetConfiguration<ISpawnChangeServiceConfiguration>();
+                    var newValue = Convert.ToBoolean(value);
+
+                    if (configuration.IsManualSpawnChance == newValue)
+                    {
+                        Reply(configuration.IsManualSpawnChance switch
+                        {
+                            true => "Manual spawn chance usage is already active",
+                            false => "Manual spawn chance usage is already disabled",
+                        }, userIdentifier, ExtendedColors.LightGreen);
+
+                        break;
+                    }
+
+                    configuration.IsManualSpawnChance = newValue;
+                    configuration.CommitChanges();
+
+                    Reply(newValue switch
+                    {
+                        true => $"Now lucky blocks will spawn with manual chance ({configuration.SpawnChance * 100}%)",
+                        false =>
+                            $"Now lucky blocks will spawn with default chance ({FullConfiguration.SpawnChanceDefault * 100}%)"
+                    }, userIdentifier, ExtendedColors.LightGreen);
+
+                    break;
+                }
+                case "manual_chance":
+                case "mc":
+                {
+                    if (!int.TryParse(commandArgs, out var value) || value is < 0 or > 100)
+                    {
+                        Reply("You should pass valid integer as parameter", userIdentifier, ExtendedColors.ImperialRed);
+                        Reply("[0 - 100] - Manual spawn chance range in %", userIdentifier);
+                        return;
+                    }
+
+                    var configuration = _configurationService.GetConfiguration<ISpawnChangeServiceConfiguration>();
+                    var newValue = value / 100f;
+
+                    if (configuration.SpawnChance == newValue)
+                    {
+                        Reply($"Manual spawn chance already equals {newValue * 100}%", userIdentifier,
+                            ExtendedColors.LightGreen);
+
+                        break;
+                    }
+
+                    configuration.SpawnChance = newValue;
+                    configuration.CommitChanges();
+                    Reply($"Manual spawn chance set to {newValue * 100}%", userIdentifier, ExtendedColors.LightGreen);
+
+                    break;
+                }
                 case "restart":
                 {
-#if DEBUG
-                    _game.RunCommand("/stopscript luckyblocks_wtf");
-                    _game.RunCommand("/startscript luckyblocks_wtf");
-#else
+#if PUBLICRELEASE
                     _game.RunCommand("/stopscript LuckyBlocks");
                     _game.RunCommand("/startscript LuckyBlocks");
+#else
+                    _game.RunCommand("/stopscript luckyblocks_wtf");
+                    _game.RunCommand("/startscript luckyblocks_wtf");
 #endif
                     break;
                 }
-#if DEBUG
+#if !PUBLICRELEASE
                 case "spawn":
                 {
                     var supplyCrate = (_game.CreateObject("SupplyCrate00", position) as IObjectSupplyCrate)!;
@@ -183,7 +269,7 @@ internal class CommandsHandler : ICommandsHandler
                         return;
 
                     givenPlayer.Gib();
-                    
+
                     break;
                 }
                 case "respawn":
@@ -266,6 +352,11 @@ internal class CommandsHandler : ICommandsHandler
                     _effectsPlayer.PlaySoundEffect(commandArgs, position);
                     break;
                 }
+                case "hand":
+                {
+                    _effectsPlayer.PlayHandGleamEffect(playerInstance);
+                    break;
+                }
 #endif
             }
         }
@@ -273,5 +364,11 @@ internal class CommandsHandler : ICommandsHandler
         {
             _logger.Error(exception, "Unexpected exception in CommandsHandler.OnUserMessage");
         }
+    }
+
+    private void Reply(string @string, int userIdentifier, Color? color = null)
+    {
+        color ??= ExtendedColors.Gold;
+        _notificationService.CreateChatNotification($"[LB] {@string}", (Color)color, userIdentifier);
     }
 }

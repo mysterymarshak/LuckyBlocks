@@ -22,4 +22,5 @@ internal static class ExtendedColors
     public static readonly Color TotemOfUndying = new(243, 222, 147);
     public static readonly Color TheFool = new(247, 217, 2);
     public static readonly Color Lost = new(80, 76, 123);
+    public static readonly Color Gold = new(255, 215, 0);
 }

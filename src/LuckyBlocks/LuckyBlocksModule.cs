@@ -5,6 +5,7 @@ using LuckyBlocks.Data.Args;
 using LuckyBlocks.Data.Weapons;
 using LuckyBlocks.Features.Buffs;
 using LuckyBlocks.Features.Commands;
+using LuckyBlocks.Features.Configuration;
 using LuckyBlocks.Features.Dialogues;
 using LuckyBlocks.Features.Elevators;
 using LuckyBlocks.Features.Entities;
@@ -267,6 +268,10 @@ internal class LuckyBlocksModule : Module
 
         builder.RegisterType<KeyboardService>()
             .As<IKeyboardService>()
+            .SingleInstance();
+        
+        builder.RegisterType<ConfigurationService>()
+            .As<IConfigurationService>()
             .SingleInstance();
     }
 }
