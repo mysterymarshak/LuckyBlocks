@@ -4,6 +4,7 @@ using LuckyBlocks.Data.Args;
 using LuckyBlocks.Features.Buffs;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Utils;
+using Serilog;
 using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Features.Magic;
@@ -21,11 +22,13 @@ internal abstract class MagicBase : IMagic
     protected ILifetimeScope LifetimeScope { get; }
     protected IExtendedEvents ExtendedEvents { get; }
 
+    private readonly ILogger _logger;
     private readonly MagicFinishCondition _finishCondition;
 
     public MagicBase(Player wizard, MagicConstructorArgs args)
     {
         Wizard = wizard;
+        _logger = args.Logger;
         LifetimeScope = args.LifetimeScope.BeginLifetimeScope();
         ExtendedEvents = LifetimeScope.Resolve<IExtendedEvents>();
         _finishCondition = new MagicFinishCondition();
@@ -60,13 +63,24 @@ internal abstract class MagicBase : IMagic
 
     private void OnFinish()
     {
-        IsFinished = true;
+        if (IsFinished)
+            return;
 
-        LifetimeScope.Dispose();
-        ExtendedEvents.Clear();
+        try
+        {
+            IsFinished = true;
 
-        OnFinishInternal();
-        SendFinishNotification();
+            LifetimeScope.Dispose();
+            ExtendedEvents.Clear();
+
+            OnFinishInternal();
+            SendFinishNotification();
+        }
+        catch (Exception exception)
+        {
+            _logger.Error(exception, "unexpected exception in magic {MagicName} OnFinish for player {PlayerName}", Name,
+                Wizard.Name);
+        }
     }
 
     private void SendFinishNotification()

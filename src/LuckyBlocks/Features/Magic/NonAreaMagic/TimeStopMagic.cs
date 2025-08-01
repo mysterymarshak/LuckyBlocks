@@ -121,7 +121,6 @@ internal class TimeStopMagic : NonAreaMagicBase
 
     private void OnResumeTime()
     {
-        ExtendedEvents.Clear();
         _timeStopEffect!.PlayTimeResumeEffect();
 
         RemoveBoostsFromWizard();
@@ -164,7 +163,6 @@ internal class TimeStopMagic : NonAreaMagicBase
         _resumeTimeCts?.Dispose();
 
         _notificationService.ClosePopupNotification();
-        ExtendedEvents.Clear();
     }
 
     private class TimeStopEffect
