@@ -88,7 +88,11 @@ internal class Keyboard
     private void OnKeyInput(Event<IPlayer, VirtualKeyInfo[]> @event)
     {
         var playerInstance = @event.Arg1;
+        
         if (playerInstance != _player.Instance)
+            return;
+
+        if (playerInstance.IsDead)
             return;
 
         var keyInputs = @event.Arg2;
