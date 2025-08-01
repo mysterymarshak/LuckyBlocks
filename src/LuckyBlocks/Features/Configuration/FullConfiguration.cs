@@ -4,10 +4,11 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace LuckyBlocks.Features.Configuration;
 
-internal class FullConfiguration : ISpawnChangeServiceConfiguration
+internal class FullConfiguration : ISpawnChangeServiceConfiguration, IRandomItemProviderConfiguration
 {
     public static bool IsManualSpawnChanceDefault => false;
     public static float SpawnChanceDefault => 0.3f;
+    public static List<string> ExcludedItemsDefault => [];
 
     public bool IsManualSpawnChance
     {
@@ -38,8 +39,22 @@ internal class FullConfiguration : ISpawnChangeServiceConfiguration
         }
     }
 
+    public IEnumerable<string> ExcludedItems
+    {
+        get;
+        set
+        {
+            field = value;
+
+            if (!_isInitialized)
+                return;
+
+            Changes[nameof(ExcludedItems)] = () => _configurationService.UpdateProperty(nameof(ExcludedItems), value);
+        }
+    }
+
     private readonly IConfigurationService _configurationService;
-    
+
     [field: MaybeNull]
     private Dictionary<string, Action> Changes => field ??= new Dictionary<string, Action>();
 

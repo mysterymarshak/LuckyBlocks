@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using System.Linq;
 using LuckyBlocks.Extensions;
+using LuckyBlocks.Loot;
 using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Features.Configuration;
@@ -15,10 +17,14 @@ internal class ConfigurationService : IConfigurationService
     private static readonly List<string> StorageKeys =
     [
         nameof(ISpawnChangeServiceConfiguration.IsManualSpawnChance),
-        nameof(ISpawnChangeServiceConfiguration.SpawnChance)
+        nameof(ISpawnChangeServiceConfiguration.SpawnChance),
+        nameof(IRandomItemProviderConfiguration.ExcludedItems)
     ];
 
     private readonly IGame _game;
+
+    private FullConfiguration? _configuration;
+    private bool _onlyOnceFlag;
 
     public ConfigurationService(IGame game)
     {
@@ -27,6 +33,11 @@ internal class ConfigurationService : IConfigurationService
 
     public T GetConfiguration<T>() where T : class, IConfiguration
     {
+        if (_configuration is not null)
+        {
+            return (_configuration as T)!;
+        }
+
         var configuration = new FullConfiguration(this);
 
         foreach (var key in StorageKeys)
@@ -45,9 +56,22 @@ internal class ConfigurationService : IConfigurationService
                         _game.LocalStorage.TryGetValueOrDefault(key, FullConfiguration.SpawnChanceDefault);
                     break;
                 }
+                case nameof(IRandomItemProviderConfiguration.ExcludedItems):
+                {
+                    configuration.ExcludedItems =
+                        _game.LocalStorage.TryGetValueOrDefault(key, FullConfiguration.ExcludedItemsDefault);
+
+                    if (!_onlyOnceFlag)
+                    {
+                        InvalidateExcludedItems(configuration);
+                    }
+
+                    break;
+                }
             }
         }
 
+        _onlyOnceFlag = true;
         configuration.SetInitialized();
         return (configuration as T)!;
     }
@@ -59,13 +83,44 @@ internal class ConfigurationService : IConfigurationService
             case bool boolValue:
             {
                 _game.LocalStorage.SetItem(name, boolValue);
-                return;
+                break;
             }
             case float floatValue:
             {
                 _game.LocalStorage.SetItem(name, floatValue);
-                return;
+                break;
             }
+            case IEnumerable<string> stringCollection:
+            {
+                _game.LocalStorage.SetItem(name, stringCollection.ToArray());
+                break;
+            }
+        }
+
+        InvalidateConfiguration();
+    }
+
+    private void InvalidateConfiguration()
+    {
+        _configuration = null;
+    }
+
+    private void InvalidateExcludedItems(IRandomItemProviderConfiguration configuration)
+    {
+        List<string>? newItems = null;
+
+        foreach (var item in configuration.ExcludedItems)
+        {
+            if (!ItemExtensions.IsDefined(item))
+            {
+                newItems ??= configuration.ExcludedItems.ToList();
+                newItems.Remove(item);
+            }
+        }
+
+        if (newItems is not null)
+        {
+            configuration.ExcludedItems = newItems;
         }
     }
 }

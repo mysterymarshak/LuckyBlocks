@@ -19,7 +19,7 @@ internal enum Item
     LegendaryWeapon,
 
     Explosion,
-
+    
     [OnlyPlayer]
     [PlayerIsNotFullHp]
     FullHp,

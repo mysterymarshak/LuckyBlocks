@@ -66,8 +66,18 @@ internal class LuckyBlocksService : ILuckyBlocksService
         if (args.ShouldHandle)
         {
             var item = args.PredefinedItem == Item.None ? _randomItemProvider.GetRandomItem(args) : args.PredefinedItem;
-            var createLootResult = _lootFactory.CreateLoot(args, item);
 
+            if (item == Item.None)
+            {
+                _logger.Error("No lucky block loot for applying configuration and current circumstances found");
+                _entitiesService.Remove(args.LuckyBlockId);
+
+                _game.SpawnWeaponItem(_game.GetRandomWeaponItem(), args.Position, true, 20_000f);
+
+                return;
+            }
+
+            var createLootResult = _lootFactory.CreateLoot(args, item);
             if (createLootResult.TryPickT1(out var error, out var loot))
             {
                 _logger.Error("Error in ILootFactory.Create: {Error}", error.Value);

@@ -3,22 +3,19 @@ using System.Globalization;
 using System.Linq;
 using Autofac;
 using Autofac.Util;
-using LuckyBlocks.Data.Args;
 using LuckyBlocks.Data.Weapons;
 using LuckyBlocks.Features.Buffs;
 using LuckyBlocks.Features.Configuration;
-using LuckyBlocks.Features.Entities;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.LuckyBlocks;
 using LuckyBlocks.Features.Notifications;
-using LuckyBlocks.Features.Objects;
 using LuckyBlocks.Features.Time.TimeRevert;
 using LuckyBlocks.Features.WeaponPowerups;
 using LuckyBlocks.Loot;
+using LuckyBlocks.Loot.Attributes;
 using LuckyBlocks.Reflection;
 using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
 using LuckyBlocks.Utils;
-using LuckyBlocks.Utils.Watchers;
 using Serilog;
 using SFDGameScriptInterface;
 
@@ -39,13 +36,8 @@ internal class CommandsHandler : ICommandsHandler
     private readonly IRespawner _respawner;
     private readonly IGame _game;
     private readonly ILogger _logger;
-    private readonly LootConstructorArgs _lootArgs;
     private readonly IWeaponPowerupsService _weaponPowerupsService;
-    private readonly IWeaponsDataWatcher _weaponsDataWatcher;
     private readonly ITimeRevertService _timeRevertService;
-    private readonly IMappedObjectsService _mappedObjectsService;
-    private readonly IEntitiesService _entitiesService;
-    private readonly ISnapshotCreator _snapshotCreator;
     private readonly ISpawnChanceService _spawnChanceService;
     private readonly IEffectsPlayer _effectsPlayer;
     private readonly INotificationService _notificationService;
@@ -54,11 +46,9 @@ internal class CommandsHandler : ICommandsHandler
 
     public CommandsHandler(ILuckyBlocksService luckyBlocksService, IIdentityService identityService,
         IBuffFactory buffFactory, IPowerupFactory powerupFactory, IBuffsService buffsService, IRespawner respawner,
-        LootConstructorArgs lootArgs, IGame game, ILogger logger, IWeaponPowerupsService weaponPowerupsService,
-        ILifetimeScope lifetimeScope, IWeaponsDataWatcher weaponsDataWatcher, ITimeRevertService timeRevertService,
-        IMappedObjectsService mappedObjectsService, IEntitiesService entitiesService, ISnapshotCreator snapshotCreator,
-        ISpawnChanceService spawnChanceService, IEffectsPlayer effectsPlayer, INotificationService notificationService,
-        IConfigurationService configurationService)
+        IGame game, ILogger logger, IWeaponPowerupsService weaponPowerupsService, ILifetimeScope lifetimeScope,
+        ITimeRevertService timeRevertService, ISpawnChanceService spawnChanceService, IEffectsPlayer effectsPlayer,
+        INotificationService notificationService, IConfigurationService configurationService)
     {
         _luckyBlocksService = luckyBlocksService;
         _identityService = identityService;
@@ -68,13 +58,8 @@ internal class CommandsHandler : ICommandsHandler
         _respawner = respawner;
         _game = game;
         _logger = logger;
-        _lootArgs = lootArgs;
         _weaponPowerupsService = weaponPowerupsService;
-        _weaponsDataWatcher = weaponsDataWatcher;
         _timeRevertService = timeRevertService;
-        _mappedObjectsService = mappedObjectsService;
-        _entitiesService = entitiesService;
-        _snapshotCreator = snapshotCreator;
         _spawnChanceService = spawnChanceService;
         _effectsPlayer = effectsPlayer;
         _notificationService = notificationService;
@@ -111,6 +96,9 @@ internal class CommandsHandler : ICommandsHandler
                     var configuration = _configurationService.GetConfiguration<FullConfiguration>();
 
                     Reply("Lucky Blocks settings:", userIdentifier);
+                    Reply($"Current spawn chance: {_spawnChanceService.Chance * 100}%", userIdentifier);
+                    Reply($"Current items exclusion list: [{string.Join(", ", configuration.ExcludedItems)}]",
+                        userIdentifier);
                     Reply(
                         $"/lb_use_manual_chance {(configuration.IsManualSpawnChance ? 1 : 0)} [0/1] {{ also /lb_umc }}",
                         userIdentifier);
@@ -118,6 +106,9 @@ internal class CommandsHandler : ICommandsHandler
                         string.Format(CultureInfo.InvariantCulture, "/lb_manual_chance {0} [0-100] {{ also /lb_mc }}",
                             configuration.SpawnChance * 100),
                         userIdentifier);
+                    Reply("/lb_items", userIdentifier);
+                    Reply("/lb_exclude [Item]", userIdentifier);
+                    Reply("/lb_include [Item]", userIdentifier);
 
                     break;
                 }
@@ -184,6 +175,68 @@ internal class CommandsHandler : ICommandsHandler
                     configuration.SpawnChance = newValue;
                     configuration.CommitChanges();
                     Reply($"Manual spawn chance set to {newValue * 100}%", userIdentifier, ExtendedColors.LightGreen);
+
+                    break;
+                }
+                case "items":
+                {
+                    var items = ItemExtensions.GetValues()
+                        .Where(x => EnumUtils.GetAttributesOfType<ItemAttribute, Item>(x)
+                            .All(y => y is not (DisabledAttribute or UnusedAttribute)));
+
+                    Reply($"Items: [{string.Join(", ", items.Select(x => x.ToStringFast()))}]", userIdentifier);
+
+                    break;
+                }
+                case "exclude":
+                {
+                    if (!ItemExtensions.IsDefined(commandArgs))
+                    {
+                        Reply("You should pass valid item name (case-sensitive). Type /lb_items to get items list",
+                            userIdentifier, ExtendedColors.ImperialRed);
+
+                        break;
+                    }
+
+                    var configuration = _configurationService.GetConfiguration<IRandomItemProviderConfiguration>();
+                    if (configuration.ExcludedItems.Contains(commandArgs))
+                    {
+                        Reply($"{commandArgs} is already excluded", userIdentifier, ExtendedColors.LightGreen);
+
+                        break;
+                    }
+
+                    configuration.ExcludedItems = configuration.ExcludedItems.Append(commandArgs);
+                    configuration.CommitChanges();
+
+                    Reply($"{commandArgs} was excluded from lucky blocks loot", userIdentifier,
+                        ExtendedColors.LightGreen);
+
+                    break;
+                }
+                case "include":
+                {
+                    if (!ItemExtensions.IsDefined(commandArgs))
+                    {
+                        Reply("You should pass valid item name (case-sensitive). Type /lb_items to get items list",
+                            userIdentifier, ExtendedColors.ImperialRed);
+
+                        break;
+                    }
+
+                    var configuration = _configurationService.GetConfiguration<IRandomItemProviderConfiguration>();
+                    if (!configuration.ExcludedItems.Contains(commandArgs))
+                    {
+                        Reply($"{commandArgs} isn't excluded", userIdentifier, ExtendedColors.LightGreen);
+
+                        break;
+                    }
+
+                    configuration.ExcludedItems = configuration.ExcludedItems.Where(x => x != commandArgs);
+                    configuration.CommitChanges();
+
+                    Reply($"{commandArgs} was included back to lucky blocks loot", userIdentifier,
+                        ExtendedColors.LightGreen);
 
                     break;
                 }
