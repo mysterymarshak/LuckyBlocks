@@ -48,6 +48,7 @@ internal class TimeRevertMagic : NonAreaMagicBase
     private CancellationTokenSource? _cts;
     private float _elapsedRealTimeWhenStarted;
     private IEventSubscription? _keyInputSubscription;
+    private bool _isTimeReverting;
 
     public TimeRevertMagic(Player wizard, MagicConstructorArgs args) : base(wizard, args)
     {
@@ -68,11 +69,7 @@ internal class TimeRevertMagic : NonAreaMagicBase
     public override void Cast()
     {
         _timeStopService.StopTime(TimeSpan.MaxValue, Wizard.Instance!);
-        _cts = new CancellationTokenSource();
-        _elapsedRealTimeWhenStarted = _game.TotalElapsedRealTime;
-
         Awaiter.Start(OnTimeStopped, _timeStopService.TimeStopDelay);
-        Awaiter.Start(OnTimeForChoosePassed, TimeForChooseSnapshot, _cts.Token);
     }
 
     public override MagicBase Copy()
@@ -193,38 +190,52 @@ internal class TimeRevertMagic : NonAreaMagicBase
             additionalOffset.Y += cameraArea.Bottom - baseMin.Y + 10;
         }
 
-        foreach (var snapshot in Snapshots)
+        if (!_isTimeReverting)
         {
-            var textPosition = position + additionalOffset + new Vector2(-50 + 50 * (snapshotIndex % SnapshotsInRow),
-                -30 * (snapshotIndex / SnapshotsInRow) - 15);
-            var textColor = snapshotIndex == _selectedSnapshotIndex ? ExtendedColors.KillerQueen : Color.Grey;
-            var timeBehind = TimeSpan.FromMilliseconds(_timeProvider.ElapsedGameTime - snapshot.ElapsedGameTime);
+            foreach (var snapshot in Snapshots)
+            {
+                var textPosition = position + additionalOffset + new Vector2(
+                    -50 + 50 * (snapshotIndex % SnapshotsInRow),
+                    -30 * (snapshotIndex / SnapshotsInRow) - 15);
+                var textColor = snapshotIndex == _selectedSnapshotIndex ? ExtendedColors.KillerQueen : Color.Grey;
 
-            _effectsPlayer.PlayEffect(EffectName.CustomFloatText, textPosition,
-                $"{Math.Round(timeBehind.TotalSeconds)}s",
-                textColor, 1f, 3f, true);
+                _effectsPlayer.PlayEffect(EffectName.CustomFloatText, textPosition, $"{GetPassedSeconds(snapshot)}s",
+                    textColor, 1f, 3f, true);
 
-            snapshotIndex++;
+                snapshotIndex++;
+            }
         }
 
-        var rows = (int)Math.Ceiling(Snapshots.Count / (double)SnapshotsInRow);
+        var rows = _isTimeReverting ? 1 : (int)Math.Ceiling(Snapshots.Count / (double)SnapshotsInRow);
         const string tipBaseText = "HOW MUCH TIME YOU WANNA REVERT?";
+        const string tipRevertingTimeText = "REVERTING TIME FOR {0} SECONDS";
         const string tip3SecondsLeft = "3 SECONDS LEFT";
         const string tip2SecondsLeft = "2 SECONDS LEFT";
         const string tip1SecondLeft = "1 SECOND LEFT";
 
         var tipOffset = position + additionalOffset + new Vector2(0, -45 * rows);
         var timeLeft = TimeForChooseSnapshot.TotalMilliseconds -
-                       (_game.TotalElapsedGameTime - _elapsedRealTimeWhenStarted);
-        var tipText = timeLeft switch
+                       (_game.TotalElapsedRealTime - _elapsedRealTimeWhenStarted);
+        var tipText = (timeLeft, _isTimeReverting) switch
         {
-            > 3000f => tipBaseText,
-            > 2000f and <= 3000f => tip3SecondsLeft,
-            > 1000f and <= 2000f => tip2SecondsLeft,
-            <= 1000f => tip1SecondLeft
+            (> 3000f, false) => tipBaseText,
+            (> 2000f and <= 3000f, false) => tip3SecondsLeft,
+            (> 1000f and <= 2000f, false) => tip2SecondsLeft,
+            (<= 1000f, false) => tip1SecondLeft,
+            (_, true) => string.Format(tipRevertingTimeText, GetPassedSeconds(Snapshots[_selectedSnapshotIndex]))
         };
 
         _effectsPlayer.PlayEffect(EffectName.CustomFloatText, tipOffset, tipText, Color.Grey, 1f, 3f, true);
+    }
+
+    private int GetPassedSeconds(RealitySnapshot snapshot)
+    {
+        return (int)Math.Round(GetPassedTime(snapshot).TotalSeconds);
+    }
+
+    private TimeSpan GetPassedTime(RealitySnapshot snapshot)
+    {
+        return TimeSpan.FromMilliseconds(_timeProvider.ElapsedGameTime - snapshot.ElapsedGameTime);
     }
 
     private void OnTimeStopped()
@@ -240,17 +251,22 @@ internal class TimeRevertMagic : NonAreaMagicBase
         _notificationService.CreateChatNotification(
             $"You have {TimeForChooseSnapshot.Seconds}s to choose an interval! Otherwise, a random one will be selected",
             ExtendedColors.KillerQueen, Wizard.UserIdentifier);
-        // todo: move to wizard
+
+        _cts = new CancellationTokenSource();
+        _elapsedRealTimeWhenStarted = _game.TotalElapsedRealTime;
+        Awaiter.Start(OnTimeForChoosePassed, TimeForChooseSnapshot, _cts.Token);
     }
 
     private void OnTimeForChoosePassed()
     {
-        _selectedSnapshotId = Snapshots.GetRandomElement().Id;
+        _selectedSnapshotIndex = SharedRandom.Instance.Next(Snapshots.Count - 1);
+        _selectedSnapshotId = Snapshots[_selectedSnapshotIndex].Id;
         RevertTime();
     }
 
     private void RevertTime()
     {
+        _isTimeReverting = true;
         _cts!.Cancel();
         _keyInputSubscription?.Dispose();
         _game.RunCommand("/slomo 1");
