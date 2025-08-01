@@ -51,6 +51,7 @@ internal class IdentityService : IIdentityService
         }
 
         _extendedEvents.HookOnUserJoined(OnUserJoined, EventHookMode.Default);
+        _extendedEvents.HookOnUserLeft(OnUserLeft, EventHookMode.Default);
         _extendedEvents.HookOnDestroyed(OnObjectDestroyed, EventHookMode.Default);
     }
 
@@ -103,6 +104,15 @@ internal class IdentityService : IIdentityService
         }
     }
 
+    private void OnUserLeft(Event<IUser[], DisconnectionType> @event)
+    {
+        var users = @event.Arg1;
+        foreach (var user in users)
+        {
+            UnregisterUser(user.UserIdentifier);
+        }
+    }
+
     private void OnObjectDestroyed(Event<IObject[]> @event)
     {
         foreach (var @object in @event.Args)
@@ -114,18 +124,25 @@ internal class IdentityService : IIdentityService
         }
     }
 
-    private void RegisterUser(int userId)
+    private void RegisterUser(int userIdentifier)
     {
-        var validationResult = _playersRepository.ValidateUser(userId);
+        var validationResult = _playersRepository.ValidateUser(userIdentifier);
         if (!validationResult.TryPickT0(out var player, out _))
         {
-            _logger.Error("Failed to register user with id '{UserId}': {Message}", userId, validationResult.AsT1);
+            _logger.Error("Failed to register user with id '{UserId}': {Message}", userIdentifier,
+                validationResult.AsT1);
             return;
         }
 
         var notification = new UserRegisteredNotification(player);
         _mediator.Publish(notification);
 
-        _logger.Debug("Registered user with id '{UserId}'", userId);
+        _logger.Debug("Registered user with id '{UserId}'", userIdentifier);
+    }
+
+    private void UnregisterUser(int userIdentifier)
+    {
+        _playersRepository.UnregisterUser(userIdentifier);
+        _logger.Debug("Unregistered user with id '{UserId}'", userIdentifier);
     }
 }

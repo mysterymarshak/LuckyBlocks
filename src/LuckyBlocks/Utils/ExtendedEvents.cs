@@ -107,6 +107,10 @@ public interface IExtendedEvents
     IEventSubscription HookOnUserJoined(Action<Event<IUser[]>> callback, EventHookMode hookMode,
         bool ignoreHandled = false);
 
+    [GameCallbackType(typeof(Events.UserLeaveCallback))]
+    IEventSubscription HookOnUserLeft(Action<Event<IUser[], DisconnectionType>> callback, EventHookMode hookMode,
+        bool ignoreHandled = false);
+
     [GameCallbackType(typeof(Events.PlayerKeyInputCallback))]
     IEventSubscription HookOnKeyInput(Action<Event<IPlayer, VirtualKeyInfo[]>> callback,
         EventHookMode hookMode, bool ignoreHandled = false);

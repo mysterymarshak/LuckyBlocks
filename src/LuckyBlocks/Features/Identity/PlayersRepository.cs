@@ -13,6 +13,7 @@ namespace LuckyBlocks.Features.Identity;
 internal interface IPlayersRepository
 {
     OneOf<Player, Unknown> ValidateUser(int userId);
+    void UnregisterUser(int userId);
     OneOf<Player, Unknown> GetPlayerById(int uniqueId);
     Player GetPlayerByInstance(IPlayer playerInstance);
     IEnumerable<Player> GetAlivePlayers(bool includeFakePlayers = true);
@@ -40,6 +41,14 @@ internal class PlayersRepository : IPlayersRepository
     {
         var getPlayerResult = GetPlayerByUserId(userId);
         return getPlayerResult.IsT0 ? getPlayerResult.AsT0 : new Unknown();
+    }
+
+    public void UnregisterUser(int userId)
+    {
+        if (_players.TryGetValue(userId, out _))
+        {
+            _players.Remove(userId);
+        }
     }
 
     public OneOf<Player, Unknown> GetPlayerById(int uniqueId)
