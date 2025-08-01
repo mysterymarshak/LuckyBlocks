@@ -10,7 +10,7 @@ namespace LuckyBlocks.Features.Buffs.Wizards;
 
 internal class TimeStopWizard : WizardBase, IImmunityFlagsIndicatorBuff
 {
-    public override string Name => "Time stop wizard";
+    public override string Name => "Time Stop Wizard";
     public override int CastsCount => 1;
     public ImmunityFlag ImmunityFlags => ImmunityFlag.ImmunityToTimeStop;
     public override Color BuffColor => Color.Yellow;

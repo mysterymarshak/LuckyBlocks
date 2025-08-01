@@ -8,7 +8,7 @@ namespace LuckyBlocks.Features.Buffs.Wizards;
 
 internal class DecoyWizard : WizardBase
 {
-    public override string Name => "Decoy wizard";
+    public override string Name => "Decoy Wizard";
     public override int CastsCount => 1;
     public override Color BuffColor => Color.White;
 

@@ -10,7 +10,7 @@ namespace LuckyBlocks.Features.Buffs.Wizards;
 
 internal class FireWizard : WizardBase, IImmunityFlagsIndicatorBuff
 {
-    public override string Name => "Fire wizard";
+    public override string Name => "Fire Wizard";
     public override int CastsCount => 3;
 
     public ImmunityFlag ImmunityFlags =>

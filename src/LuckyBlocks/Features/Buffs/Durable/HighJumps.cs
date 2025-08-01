@@ -15,7 +15,7 @@ internal class HighJumps : DurableBuffBase, IImmunityFlagsIndicatorBuff
         JumpHeight = 2f
     };
 
-    public override string Name => "High jumps";
+    public override string Name => "High Jumps";
     public override TimeSpan Duration => TimeSpan.FromSeconds(10);
     public ImmunityFlag ImmunityFlags => ImmunityFlag.ImmunityToFall;
     public override Color BuffColor => Color.White;

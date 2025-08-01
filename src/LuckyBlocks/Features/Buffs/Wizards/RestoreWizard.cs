@@ -10,7 +10,7 @@ namespace LuckyBlocks.Features.Buffs.Wizards;
 
 internal class RestoreWizard : WizardBase
 {
-    public override string Name => "Restore wizard";
+    public override string Name => "Restore Wizard";
     public override int CastsCount => 2;
     public override Color BuffColor => ExtendedColors.Amethyst;
 

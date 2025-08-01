@@ -19,7 +19,7 @@ internal class StrongMan : DurableBuffBase, IImmunityFlagsIndicatorBuff
         ThrowForce = 3f
     };
 
-    public override string Name => "Strong man";
+    public override string Name => "Strong Man";
     public override TimeSpan Duration => TimeSpan.FromSeconds(5);
     public ImmunityFlag ImmunityFlags => ImmunityFlag.ImmunityToWind;
     public override Color BuffColor => ExtendedColors.ImperialRed;

@@ -10,7 +10,7 @@ namespace LuckyBlocks.Features.Buffs.Wizards;
 
 internal class WindWizard : WizardBase, IImmunityFlagsIndicatorBuff
 {
-    public override string Name => "Wind wizard";
+    public override string Name => "Wind Wizard";
     public override int CastsCount => 3;
     public ImmunityFlag ImmunityFlags => ImmunityFlag.ImmunityToWind;
     public override Color BuffColor => ExtendedColors.LightGreen;

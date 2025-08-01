@@ -11,7 +11,7 @@ namespace LuckyBlocks.Features.Buffs.Finishable;
 
 internal class TotemOfUndying : FinishableBuffBase, ICloneableBuff<IFinishableBuff>, IImmunityFlagsIndicatorBuff
 {
-    public override string Name => "Totem of undying";
+    public override string Name => "Totem Of Undying";
     public ImmunityFlag ImmunityFlags => ImmunityFlag.ImmunityToDeath;
     public override Color BuffColor => ExtendedColors.TotemOfUndying;
 
@@ -30,7 +30,7 @@ internal class TotemOfUndying : FinishableBuffBase, ICloneableBuff<IFinishableBu
     public override void Run()
     {
         ExtendedEvents.HookOnDead(PlayerInstance!, OnDead, EventHookMode.Default);
-        ShowTotemDialogue("Totem of Undying");
+        ShowTotemDialogue("TOTEM OF UNDYING");
     }
 
     private void OnDead(Event<PlayerDeathArgs> @event)
@@ -44,7 +44,7 @@ internal class TotemOfUndying : FinishableBuffBase, ICloneableBuff<IFinishableBu
             Player.SetWeapons(Player.WeaponsData, true);
         }
 
-        ShowTotemDialogue("Totem saved you", true);
+        ShowTotemDialogue("TOTEM SAVED YOU", true);
         InternalFinish();
     }
 

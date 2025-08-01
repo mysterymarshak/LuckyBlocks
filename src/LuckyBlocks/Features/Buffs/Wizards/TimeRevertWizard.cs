@@ -10,7 +10,7 @@ namespace LuckyBlocks.Features.Buffs.Wizards;
 
 internal class TimeRevertWizard : WizardBase
 {
-    public override string Name => "Time revert wizard";
+    public override string Name => "Time Revert Wizard";
     public override int CastsCount => 1;
     public override Color BuffColor => ExtendedColors.KillerQueen;
 

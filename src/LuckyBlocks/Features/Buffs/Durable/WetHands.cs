@@ -13,7 +13,7 @@ namespace LuckyBlocks.Features.Buffs.Durable;
 
 internal class WetHands : DurableRepressibleByImmunityFlagsBuffBase
 {
-    public override string Name => "Wet hands";
+    public override string Name => "Wet Hands";
     public override TimeSpan Duration => TimeSpan.FromSeconds(20);
     public override ImmunityFlag ImmunityFlags => ImmunityFlag.ImmunityToWater;
     public override Color BuffColor => ExtendedColors.Water;

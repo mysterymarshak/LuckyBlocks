@@ -11,7 +11,7 @@ namespace LuckyBlocks.Features.Buffs.Wizards;
 
 internal class ElectricWizard : WizardBase, IDelayedImmunityRemovalBuff
 {
-    public override string Name => "Electric wizard";
+    public override string Name => "Electric Wizard";
     public override int CastsCount => 3;
     public ImmunityFlag ImmunityFlags => ImmunityFlag.ImmunityToShock;
     public TimeSpan ImmunityRemovalDelay => TimeSpan.FromSeconds(2);

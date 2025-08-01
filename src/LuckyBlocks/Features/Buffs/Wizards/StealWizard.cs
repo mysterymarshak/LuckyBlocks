@@ -17,7 +17,7 @@ namespace LuckyBlocks.Features.Buffs.Wizards;
 
 internal class StealWizard : WizardBase, IImmunityFlagsIndicatorBuff
 {
-    public override string Name => "Steal wizard";
+    public override string Name => "Steal Wizard";
     public override int CastsCount => 1;
     public ImmunityFlag ImmunityFlags => ImmunityFlag.ImmunityToSteal;
     public override Color BuffColor => ExtendedColors.NightBlack;
@@ -28,7 +28,6 @@ internal class StealWizard : WizardBase, IImmunityFlagsIndicatorBuff
     private readonly IMagicService _magicService;
     private readonly IMagicFactory _magicFactory;
     private readonly IIdentityService _identityService;
-    private readonly INotificationService _notificationService;
     private readonly BuffConstructorArgs _args;
     private readonly Timer _stealTimer;
     private readonly PeriodicTimer _stealTimeWarningTimer;
@@ -44,7 +43,6 @@ internal class StealWizard : WizardBase, IImmunityFlagsIndicatorBuff
         _magicService = args.MagicService;
         _magicFactory = args.MagicFactory;
         _identityService = args.IdentityService;
-        _notificationService = args.NotificationService;
         _args = args;
         _stealTimer = new Timer(timeLeft == default ? TimeForSteal : timeLeft, TimeBehavior.TimeModifier,
             OnTimeForStealPassed, ExtendedEvents);

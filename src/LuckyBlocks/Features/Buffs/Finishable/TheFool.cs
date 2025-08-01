@@ -37,7 +37,7 @@ internal class TheFool : FinishableBuffBase, ICloneableBuff<IFinishableBuff>
     {
         ExtendedEvents.HookOnKeyInput(OnKeyInput, EventHookMode.Default);
         
-        ShowDialogue("The Fool", TimeSpan.FromSeconds(3));
+        ShowDialogue("THE FOOL", TimeSpan.FromSeconds(3));
         ShowChatMessage($"[ALT + D] to prohibit magic usage for {MagicProhibitionTime.TotalSeconds}s");
     }
 
