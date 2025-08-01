@@ -1,5 +1,6 @@
 using System.Linq;
 using LuckyBlocks.Data.Args;
+using LuckyBlocks.Extensions;
 using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
 using LuckyBlocks.Utils;
 using SFDGameScriptInterface;
@@ -48,13 +49,17 @@ internal class PushProjectile : ProjectilePowerupBase
 
         var objects = _game
             .GetObjectsByArea(area)
-            .Where(x => x.GetBodyType() != BodyType.Static)
-            .Where(x => x.GetPhysicsLayer() == PhysicsLayer.Active);
+            .Where(x => x.GetBodyType() != BodyType.Static);
 
         foreach (var @object in objects)
         {
             if (@object.UniqueId == Projectile.InitialOwnerPlayerID)
                 continue;
+
+            if (@object is IPlayer playerInstance)
+            {
+                playerInstance.LiftUp();
+            }
 
             @object.SetLinearVelocity(Projectile.Velocity / 20);
         }

@@ -106,4 +106,12 @@ internal static class IPlayerExtensions
             _ => new Vector2(0, 5) + faceDirection * new Vector2(10, 0)
         };
     }
+
+    public static void LiftUp(this IPlayer playerInstance)
+    {
+        if (playerInstance.IsOnGround || playerInstance.IsLayingOnGround)
+        {
+            playerInstance.SetWorldPosition(playerInstance.GetWorldPosition() + new Vector2(0, 3));
+        }
+    }
 }

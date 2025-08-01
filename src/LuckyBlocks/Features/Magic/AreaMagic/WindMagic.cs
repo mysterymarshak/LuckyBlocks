@@ -71,10 +71,7 @@ internal class WindMagic : AreaMagicBase
             var disarm = new WindDisarm(player);
             _buffsService.TryAddBuff(disarm, player);
 
-            if (playerInstance.IsOnGround || playerInstance.IsLayingOnGround)
-            {
-                playerInstance.SetWorldPosition(playerInstance.GetWorldPosition() + new Vector2(0, 3));
-            }
+            playerInstance.LiftUp();
         }
 
         ScheduleWind(objects, Direction);
