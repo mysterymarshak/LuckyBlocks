@@ -10,6 +10,7 @@ namespace LuckyBlocks.Features.WeaponPowerups;
 internal class ChangedAmmo : IStackablePowerup<Weapon>
 {
     public string Name => "Changed ammo";
+    public bool IsHidden => true;
     public Weapon Weapon { get; private set; }
 
     private readonly IMediator _mediator;

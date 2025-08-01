@@ -13,6 +13,7 @@ namespace LuckyBlocks.Features.WeaponPowerups.Melees;
 internal class FlamyKatana : IStackablePowerup<Melee>
 {
     public string Name => "Flamy katana";
+    public bool IsHidden => false;
     public Melee Weapon { get; private set; }
 
     private static TimeSpan Lifetime => TimeSpan.FromSeconds(15);

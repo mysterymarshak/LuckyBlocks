@@ -16,6 +16,7 @@ namespace LuckyBlocks.Features.WeaponPowerups;
 internal abstract class UsablePowerupBase<T> : IUsablePowerup<T> where T : Weapon
 {
     public abstract string Name { get; }
+    public virtual bool IsHidden => false;
     public abstract T Weapon { get; protected set; }
     public abstract int UsesCount { get; }
     public abstract int UsesLeft { get; protected set; }

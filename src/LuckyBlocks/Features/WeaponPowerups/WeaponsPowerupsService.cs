@@ -4,6 +4,8 @@ using System.Linq;
 using LuckyBlocks.Data.Weapons;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Identity;
+using LuckyBlocks.Features.Keyboard;
+using LuckyBlocks.Features.Notifications;
 using LuckyBlocks.Utils;
 using OneOf;
 using OneOf.Types;
@@ -14,6 +16,7 @@ namespace LuckyBlocks.Features.WeaponPowerups;
 
 internal interface IWeaponPowerupsService
 {
+    void InitializePlayer(Player player);
     bool CanAddWeaponPowerup(IPlayer player, Type powerupType);
     OneOf<NotFound, IEnumerable<Weapon>> TryGetWeaponsForPowerup(IPlayer player, Type powerupType);
     void AddWeaponPowerup(IWeaponPowerup<Weapon> powerup, Weapon weapon);
@@ -26,13 +29,29 @@ internal interface IWeaponPowerupsService
 
 internal class WeaponPowerupsService : IWeaponPowerupsService
 {
-    private readonly IIdentityService _identityService;
-    private readonly ILogger _logger;
+    private static TimeSpan ShowPowerupsMessageCooldown => TimeSpan.FromSeconds(3);
 
-    public WeaponPowerupsService(IIdentityService identityService, ILogger logger)
+    private readonly IIdentityService _identityService;
+    private readonly IKeyboardService _keyboardService;
+    private readonly INotificationService _notificationService;
+    private readonly ILogger _logger;
+    private readonly Dictionary<Player, IKeyboardEventSubscription> _showPowerupsSubscriptions = new();
+
+    public WeaponPowerupsService(IIdentityService identityService, IKeyboardService keyboardService,
+        INotificationService notificationService, ILogger logger)
     {
         _identityService = identityService;
+        _keyboardService = keyboardService;
+        _notificationService = notificationService;
         _logger = logger;
+    }
+
+    public void InitializePlayer(Player player)
+    {
+        var keyboard = _keyboardService.ResolveForPlayer(player);
+        var subscription = keyboard.HookPress([VirtualKey.SPRINT, VirtualKey.WALKING], () => ShowPlayerPowerups(player),
+            ShowPowerupsMessageCooldown);
+        _showPowerupsSubscriptions.Add(player, subscription);
     }
 
     public bool CanAddWeaponPowerup(IPlayer player, Type powerupType)
@@ -232,6 +251,46 @@ internal class WeaponPowerupsService : IWeaponPowerupsService
         // hope i wont shoot in my leg
         // but i already delay magic restoring for 3 ticks
         // funny isnt it? delay need for StealWizard
+    }
+
+    private void ShowPlayerPowerups(Player player)
+    {
+        var poweruppedWeapons = player.WeaponsData
+            .Where(x => x.Powerups.Count(y => !y.IsHidden) > 0)
+            .ToList();
+
+        if (poweruppedWeapons.Count == 0)
+        {
+            _notificationService.CreateChatNotification("You have no powerupped weapons", Color.White,
+                player.UserIdentifier);
+            return;
+        }
+
+        _notificationService.CreateChatNotification("Your powerupped weapons:", Color.White, player.UserIdentifier);
+        foreach (var poweruppedWeapon in poweruppedWeapons)
+        {
+            var message = $"{poweruppedWeapon.WeaponItem}: [{string.Join(", ", poweruppedWeapon.Powerups
+                .Where(x => !x.IsHidden)
+                .Select(y => y switch
+                {
+                    IUsablePowerup<Weapon> usablePowerup => $"{usablePowerup.Name} ({usablePowerup.UsesLeft})",
+                    _ => y.Name
+                }))}]";
+            _notificationService.CreateChatNotification(message, Color.White, player.UserIdentifier);
+        }
+
+        // var message = poweruppedWeapons.Count switch
+        // {
+        //     0 => "You have no powerupped weapons",
+        //     _ =>
+        //         $"Your powerupped weapons: [{string.Join(", ", poweruppedWeapons.Select(x => $"{x.WeaponItem}: [{string.Join(", ", x.Powerups
+        //             .Where(y => !y.IsHidden)
+        //             .Select(z => z switch
+        //             {
+        //                 IUsablePowerup<Weapon> usablePowerup => $"{usablePowerup.Name} ({usablePowerup.UsesLeft})",
+        //                 _ => z.Name
+        //             }))}]"))}]"
+        // };
     }
 
     private bool TryAddPowerupAgain(IWeaponPowerup<Weapon> powerup, Weapon weapon)

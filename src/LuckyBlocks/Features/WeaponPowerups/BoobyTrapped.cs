@@ -12,6 +12,7 @@ namespace LuckyBlocks.Features.WeaponPowerups;
 internal class BoobyTrapped : IStackablePowerup<Weapon>
 {
     public string Name => "Booby-trapped";
+    public bool IsHidden => true;
     public Weapon Weapon { get; private set; }
 
     private IPlayer? Player => Weapon.Owner;
