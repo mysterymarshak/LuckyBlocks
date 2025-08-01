@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using LuckyBlocks.Data.Args;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Buffs.Instant;
@@ -141,7 +142,7 @@ internal class Vampirism : DurableBuffBase
         PlayerInstance.SetHealth(newHealth);
         GiveEnergyBuff(PlayerInstance, difference);
 
-        _notificationService.CreateTextNotification($"+{Math.Round(difference, 1)}", Color.Green,
+        _notificationService.CreateTextNotification($"+{Math.Round(difference)}", Color.Green,
             TimeSpan.FromMilliseconds(300), PlayerInstance);
     }
 
