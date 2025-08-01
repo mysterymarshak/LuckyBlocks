@@ -12,6 +12,8 @@
         <Features>peverify-compat</Features>
         <AssemblyVersion>69.420.0.0</AssemblyVersion>
         <FileVersion>69.420.0.0</FileVersion>
+        <Configurations>Debug;Release;PublicRelease</Configurations>
+        <Platforms>AnyCPU</Platforms>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -22,12 +24,17 @@
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-        <DebugType>pdbonly</DebugType>
+        <DebugType>none</DebugType>
         <DebugSymbols>false</DebugSymbols>
         <Optimize>true</Optimize>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
-    <PropertyGroup/>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'PublicRelease' ">
+      <Optimize>true</Optimize>
+      <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+      <DebugType>none</DebugType>
+    </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="Autofac" Version="6.5.0"/>
