@@ -32,7 +32,7 @@ internal class TimeRevertService : ITimeRevertService
     public int SnapshotsCount => _snapshots.Count;
     public IEnumerable<RealitySnapshot> Snapshots => _snapshots;
 
-    private const int MaxSavedSnapshots = 7;
+    private const int MaxSavedSnapshots = 9;
     private const float SnapshotsFrequency = 5000f;
 
     private readonly IObjectsWatcher _objectsWatcher;
