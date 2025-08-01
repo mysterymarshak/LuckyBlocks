@@ -124,6 +124,8 @@ internal class Vampirism : DurableBuffBase
 
                 break;
             }
+            case PlayerDamageEventType.Fire:
+                return;
         }
 
         OnAttack(args);
@@ -142,7 +144,7 @@ internal class Vampirism : DurableBuffBase
         PlayerInstance.SetHealth(newHealth);
         GiveEnergyBuff(PlayerInstance, difference);
 
-        _notificationService.CreateTextNotification($"+{Math.Round(difference)}", Color.Green,
+        _notificationService.CreateTextNotification($"+{Math.Ceiling(difference)}", Color.Green,
             TimeSpan.FromMilliseconds(300), PlayerInstance);
     }
 
