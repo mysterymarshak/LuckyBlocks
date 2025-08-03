@@ -55,12 +55,20 @@ internal class RevertedObjectWeaponItem : RevertedDynamicObject
         }
 
         var weapon = _weaponsDataWatcher.RegisterWeapon(objectWeaponItem);
-        foreach (var powerup in weapon.Powerups)
+        
+        if (weapon.Powerups.Any())
         {
-            _weaponPowerupsService.RemovePowerup(powerup, weapon);
+            var powerupsList = weapon.Powerups.ToList();
+            foreach (var powerup in powerupsList)
+            {
+                _weaponPowerupsService.RemovePowerup(powerup, weapon);
+            }
         }
 
-        _weaponPowerupsService.ConcatPowerups(weapon, _powerups);
+        if (_powerups.Count > 0)
+        {
+            _weaponPowerupsService.ConcatPowerups(weapon, _powerups);
+        }
 
         if (objectWeaponItem.GetCurrentAmmo() != _ammo)
         {
