@@ -72,6 +72,7 @@ internal class ConfigurationService : IConfigurationService
         }
 
         _onlyOnceFlag = true;
+        _configuration = configuration;
         configuration.SetInitialized();
         return (configuration as T)!;
     }
