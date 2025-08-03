@@ -30,7 +30,7 @@ internal class LostBullets : BulletsPowerupBase
     private readonly IGame _game;
     private readonly IEffectsPlayer _effectsPlayer;
     private readonly PowerupConstructorArgs _args;
-    private readonly PeriodicTimer<Weapon> _effectTimer;
+    private readonly PeriodicTimer _effectTimer;
 
     public LostBullets(Firearm firearm, PowerupConstructorArgs args) : base(firearm, args)
     {
@@ -38,9 +38,8 @@ internal class LostBullets : BulletsPowerupBase
         _game = args.Game;
         _effectsPlayer = args.EffectsPlayer;
         _args = args;
-        _effectTimer = new PeriodicTimer<Weapon>(TimeSpan.FromMilliseconds(250), TimeBehavior.TimeModifier,
-            PlayLostEffect,
-            x => !x.IsDropped, null, Weapon, ExtendedEvents);
+        _effectTimer = new PeriodicTimer(TimeSpan.FromMilliseconds(250), TimeBehavior.TimeModifier, PlayLostEffect,
+            null, int.MaxValue, ExtendedEvents);
     }
 
     public override IWeaponPowerup<Firearm> Clone(Weapon weapon)
@@ -54,7 +53,7 @@ internal class LostBullets : BulletsPowerupBase
     {
         if (Weapon.IsDropped)
         {
-            _effectTimer.Start();
+            _effectTimer.Restart();
         }
 
         Weapon.Drop += OnWeaponDropped;
@@ -77,8 +76,14 @@ internal class LostBullets : BulletsPowerupBase
         _effectTimer.Restart();
     }
 
-    private void PlayLostEffect(Weapon weapon)
+    private void PlayLostEffect()
     {
+        if (!Weapon.IsDropped)
+        {
+            _effectTimer.Stop();
+            return;
+        }
+
         var weaponObject = _game.GetObject(Weapon.ObjectId);
         if (weaponObject is null)
         {

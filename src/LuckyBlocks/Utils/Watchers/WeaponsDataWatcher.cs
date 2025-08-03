@@ -330,10 +330,11 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
 
                     if (shotWeapon.IsInvalid)
                     {
-                        Logger.Warning("Invalid shot weapon {Weapon} ({PlayerName}); projectile: {Projectile}", shotWeapon, player.Name, projectileItem);
+                        Logger.Warning("Invalid shot weapon {Weapon} ({PlayerName}); projectile: {Projectile}",
+                            shotWeapon, player.Name, projectileItem);
                         continue;
                     }
-                    
+
                     player.UpdateWeaponData(shotWeapon.WeaponItemType);
                     shotWeapon.RaiseEvent(WeaponEvent.Fired, playerInstance, projectilesByItem.Select(x => x));
 
@@ -468,6 +469,7 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
     private static void DisposeWeapon(Weapon weapon)
     {
         weapon.RaiseEvent(WeaponEvent.Disposed);
-        Logger.Debug("Disposed weapon {WeaponItem}", weapon.WeaponItem);
+        Logger.Debug("Disposed weapon {WeaponItem} [{ObjectId} | {OwnerName}]", weapon.WeaponItem, weapon.ObjectId,
+            weapon.Owner?.Name);
     }
 }
