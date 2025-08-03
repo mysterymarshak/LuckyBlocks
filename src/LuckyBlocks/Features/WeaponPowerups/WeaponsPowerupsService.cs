@@ -70,26 +70,17 @@ internal class WeaponPowerupsService : IWeaponPowerupsService
             .First(x => x.IsGenericType && x.GetGenericTypeDefinition() == typeof(IWeaponPowerup<>))
             .GetGenericArguments()[0];
 
-        var weaponsToPowerup = weaponsData
+        var compatibleWeapons = weaponsData
             .GetWeaponsByType(powerupWeaponType)
-            .Where(x => x is not Flamethrower)
+            .Where(x => x is not Flamethrower && x.Powerups.All(y => y.IsCompatibleWith(powerupType)))
             .ToList();
 
-        if (weaponsToPowerup.Count == 0)
+        if (compatibleWeapons.Count == 0)
         {
             return new NotFound();
         }
 
-        var compatibleWeapons = weaponsToPowerup
-            .Where(x => x.Powerups.All(y => y.IsCompatibleWith(powerupType)))
-            .ToList();
-
-        if (compatibleWeapons.Count > 0)
-        {
-            return compatibleWeapons;
-        }
-
-        return new NotFound();
+        return compatibleWeapons;
     }
 
     public void AddWeaponPowerup(IWeaponPowerup<Weapon> powerup, Weapon weapon) =>

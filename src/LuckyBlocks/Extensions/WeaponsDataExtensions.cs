@@ -111,7 +111,7 @@ internal static class WeaponsDataExtensions
                 }
             }
         }
-        else if (weaponType == typeof(Grenade) || weaponType == typeof(Throwable))
+        else if (weaponType == typeof(Throwable))
         {
             if (!weaponsData.ThrowableItem.IsInvalid)
             {
