@@ -48,7 +48,7 @@ internal class WeaponWithRandomPowerupsLoot : PowerUppedWeaponBase
     };
 
     private static readonly Dictionary<int, List<List<Type>>> PossibleFirearmPowerupsCombinations;
-    private static int _maxPowerupsCount;
+    private static readonly int MaxPowerupsCount;
 
     private const double ChanceForIncreasingPowerupsCount = 0.3;
 
@@ -85,7 +85,7 @@ internal class WeaponWithRandomPowerupsLoot : PowerUppedWeaponBase
         }
 
         PossibleFirearmPowerupsCombinations = powerupCombinations;
-        _maxPowerupsCount = powerupCombinations.Keys.Max();
+        MaxPowerupsCount = powerupCombinations.Keys.Max();
     }
 
     public WeaponWithRandomPowerupsLoot(Vector2 spawnPosition, LootConstructorArgs args) : base(spawnPosition, args)
@@ -121,7 +121,7 @@ internal class WeaponWithRandomPowerupsLoot : PowerUppedWeaponBase
     private List<Type> GetRandomPowerups()
     {
         var powerupsCount = 1;
-        while (powerupsCount < _maxPowerupsCount &&
+        while (powerupsCount < MaxPowerupsCount &&
                SharedRandom.Instance.NextDouble() < ChanceForIncreasingPowerupsCount)
         {
             powerupsCount++;
