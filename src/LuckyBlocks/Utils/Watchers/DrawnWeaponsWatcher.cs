@@ -1,7 +1,5 @@
-using System.Collections.Generic;
 using Autofac;
 using LuckyBlocks.Data.Weapons;
-using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Reflection;
 using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;

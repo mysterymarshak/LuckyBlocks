@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading;
 using Autofac;
 using LuckyBlocks.Data.Args;
-using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.Notifications;
 using LuckyBlocks.Features.Time;
