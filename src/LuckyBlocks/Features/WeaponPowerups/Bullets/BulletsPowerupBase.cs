@@ -10,7 +10,7 @@ namespace LuckyBlocks.Features.WeaponPowerups.Bullets;
 internal abstract class BulletsPowerupBase : UsablePowerupBase<Firearm>
 {
     public abstract override string Name { get; }
-    public override int UsesCount => Math.Min(Math.Max(Weapon.MagSize, 3), Weapon.MaxTotalAmmo / 2);
+    public override int UsesCount => (int)MathHelper.Clamp(Weapon.MagSize, 3, Weapon.MaxTotalAmmo / 2);
     public sealed override Firearm Weapon { get; protected set; }
 
     public override int UsesLeft
@@ -34,7 +34,7 @@ internal abstract class BulletsPowerupBase : UsablePowerupBase<Firearm>
     {
         if (Weapon.IsBoobyTrapped)
             return;
-        
+
         // _usesLeft = Math.Min(UsesLeft, Weapon.TotalAmmo + projectiles.Count);
 
         var isShotgun = Weapon is Shotgun;
