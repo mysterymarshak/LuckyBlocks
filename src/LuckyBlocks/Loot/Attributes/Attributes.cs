@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using LuckyBlocks.Features.Immunity;
 using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Loot.Attributes;
@@ -97,3 +98,11 @@ internal class WeightAttribute : ItemAttribute
 }
 
 internal class MagicIsAllowedAttribute : ItemAttribute;
+
+internal class PlayerHasNoImmunitiesAttribute : ItemAttribute
+{
+    public ImmunityFlag ImmunityFlags { get; private set; }
+
+    public PlayerHasNoImmunitiesAttribute(ImmunityFlag immunityFlags)
+        => ImmunityFlags = immunityFlags;
+}

@@ -1,12 +1,8 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
-using LuckyBlocks.Data;
 using LuckyBlocks.Features.Buffs;
 using LuckyBlocks.Features.Buffs.Durable;
 using LuckyBlocks.Features.Identity;
-using LuckyBlocks.Features.Immunity;
-using OneOf;
-using OneOf.Types;
 
 namespace LuckyBlocks.Loot;
 
@@ -27,9 +23,9 @@ internal class BuffWrapper : IBuffWrapper
         return new WrappedBuff(item, buff, () => OnRan(buff, player));
     }
 
-    private OneOf<Success, PlayerIsDeadResult, ImmunityFlag> OnRan(IBuff buff, Player player)
+    private void OnRan(IBuff buff, Player player)
     {
-        return _buffsService.TryAddBuff(buff, player, false);
+        _buffsService.TryAddBuff(buff, player, false);
     }
 
     private class WrappedBuff : ILoot
@@ -40,24 +36,18 @@ internal class BuffWrapper : IBuffWrapper
         public string Name => field ??= GetHintName();
 
         private readonly IBuff _buff;
-        private readonly Func<OneOf<Success, PlayerIsDeadResult, ImmunityFlag>> _runCallback;
+        private readonly Action _runDelegate;
 
-        private bool _isRepressed;
-
-        public WrappedBuff(Item item, IBuff buff, Func<OneOf<Success, PlayerIsDeadResult, ImmunityFlag>> runCallback)
+        public WrappedBuff(Item item, IBuff buff, Action runDelegate)
         {
             Item = item;
             _buff = buff;
-            _runCallback = runCallback;
+            _runDelegate = runDelegate;
         }
 
         public void Run()
         {
-            var buffAdditionResult = _runCallback.Invoke();
-            if (buffAdditionResult.IsT2)
-            {
-                _isRepressed = true;
-            }
+            _runDelegate.Invoke();
         }
 
         private string GetHintName()
@@ -66,7 +56,7 @@ internal class BuffWrapper : IBuffWrapper
                 ? $"{durableBuff.Name}: {durableBuff.Duration.TotalSeconds}s"
                 : _buff.Name;
 
-            return _isRepressed ? $"{name} | Repressed" : name;
+            return name;
         }
     }
 }

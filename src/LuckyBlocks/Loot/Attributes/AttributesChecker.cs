@@ -4,6 +4,7 @@ using System.Linq;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Buffs.Wizards;
 using LuckyBlocks.Features.Identity;
+using LuckyBlocks.Features.Immunity;
 using LuckyBlocks.Features.LuckyBlocks;
 using LuckyBlocks.Features.Magic;
 using LuckyBlocks.Features.PlayerModifiers;
@@ -134,6 +135,12 @@ internal class AttributesChecker : IAttributesChecker
             return magicService.IsMagicAllowed;
         }
 
+        bool PlayerHasNoImmunitiesAttributeCheck(ItemAttribute attribute, OneOf<Player, Unknown> player)
+        {
+            var immunityFlags = (attribute as PlayerHasNoImmunitiesAttribute)!.ImmunityFlags;
+            return player.AsT0.GetImmunityFlags().HasFlag(immunityFlags) == false;
+        }
+
         _checks = new Dictionary<Type, Func<ItemAttribute, OneOf<Player, Unknown>, bool>>
         {
             [typeof(UnusedAttribute)] = (_, _) => false,
@@ -153,7 +160,8 @@ internal class AttributesChecker : IAttributesChecker
             [typeof(ModifiedModifiersAttribute)] = ModifiedModifiersAttributeCheck,
             [typeof(PlayerDoesNotHaveBuff)] = PlayerDoesNotHaveBuffAttributeCheck,
             [typeof(NoOneHaveBuffAttribute)] = NoOneHaveBuffAttributeCheck,
-            [typeof(MagicIsAllowedAttribute)] = MagicIsAllowedAttributeCheck
+            [typeof(MagicIsAllowedAttribute)] = MagicIsAllowedAttributeCheck,
+            [typeof(PlayerHasNoImmunitiesAttribute)] = PlayerHasNoImmunitiesAttributeCheck
         };
     }
 

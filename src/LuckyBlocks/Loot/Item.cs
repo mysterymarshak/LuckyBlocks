@@ -1,6 +1,7 @@
 ﻿using LuckyBlocks.Features.Buffs.Durable;
 using LuckyBlocks.Features.Buffs.Finishable;
 using LuckyBlocks.Features.Buffs.Wizards;
+using LuckyBlocks.Features.Immunity;
 using LuckyBlocks.Features.WeaponPowerups.Bullets;
 using LuckyBlocks.Loot.Attributes;
 using NetEscapades.EnumGenerators;
@@ -25,6 +26,7 @@ internal enum Item
     FullHp,
 
     [OnlyPlayer]
+    [PlayerHasNoImmunities(ImmunityFlag.ImmunityToFreeze)]
     Freeze,
 
     [OnlyPlayer]
@@ -167,6 +169,7 @@ internal enum Item
     TimeRevertWizard,
 
     [OnlyPlayer]
+    [PlayerHasNoImmunities(ImmunityFlag.ImmunityToWater)]
     WetHands,
 
     [OnlyPlayer]
