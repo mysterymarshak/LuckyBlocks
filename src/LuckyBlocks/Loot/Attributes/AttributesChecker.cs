@@ -4,7 +4,6 @@ using System.Linq;
 using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Buffs.Wizards;
 using LuckyBlocks.Features.Identity;
-using LuckyBlocks.Features.Immunity;
 using LuckyBlocks.Features.LuckyBlocks;
 using LuckyBlocks.Features.Magic;
 using LuckyBlocks.Features.PlayerModifiers;
@@ -18,7 +17,7 @@ namespace LuckyBlocks.Loot.Attributes;
 
 internal interface IAttributesChecker
 {
-    bool Check(Item item, OneOf<Player, Unknown> player, bool ignorePlayerAttributes = false);
+    bool Check(Item item, OneOf<Player, Unknown> player);
 }
 
 internal class AttributesChecker : IAttributesChecker
@@ -165,13 +164,10 @@ internal class AttributesChecker : IAttributesChecker
         };
     }
 
-    public bool Check(Item item, OneOf<Player, Unknown> player, bool ignorePlayerAttributes = false)
+    public bool Check(Item item, OneOf<Player, Unknown> player)
     {
         return EnumUtils.GetAttributesOfType<ItemAttribute, Item>(item)
             .OrderByDescending(x => x, _attributesComparer)
-            .Where(x => !ignorePlayerAttributes || (ignorePlayerAttributes && x.GetType() is { Name: var name } &&
-                                                    name.Contains("Player") == name.Contains("Players") &&
-                                                    !name.Contains("Incompatible")))
             .All(attribute => !_checks.TryGetValue(attribute.GetType(), out var func) || func(attribute, player));
     }
 }

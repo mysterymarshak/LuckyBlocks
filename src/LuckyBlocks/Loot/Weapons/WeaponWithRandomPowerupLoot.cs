@@ -4,14 +4,10 @@ using System.Linq;
 using LuckyBlocks.Data.Args;
 using LuckyBlocks.Data.Weapons;
 using LuckyBlocks.Extensions;
-using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.WeaponPowerups;
 using LuckyBlocks.Features.WeaponPowerups.Bullets;
 using LuckyBlocks.Features.WeaponPowerups.Melees;
 using LuckyBlocks.Features.WeaponPowerups.ThrownItems;
-using LuckyBlocks.Loot.Attributes;
-using OneOf;
-using OneOf.Types;
 using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Loot.Weapons;
@@ -31,17 +27,17 @@ internal class WeaponWithRandomPowerupLoot : PowerUppedWeaponBase
         .Except(Exceptions)
         .ToList();
 
-    private static readonly List<(Type, Item)> FirearmPowerups = new()
+    private static readonly List<Type> FirearmPowerups = new()
     {
-        (typeof(AimBullets), Item.AimBullets), (typeof(ExplosiveBullets), Item.ExplosiveBullets),
-        (typeof(FreezeBullets), Item.FreezeBullets), (typeof(InfiniteRicochetBullets), Item.InfiniteRicochetBullets),
-        (typeof(PushBullets), Item.PushBullets), (typeof(TripleRicochetBullets), Item.TripleRicochetBullets),
-        (typeof(PoisonBullets), Item.PoisonBullets)
+        typeof(AimBullets), typeof(ExplosiveBullets),
+        typeof(FreezeBullets), typeof(InfiniteRicochetBullets),
+        typeof(PushBullets), typeof(TripleRicochetBullets),
+        typeof(PoisonBullets)
     };
 
-    private static readonly List<(Type, Item)> GrenadePowerups = new()
+    private static readonly List<Type> GrenadePowerups = new()
     {
-        (typeof(StickyGrenades), Item.StickyGrenades), (typeof(BananaGrenades), Item.BananaGrenades)
+        typeof(StickyGrenades), typeof(BananaGrenades)
     };
 
     protected override WeaponItem WeaponItem => _weaponItem;
@@ -49,13 +45,11 @@ internal class WeaponWithRandomPowerupLoot : PowerUppedWeaponBase
     private readonly WeaponItem _weaponItem;
     private readonly Type _powerupType;
     private readonly IPowerupFactory _powerupFactory;
-    private readonly IAttributesChecker _attributesChecker;
 
     public WeaponWithRandomPowerupLoot(Vector2 spawnPosition, LootConstructorArgs args) : base(spawnPosition, args)
     {
         _weaponItem = WeaponItems.GetRandomElement();
         _powerupFactory = args.PowerupFactory;
-        _attributesChecker = args.AttributesChecker;
         _powerupType = GetRandomPowerup();
     }
 
@@ -66,19 +60,12 @@ internal class WeaponWithRandomPowerupLoot : PowerUppedWeaponBase
 
     private Type GetRandomPowerup()
     {
-        Type? powerupType = null;
-        var item = Item.None;
-
-        while (powerupType is null ||
-               !_attributesChecker.Check(item, OneOf<Player, Unknown>.FromT1(new Unknown()), true))
+        var powerupType = _weaponItem switch
         {
-            (powerupType, item) = _weaponItem switch
-            {
-                WeaponItem.GRENADES => GrenadePowerups.GetRandomElement(),
-                WeaponItem.KATANA => (typeof(FlamyKatana), Item.FlamyKatana),
-                _ => FirearmPowerups.GetRandomElement()
-            };
-        }
+            WeaponItem.GRENADES => GrenadePowerups.GetRandomElement(),
+            WeaponItem.KATANA => typeof(FlamyKatana),
+            _ => FirearmPowerups.GetRandomElement()
+        };
 
         return powerupType;
     }
