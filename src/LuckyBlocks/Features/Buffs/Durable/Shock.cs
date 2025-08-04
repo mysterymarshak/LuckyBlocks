@@ -17,7 +17,7 @@ namespace LuckyBlocks.Features.Buffs.Durable;
 internal class Shock : DurableRepressibleByImmunityFlagsBuffBase, IDelayedImmunityRemovalBuff
 {
     public override string Name => "Shock";
-    public override TimeSpan Duration => TimeSpan.FromSeconds(5);
+    public override TimeSpan Duration => TimeSpan.FromMilliseconds(3500);
 
     public override ImmunityFlag ImmunityFlags => ImmunityFlag.ImmunityToShock;
     public TimeSpan ImmunityRemovalDelay => TimeSpan.FromMilliseconds(700);
