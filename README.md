@@ -25,14 +25,6 @@ Every loot has `weight` attribute, equals to `1` by default.
 The higher value corresponds to higher chance to appear.  
 P.S. [Bloody bath](#bloody-bath) and both of [Remove all weapons](#remove-weapons) has lower weight due to balance issues.  
 
-## Loot
-
-<details>
-  
-<summary>Player Buffs</summary>
-
-<ul>
-
 ## Player Buffs
 
 Player buffs somehow modify player. Most of them are obtained from lucky block (check source in description) when player breaks it by melee attack. There are buffs that are obtained when certain condition are met.  
@@ -50,12 +42,6 @@ Incompatible buffs are impossible to get together in the same time.
 Some buffs may give an immunity to something (like fire, fall damage, something script-specific or etc). It ends with the buff itself (sometimes with delay).
 
 Every buff may interact with others, like if you has wet-hands, becoming fire wizard will dry them.
-
-<details>
-
-<summary>Instant Buffs</summary>
-
-<ul>
   
 ## Instant Buffs
 
@@ -94,16 +80,6 @@ Throws the active player's weapon.
 **Will be repressed if**: player has an immunity to wind  
 
 > USAGE DEMO
-
-</ul>
-
-</details>
-
-<details>
-
-<summary>Durable Buffs</summary>
-
-<ul>
 
 ## Durable Buffs
 
@@ -248,16 +224,6 @@ Paralyzes player and deals `3` damage every `0.3` seconds.
 
 > USAGE DEMO
 
-</ul>
-
-</details>
-
-<details>
-
-<summary>Situational Buffs</summary>
-
-<ul>
-
 ## Situational Buffs
 
 ### Totem of Undying
@@ -275,7 +241,7 @@ Instantly revives the player upon death.
 > After revival you will lost all your applied buffs!
 
 > [!NOTE]
-> The totem will not revive you if the body was destroyed (three hundred ton hydraulic press iis still your enemy)  
+> The totem will not revive you if the body was destroyed (three hundred ton hydraulic press is still your enemy)  
 > 
 > <img width="370" src="https://github.com/mysterymarshak/LuckyBlocks/assets/37479500/6320470a-153a-4a2c-a77f-7de7eee9ff9e" alt="Demo of note" />
 
@@ -283,26 +249,12 @@ Instantly revives the player upon death.
 
 ### The Fool
 
-By pressing `[ALT + D]` you can prohibit magic usage for 15s.  
+By pressing `[ALT + D]` you can prohibit magic usage for `15` seconds.  
 
 **Source**: `TheFool` loot  
 **If**: no one have this buff and magic is allowed on the moment when lucky block was broken  
 
 > USAGE DEMO
-
-</ul>
-
-</details>
-
-</details>
-
-</ul>
-
-<details>
-
-<summary>Weapons</summary>
-
-<ul>
 
 ## Weapons
 
@@ -317,12 +269,6 @@ Weapons are obtained after lucky block destruction.
 > <img width="370" src="https://github.com/mysterymarshak/LuckyBlocks/assets/37479500/95e2f2a0-8f40-4e3d-9371-60e9756f8185" alt="Demo of booby-trap" />
 
 </p>
-
-<details>
-
-<summary>Weapon Items</summary>
-
-<ul>
 
 ### Legendary weapon
 
@@ -380,8 +326,6 @@ Drops a random fun weapon from templates:
 
 > [!NOTE]
 > There's `30%` chance that weapon will also get [Lost bullets](#lost-bullets) powerup.  
->
-> USAGE DEMO
 
 ### Random weapon with random powerups
 
@@ -391,16 +335,6 @@ After first powerup on weapon each next is added with `30%` chance.
 **Source**: `WeaponWithRandomPowerups` loot  
 
 <img width="370" src="https://github.com/mysterymarshak/LuckyBlocks/assets/37479500/1efdc942-a6ba-46cf-9d1c-1b7c7b83f81f" alt="Demo of weapon" />
-
-</ul>
-
-</details>
-
-<details>
-
-<summary>Weapon Powerups</summary>
-
-<ul>
 
 ## Weapon Powerups
 
@@ -495,18 +429,6 @@ Katana + Fire = Flamy Katana
 
 > USAGE DEMO
 
-</ul>
-
-</details>
-
-</details>
-
-<details>
-
-<summary>Magic</summary>
-
-<ul>
-
 ## Magic
 
 You're not issekai hero, only one magic.  
@@ -580,7 +502,7 @@ Spawns three player illusions.
 ### Time stop wizard
 
 Stops the time. Every action performed in stopped scene saves impulse and affects further game.  
-Time automatically resumes if wizerd dies.  
+Time automatically resumes if wizard dies.  
 
 **Source**: `TimeStopWizard` loot  
 **Casts count**: 1  
@@ -642,16 +564,6 @@ Reverts last X seconds back.
 
 <img width="370" src="https://github.com/mysterymarshak/LuckyBlocks/assets/37479500/293e9a55-9404-45e6-99eb-2b0a67ecba3d" alt="Demo of magic colliding" />
 
-</ul>
-
-</details>
-
-<details>
-
-<summary>Items</summary>
-
-<ul>
-
 ## Items
 
 ### Medkit
@@ -670,16 +582,6 @@ Spawns pills (25 HP) or medkit (50 HP)
 > <img width="370" src="https://github.com/mysterymarshak/LuckyBlocks/assets/37479500/c3a3900a-c305-4032-b541-e73eb7a254b3" alt="Demo of medkit" />
 
 </p>
-
-</ul>
-
-</details>
-
-<details>
-
-<summary>World Events</summary>
-
-<ul>
 
 ## World Events
 
@@ -752,8 +654,12 @@ Spawns many explosive barrels in the top of the map.
 
 <img width="370" src="https://github.com/mysterymarshak/LuckyBlocks/assets/37479500/9de5df30-c15b-41fc-834c-9dd8144f6bf1" alt="Demo of event" />
 
+<p>
+
 > [!NOTE]
 > On maps with roof (like Hazardous) barrels will stuck in it.  
+
+</p>
 
 ### Remove weapons
 
@@ -774,10 +680,6 @@ Makes activator a weapon monopolist.
 **Weight**: 0.25
 
 > USAGE DEMO
-
-</ul>
-
-</details>
 
 ## F.A.Q.
 
