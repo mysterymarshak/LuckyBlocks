@@ -22,7 +22,7 @@ internal abstract class GrenadesPowerupBase : UsablePowerupBase<Grenade>
         protected set => _usesLeft = value;
     }
 
-    protected abstract override IEnumerable<Type> IncompatiblePowerups { get; }
+    protected abstract override IReadOnlyCollection<Type> IncompatiblePowerupsInternal { get; }
 
     private readonly IGrenadesService _grenadesService;
     private readonly IGame _game;

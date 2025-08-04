@@ -10,12 +10,12 @@ namespace LuckyBlocks.Features.WeaponPowerups.Bullets;
 
 internal class PushBullets : BulletsPowerupBase
 {
+    public static readonly List<Type> IncompatiblePowerups =
+        [typeof(TripleRicochetBullets), typeof(FreezeBullets), typeof(PoisonBullets)];
+
     public override string Name => "Push bullets";
 
-    protected override IEnumerable<Type> IncompatiblePowerups => _incompatiblePowerups;
-
-    private static readonly List<Type> _incompatiblePowerups =
-        [typeof(TripleRicochetBullets), typeof(FreezeBullets), typeof(PoisonBullets)];
+    protected override IReadOnlyCollection<Type> IncompatiblePowerupsInternal => IncompatiblePowerups;
 
     private readonly IProjectilesService _projectilesService;
     private readonly PowerupConstructorArgs _args;

@@ -116,7 +116,7 @@ internal class LootFactory : ILootFactory
         Item.Medkit => new Medkit(position, _lootConstructorArgs),
         Item.StickyGrenades => new StickyGrenadesLoot(position, _lootConstructorArgs),
         Item.BananaGrenades => new BananaGrenadesLoot(position, _lootConstructorArgs),
-        Item.WeaponWithRandomPowerup => new WeaponWithRandomPowerupLoot(position, _lootConstructorArgs),
+        Item.WeaponWithRandomPowerups => new WeaponWithRandomPowerupsLoot(position, _lootConstructorArgs),
         Item.FlamyKatana => new FlamyKatanaLoot(position, _lootConstructorArgs),
         Item.RemoveWeapons => new RemoveWeapons(_lootConstructorArgs),
         Item.FunWeapon => new FunWeaponLoot(position, _lootConstructorArgs),

@@ -132,7 +132,7 @@ internal enum Item
     [PlayerIsNotOtherWizard(SourceWizard = typeof(TimeStopWizard))]
     TimeStopWizard,
 
-    WeaponWithRandomPowerup,
+    WeaponWithRandomPowerups,
 
     FlamyKatana,
 

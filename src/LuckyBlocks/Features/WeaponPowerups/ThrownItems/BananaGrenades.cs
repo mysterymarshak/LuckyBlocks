@@ -11,13 +11,13 @@ namespace LuckyBlocks.Features.WeaponPowerups.ThrownItems;
 
 internal class BananaGrenades : GrenadesPowerupBase
 {
+    public static readonly IReadOnlyCollection<Type> IncompatiblePowerups = [typeof(StickyGrenades)];
+    
     public override Color PaintColor => Color.Yellow;
     public override string Name => "Banana grenades";
     public override int UsesCount => 3;
 
-    protected override IEnumerable<Type> IncompatiblePowerups => _incompatiblePowerups;
-
-    private static readonly List<Type> _incompatiblePowerups = [typeof(StickyGrenades)];
+    protected override IReadOnlyCollection<Type> IncompatiblePowerupsInternal => IncompatiblePowerups;
 
     private readonly Func<IObjectGrenadeThrown, BananaGrenade> _createGrenadeDelegate;
     private readonly PowerupConstructorArgs _args;

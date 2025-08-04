@@ -16,15 +16,15 @@ namespace LuckyBlocks.Features.WeaponPowerups.Bullets;
 // your character moves backwards
 internal class LostBullets : BulletsPowerupBase
 {
+    public static readonly IReadOnlyCollection<Type> IncompatiblePowerups = [];
+    
     public override string Name => "Lost bullets";
 
     public override int UsesCount => Math.Max(base.UsesCount,
         (Weapon is Shotgun ? (Weapon.TotalAmmo / 2) : Weapon.TotalAmmo));
 
-    protected override IEnumerable<Type> IncompatiblePowerups => _incompatiblePowerups;
+    protected override IReadOnlyCollection<Type> IncompatiblePowerupsInternal => IncompatiblePowerups;
     protected override bool CountShotgunBulletsIndependently => false;
-
-    private static readonly List<Type> _incompatiblePowerups = [];
 
     private readonly IProjectilesService _projectilesService;
     private readonly IGame _game;

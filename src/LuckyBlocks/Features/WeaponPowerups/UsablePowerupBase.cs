@@ -21,7 +21,7 @@ internal abstract class UsablePowerupBase<T> : IUsablePowerup<T> where T : Weapo
     public abstract int UsesCount { get; }
     public abstract int UsesLeft { get; protected set; }
 
-    protected abstract IEnumerable<Type> IncompatiblePowerups { get; }
+    protected abstract IReadOnlyCollection<Type> IncompatiblePowerupsInternal { get; }
     protected IExtendedEvents ExtendedEvents { get; }
 
     private IPlayer? Player => Weapon.Owner;
@@ -105,7 +105,7 @@ internal abstract class UsablePowerupBase<T> : IUsablePowerup<T> where T : Weapo
         Run();
     }
 
-    public bool IsCompatibleWith(Type otherPowerupType) => !IncompatiblePowerups.Contains(otherPowerupType);
+    public bool IsCompatibleWith(Type otherPowerupType) => !IncompatiblePowerupsInternal.Contains(otherPowerupType);
 
     public abstract IWeaponPowerup<T> Clone(Weapon copiedWeapon);
 
