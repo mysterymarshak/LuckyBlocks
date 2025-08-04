@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Autofac;
 using LuckyBlocks.Data.Args;
+using LuckyBlocks.Extensions;
 using LuckyBlocks.Utils;
 using SFDGameScriptInterface;
 
@@ -55,14 +56,10 @@ internal class ProjectilesService : IProjectilesService
 
     private void AddPowerup(IProjectile projectile, IProjectilePowerup powerup)
     {
-        if (!_projectiles.TryGetValue(projectile, out var powerups))
-        {
-            powerups = [];
-            _projectiles.Add(projectile, powerups);
-        }
-
-        powerup.ProjectileRemove += OnProjectileRemoved;
+        var powerups = _projectiles.GetOrAdd(projectile, () => []);
         powerups.Add(powerup);
+        
+        powerup.ProjectileRemove += OnProjectileRemoved;
 
         if (powerup.IsCloned)
         {

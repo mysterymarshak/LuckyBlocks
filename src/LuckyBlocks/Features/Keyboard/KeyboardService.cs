@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Autofac;
+using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Features.Time;
 using LuckyBlocks.Utils;
@@ -27,13 +28,7 @@ internal class KeyboardService : IKeyboardService
 
     public Keyboard ResolveForPlayer(Player player)
     {
-        if (!_keyboards.TryGetValue(player, out var keyboard))
-        {
-            keyboard = new Keyboard(player, _timeProvider, _extendedEvents);
-            _keyboards.Add(player, keyboard);
-        }
-
-        return keyboard;
+        return _keyboards.GetOrAdd(player, player => new Keyboard(player, _timeProvider, _extendedEvents));
     }
 
     public void DisposeForPlayer(Player player)

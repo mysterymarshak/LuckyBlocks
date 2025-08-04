@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using LuckyBlocks.Extensions;
 using SFDGameScriptInterface;
 
 namespace LuckyBlocks.Features.WeaponPowerups.Grenades;
@@ -17,14 +18,10 @@ internal class GrenadesService : IGrenadesService
 
     public void AddPowerup(IObjectGrenadeThrown grenadeThrown, GrenadeBase powerup)
     {
-        if (!_grenades.TryGetValue(grenadeThrown, out var powerups))
-        {
-            powerups = [];
-            _grenades.Add(grenadeThrown, powerups);
-        }
+        var powerups = _grenades.GetOrAdd(grenadeThrown, () => []);
+        powerups.Add(powerup);
 
         powerup.Destroy += OnGrenadeDestroyed;
-        powerups.Add(powerup);
 
         if (powerup.IsCloned)
         {

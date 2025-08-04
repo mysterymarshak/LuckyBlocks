@@ -74,13 +74,7 @@ internal class WeaponsDataWatcher : IWeaponsDataWatcher
 
     public Weapon RegisterWeapon(IObjectWeaponItem objectWeaponItem)
     {
-        if (!_droppedWeapons.TryGetValue(objectWeaponItem.UniqueId, out var weapon))
-        {
-            weapon = objectWeaponItem.ToWeapon();
-            _droppedWeapons.Add(objectWeaponItem.UniqueId, weapon);
-        }
-
-        return weapon;
+        return _droppedWeapons.GetOrAdd(objectWeaponItem.UniqueId, objectWeaponItem.ToWeapon);
     }
 
     private void OnPlayerCreated(Event<IPlayer[]> @event)

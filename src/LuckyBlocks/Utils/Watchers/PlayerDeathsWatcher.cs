@@ -54,6 +54,7 @@ internal class PlayerDeathsWatcher : IPlayerDeathsWatcher
     {
         var playerInstance = @event.Arg1;
         var args = @event.Arg2;
+
         if (!_players.TryGetValue(playerInstance.UniqueId, out var player))
             return;
 

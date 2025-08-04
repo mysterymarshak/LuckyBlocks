@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using LuckyBlocks.Data.Args;
 using LuckyBlocks.Exceptions;
+using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Utils;
 using LuckyBlocks.Utils.Timers;
@@ -118,12 +119,7 @@ internal abstract class AreaMagicBase : MagicBase, IAreaMagic
 
     protected IEnumerable<IObject> GetAffectedObjectsByArea(Area fullArea, Area iterationArea)
     {
-        if (!_objectsByArea.TryGetValue(fullArea, out var objects))
-        {
-            objects = _game.GetObjectsByArea(fullArea).ToList();
-            _objectsByArea.Add(fullArea, objects);
-        }
-
+        var objects = _objectsByArea.GetOrAdd(fullArea, fullArea => _game.GetObjectsByArea(fullArea).ToList());
         return objects.Where(@object =>
         {
             var position = @object.GetWorldPosition();

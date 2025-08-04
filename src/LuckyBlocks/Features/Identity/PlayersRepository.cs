@@ -94,12 +94,7 @@ internal class PlayersRepository : IPlayersRepository
         }
 
         var fakePlayer = GetFakePlayer(fakeInstance, sourcePlayer);
-        if (!_playerFakes.TryGetValue(sourcePlayer, out var fakes))
-        {
-            fakes = [];
-            _playerFakes.Add(sourcePlayer, fakes);
-        }
-
+        var fakes = _playerFakes.GetOrAdd(sourcePlayer, () => []);
         fakes.Add(fakePlayer);
 
         return fakePlayer;

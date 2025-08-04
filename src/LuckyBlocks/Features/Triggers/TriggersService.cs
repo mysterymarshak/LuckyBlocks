@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using LuckyBlocks.Extensions;
 using Serilog;
 using SFDGameScriptInterface;
 
@@ -54,12 +55,7 @@ internal class TriggersService : ITriggersService
 
     public IObjectScriptTrigger CreateHookForObject(IObject hookObject, Action<TriggerArgs> callback)
     {
-        if (!_hookedCallbacks.TryGetValue(hookObject, out var callbacks))
-        {
-            callbacks = [];
-            _hookedCallbacks.Add(hookObject, callbacks);
-        }
-
+        var callbacks = _hookedCallbacks.GetOrAdd(hookObject, () => []);
         callbacks.Add(callback);
 
         return _scriptTrigger;

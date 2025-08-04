@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Autofac;
 using LuckyBlocks.Data.Weapons;
+using LuckyBlocks.Extensions;
 using LuckyBlocks.Features.Identity;
 using LuckyBlocks.Reflection;
 using LuckyBlocks.SourceGenerators.ExtendedEvents.Data;
@@ -20,7 +21,6 @@ internal class DrawnWeaponsWatcher : IDrawnWeaponsWatcher
     [InjectLogger]
     private static ILogger Logger { get; set; }
 
-    private readonly Dictionary<Player, Weapon> _previouslyDrawnWeapons = new();
     private readonly IIdentityService _identityService;
     private readonly IExtendedEvents _extendedEvents;
 
@@ -46,12 +46,6 @@ internal class DrawnWeaponsWatcher : IDrawnWeaponsWatcher
             var weaponsData = player.WeaponsData;
             var currentDrawn = weaponsData.CurrentWeaponDrawn;
             var realCurrentDrawn = playerInstance.CurrentWeaponDrawn;
-
-            if (!_previouslyDrawnWeapons.TryGetValue(player, out var previouslyDrawnWeapon))
-            {
-                previouslyDrawnWeapon = currentDrawn;
-                _previouslyDrawnWeapons.Add(player, previouslyDrawnWeapon);
-            }
 
             if (currentDrawn.WeaponItemType != realCurrentDrawn ||
                 (playerInstance.CurrentMeleeMakeshiftWeapon.WeaponItem != WeaponItem.NONE &&

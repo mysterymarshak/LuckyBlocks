@@ -58,12 +58,7 @@ internal class ProfilesService : IProfilesService
             throw new ArgumentException($"cannot found profile priority for '{typeof(T).Name}'");
         }
 
-        if (!_profileChanges.TryGetValue(player, out var changes))
-        {
-            changes = [];
-            _profileChanges.Add(player, changes);
-        }
-
+        var changes = _profileChanges.GetOrAdd(player, () => []);
         if (changes.Any(x => x.Priority == priority))
         {
             throw new InvalidOperationException(

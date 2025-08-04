@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using LuckyBlocks.Extensions;
 using Serilog;
 using SFDGameScriptInterface;
 
@@ -42,12 +43,7 @@ internal class EntitiesService : IEntitiesService
         _entitiesById.Add(entity.ObjectId, entity);
 
         var entityType = entity.GetType();
-        if (!_entitiesByType.TryGetValue(entityType, out var entitiesByType))
-        {
-            entitiesByType = [];
-            _entitiesByType.Add(entityType, entitiesByType);
-        }
-
+        var entitiesByType = _entitiesByType.GetOrAdd(entityType, () => []);
         entitiesByType.Add(entity);
     }
 
@@ -60,13 +56,7 @@ internal class EntitiesService : IEntitiesService
     // use only with reversed for-loop 
     public List<IEntity> GetAllUnsafe<T>() where T : IEntity
     {
-        if (!_entitiesByType.TryGetValue(typeof(T), out var entitiesByType))
-        {
-            entitiesByType = [];
-            _entitiesByType.Add(typeof(T), entitiesByType);
-        }
-
-        return entitiesByType;
+        return _entitiesByType.GetOrAdd(typeof(T), () => []);
     }
 
     public bool IsRegistered(IObject @object)

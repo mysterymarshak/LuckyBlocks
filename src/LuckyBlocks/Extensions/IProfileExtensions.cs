@@ -11,13 +11,7 @@ internal static class IProfileExtensions
 
     public static FieldInfo GetField(string name)
     {
-        if (!FieldsInfo.TryGetValue(name, out var field))
-        {
-            field = typeof(IProfile).GetField(name);
-            FieldsInfo.Add(name, field);
-        }
-
-        return field;
+        return FieldsInfo.GetOrAdd(name, name => typeof(IProfile).GetField(name));
     }
 
     public static IEnumerable<string> GetProperties()
