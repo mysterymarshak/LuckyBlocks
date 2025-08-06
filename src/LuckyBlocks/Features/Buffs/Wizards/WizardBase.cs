@@ -30,6 +30,8 @@ internal abstract class WizardBase : FinishableBuffBase, IWizard
 
     public bool IsCloned { get; private set; }
 
+    protected bool IsUsingMagic { get; set; }
+
     private readonly IEffectsPlayer _effectsPlayer;
     private readonly IMagicService _magicService;
     private readonly WizardFinishCondition _wizardFinishCondition;
@@ -124,7 +126,7 @@ internal abstract class WizardBase : FinishableBuffBase, IWizard
         var playerInstance = Player.Instance!;
         var position = playerInstance.GetWorldPosition();
 
-        if (!CanUseMagic() || Player.IsFake() || !_magicService.IsMagicAllowed)
+        if (!CanUseMagic() || Player.IsFake() || (!_magicService.IsMagicAllowed && !IsUsingMagic))
         {
             _effectsPlayer.PlaySoundEffect("BreakGlassSmall", position);
             _effectsPlayer.PlayEffect("DestroyGlass", playerInstance.GetHandPosition());

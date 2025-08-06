@@ -109,12 +109,15 @@ internal class StealWizard : WizardBase, IImmunityFlagsIndicatorBuff
         _stealTimeWarningTimer.Stop();
         _stealTimer.Stop();
         _magic.ExternalFinish();
+        IsUsingMagic = false;
     }
 
     private void OnStealModeEntered()
     {
         _cts = new CancellationTokenSource();
         _isInStealMode = true;
+
+        IsUsingMagic = true;
 
         ShowStealModeHints();
         _stealTimer.Start();
