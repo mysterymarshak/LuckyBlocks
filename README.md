@@ -357,7 +357,7 @@ Katana + Fire = Flamy Katana
 
 <p>
 
-> [!NOTE]
+> [!WARNING]
 > While you hold the flamy katana in hands, it "burns down" and losing durability  
 > If katana breaks in your hands, you'll be set on fire  
 
