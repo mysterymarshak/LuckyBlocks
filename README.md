@@ -580,6 +580,7 @@ You can steal inventory of chosen player.
 
 > [!TIP]
 > To switch player use `ALT`  
+> To steal use magic again  
 
 </p>
 
@@ -592,6 +593,14 @@ Reverts last X seconds back.
 **Casts count**: 1  
 
 <img width="370" src="https://github.com/user-attachments/assets/ef0788da-35cc-4fd0-b75b-802e6b601828" alt="Demo of TimeRevertWizard" />
+
+<p>
+
+> [!TIP]
+> To switch between intervals use `ARROWS`  
+> To revert the time for chosen interval use `A`  
+
+</p>
 
 ## Magic collision
 
