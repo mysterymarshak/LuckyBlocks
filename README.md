@@ -448,7 +448,7 @@ Read the title again please.
 
 Bullets will spawn in random place on the map.  
 
-**Source**: from `FunWeapon` loot with `30%` chance or in predifined template  
+**Source**: from [Fun weapon](#fun-weapon) loot with `30%` chance or in predifined template  
 **Quantity**: all weapon ammo (for shotgun 0.5 weapon ammo)  
 
 <img width="370" src="https://github.com/user-attachments/assets/c9d43ea3-0d39-4e4c-8384-ed4bce4ba44d" alt="Demo of LostBullets" />	
