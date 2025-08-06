@@ -34,7 +34,7 @@ internal class DecoyWizard : WizardBase
     protected override bool CanUseMagic()
     {
         var playerInstance = Player.Instance!;
-        return playerInstance.GetTeam() == PlayerTeam.Independent;
+        return playerInstance.GetTeam() == PlayerTeam.Independent && _magic?.IsFinished != false;
     }
 
     protected override IFinishCondition<IMagic> OnUseMagic()
