@@ -17,6 +17,7 @@ There are different drop types you may receive:
 3. [Magic](#magic) `(wind, fire, and more...)`
 4. [Items](#items) `(have you ever used expired pills?)`
 5. [World Events](#world-events) `(the big brother is watching you)`
+6. [FAQ](#faq) `... no, you`
 
 **About compability with other scripts**  
 Lucky Blocks is a global standalone mod that changes SFD gameplay in many aspects. Only following quality of life scripts are well-tested and work fine with this script: [Loot Displayer](https://steamcommunity.com/sharedfiles/filedetails/?id=2545232247), [No Drones](https://steamcommunity.com/sharedfiles/filedetails/?id=2250869022). Any other script or map with complicated logic may cause bugs and will not be fixed on our side.  
@@ -41,7 +42,7 @@ Incompatible buffs are impossible to get together in the same time.
 
 Some buffs may give an immunity to something (like fire, fall damage, something script-specific or etc). It ends with the buff itself (sometimes with delay).
 
-Every buff may interact with others, like if you has wet-hands, becoming fire wizard will dry them.
+Also some buffs may interact with others, like if you has [Wet Hands](#wet-hands), becoming [Fire Wizard](#fire-wizard) will dry them.
   
 ## Instant Buffs
 
@@ -52,7 +53,7 @@ Fully recovers player's HP.
 **Source**: `FullHp` loot  
 **If**: player's HP aren't full  
 
-<img width="370" src="https://github.com/mysterymarshak/LuckyBlocks/assets/13312994/ac7d1fec-0224-451d-9dae-01b011d06b50" alt="HP recovery" />
+<img width="370" src="https://github.com/user-attachments/assets/bc8dbd4f-e25d-4f68-98d1-24e5ffc2c99a" alt="HP recovery" />
 
 ### Ignite
 
@@ -61,8 +62,6 @@ Sets the player on fire.
 **Source**: [Ignite random player](#ignite-random-player) loot or [Fire Magic](#fire-wizard)  
 **Will be repressed if**: player has an immunity to fire  
 
-> USAGE DEMO
-
 ### Poison
 
 Poison player for some HP amount.
@@ -70,16 +69,12 @@ Poison player for some HP amount.
 **Source**: [Medkit](#medkit) loot when it's poisoned or on picking up any meds when you're a [Vampire](#vampirism)  
 **Will be repressed if**: player has an immunity to poison  
 
-> USAGE DEMO
-
 ### Disarm
 
 Throws the active player's weapon.
 
 **Source**: [Wind Magic](#wind-wizard)  
 **Will be repressed if**: player has an immunity to wind  
-
-> USAGE DEMO
 
 ## Durable Buffs
 
@@ -110,7 +105,7 @@ Increases the player's jump height.
 **Source**: `HighJumps` loot  
 **Grants immunity**: to fall damage  
 
-<img width="370" src="https://github.com/mysterymarshak/LuckyBlocks/assets/37479500/72e88a45-b1fc-4a44-b099-ad4d09744f8f" alt="High jumps" />
+<img width="370" src="https://github.com/user-attachments/assets/1f734a3c-aa61-457d-bc2e-6995705602fd" alt="High jumps" />
 
 ### Shield
 
@@ -139,7 +134,7 @@ The vampire recovers his health equal to the damage dealt to other players.
 **Source**: `Vampirism` loot  
 **Incompatibility**: with [Hulk](#hulk) and [Dwarf](#dwarf)  
 
-<img width="370" src="https://github.com/mysterymarshak/LuckyBlocks/assets/37479500/75ad22ce-3714-4d7b-81b6-78e087f1f2ec" alt="Demo of buff usage" />
+<img width="370" src="https://github.com/user-attachments/assets/90c8b80d-b968-4a3e-83ee-8e6bc84f7fcd" alt="Demo of Vampirism" />
 
 <p>
 
@@ -202,7 +197,7 @@ There's a `25%` chance that you will drop active weapon on actions with it.
 **Source**: `WetHands` loot  
 **Will be repressed if**: player has an immunity to water  
 
-> USAGE DEMO
+<img width="370" src="https://github.com/user-attachments/assets/eabd39eb-c074-44e9-85eb-9f48725218de" alt="Demo of WetHands" />
 
 ### Durable poison
 
@@ -212,17 +207,13 @@ Deals `3` damage/s every second.
 **Source**: [Poisoned projectile](#poison-bullets)  
 **Will be repressed if**: player has an immunity to poison  
 
-> USAGE DEMO
-
 ### Shock
 
 Paralyzes player and deals `3` damage every `0.3` seconds.  
 
-**Duration**: 0.05s - 5s (depends on shock charge)  
+**Duration**: 0.05s - 3.5s (depends on shock charge)  
 **Source**: [Electric Magic](#electric-wizard)  
 **Will be repressed if**: player has an immunity to shock  
-
-> USAGE DEMO
 
 ## Situational Buffs
 
@@ -254,7 +245,14 @@ By pressing `[ALT + D]` you can prohibit magic usage for `15` seconds.
 **Source**: `TheFool` loot  
 **If**: no one have this buff and magic is allowed on the moment when lucky block was broken  
 
-> USAGE DEMO
+<img width="370" src="https://github.com/user-attachments/assets/5aa86c82-adf9-4331-a1b5-c89a6f707cee" alt="Demo of TheFool" />
+
+<p>
+
+> [!WARNING]
+> Magic already in effect won't be stopped.
+
+</p>
 
 ## Weapons
 
@@ -300,7 +298,7 @@ Have you ever played Worms? C'mon, just try it
 
 **Source**: `BananaGrenades` loot  
 
-> USAGE DEMO
+<img width="370" src="https://github.com/user-attachments/assets/e8a5b270-abd6-48c7-9dbf-84a9923c5f4a" alt="Demo of BananaGrenades" />
 
 <p>
   
@@ -322,7 +320,7 @@ Drops a random fun weapon from templates:
 
 **Source**: `FunWeapon` loot  
 
-> USAGE DEMO
+<img width="370" src="https://github.com/user-attachments/assets/b447980e-3b58-4768-a44b-9cf6175c5279" alt="Demo of FunWeapon" />
 
 > [!NOTE]
 > There's `30%` chance that weapon will also get [Lost bullets](#lost-bullets) powerup.  
@@ -334,7 +332,15 @@ After first powerup on weapon each next is added with `30%` chance.
 
 **Source**: `WeaponWithRandomPowerups` loot  
 
-<img width="370" src="https://github.com/mysterymarshak/LuckyBlocks/assets/37479500/1efdc942-a6ba-46cf-9d1c-1b7c7b83f81f" alt="Demo of weapon" />
+<img width="370" src="https://github.com/user-attachments/assets/16cfd646-e27b-4c32-984f-7bebf747fe65" alt="Demo of WeaponWithRandomPowerups" />
+
+### Flamy katana
+
+Katana + Fire = Flamy Katana  
+
+**Source**: `FlamyKatana` loot  
+
+<img width="370" src="https://github.com/user-attachments/assets/1fad4593-6f9a-4d50-849f-1309d8142c3d" alt="Demo of FlamyKatana" />
 
 ## Weapon Powerups
 
@@ -347,6 +353,11 @@ Poweruped bullets count depends on weapon, unless otherwise stated.
 > Search compatible weapon order: `In hands` -> `Primary` -> `Secondary`  
 >
 > <img width="370" src="https://github.com/mysterymarshak/LuckyBlocks/assets/37479500/44604b4b-50b8-4d76-8305-a71e3e30cf64" alt="Demo of multiple powerups on the weapon" />
+
+> [!NOTE]
+> You can't pick up the weapon you already have if it's powerups are in conflict with existing weapon.  
+>
+> <img width="370" src="https://github.com/user-attachments/assets/0235338d-7152-4355-ac3f-b6f204ebd2c2" alt="Demo of poweups incompatibility" />
 
 ### Explosive bullets
 
@@ -410,24 +421,24 @@ Read the title again please.
 **Source**: `PoisonBullets` loot  
 **Incompability**: with [Triple Ricochet Bullets](#triple-ricochet-bullets) and [Push Bullets](#push-bullets)  
 
-> USAGE DEMO
+<img width="370" src="https://github.com/user-attachments/assets/ca601283-6579-4a7c-9cd0-569fbff81097" alt="Demo of PoisonBullets" />
 
 ### Lost bullets
 
 Bullets will spawn in random place on the map.  
 
-**Source**: `LostBullets` loot  
+**Source**: from `FunWeapon` loot with `30%` chance or in predifined template  
 **Quantity**: all weapon ammo (for shotgun 0.5 weapon ammo)  
 
-> USAGE DEMO
+<img width="370" src="https://github.com/user-attachments/assets/c9d43ea3-0d39-4e4c-8384-ed4bce4ba44d" alt="Demo of LostBullets" />
 
-### Flamy katana
+<p>
 
-Katana + Fire = Flamy Katana  
+> [!TIP]
+>
+> Actually bullet usings random player spawnpoint position to spawn. 
 
-**Source**: `FlamyKatana` loot  
-
-> USAGE DEMO
+</p>
 
 ## Magic
 
@@ -531,7 +542,7 @@ You can store your state to return there later.
 **If**: you isn't Restore Wizard already  
 **Casts count**: first - save, second - restore  
 
-> USAGE DEMO
+<img width="370" src="https://github.com/user-attachments/assets/adc132cd-47d9-4664-bbe7-e692b2e9e3b6" alt="Demo of RestoreWizard" />
 
 ### Steal Wizard
 
@@ -542,7 +553,7 @@ You can steal inventory of chosen player.
 **Casts count**: 1  
 **Grants immunity**: to steal  
 
-> USAGE DEMO
+<img width="370" src="https://github.com/user-attachments/assets/64f9c473-fd6f-4e88-a5a7-156ad5907b6e" alt="Demo of StealWizard" />
 
 ### Time Revert Wizard
 
@@ -552,7 +563,7 @@ Reverts last X seconds back.
 **If**: no one is Time Revert Wizard  
 **Casts count**: 1  
 
-> USAGE DEMO
+<img width="370" src="https://github.com/user-attachments/assets/ef0788da-35cc-4fd0-b75b-802e6b601828" alt="Demo of TimeRevertWizard" />
 
 ## Magic collision
 
@@ -639,7 +650,7 @@ Shuffles players weapons.
 
 ### Ignite random player
 
-Ignites random player.  
+[Ignites](#ignite) random player.  
 
 **Source**: `IgniteRandomPlayer` loot  
 
@@ -657,7 +668,7 @@ Spawns many explosive barrels in the top of the map.
 <p>
 
 > [!NOTE]
-> On maps with roof (like Hazardous) barrels will stuck in it.  
+> On maps with roof (like Hazardous) barrels may stuck in it.  
 
 </p>
 
@@ -669,7 +680,7 @@ Removes weapons from all players on the map.
 **If**: there's armed player  
 **Weight**: 0.25
 
-> USAGE DEMO
+<img width="370" src="https://github.com/user-attachments/assets/5f5480ec-fbac-408a-ab71-b95c23f0d723" alt="Demo of RemoveWeapons" />
 
 ### Remove weapons except activator
 
@@ -679,12 +690,9 @@ Makes activator a weapon monopolist.
 **If**: there's armed player  
 **Weight**: 0.25
 
-> USAGE DEMO
+<img width="370" src="https://github.com/user-attachments/assets/fcfc21dd-f03c-4af3-8997-0a42d481df21" alt="Demo of RemoveWeaponsExceptActivator" />
 
 ## F.A.Q.
-
-**Q**: What is F.A.Q.?  
-**A**: Use google please.
 
 **Q**: I am playing with gamepad, changed key mapping, how to use `[ALT+A]` etc.  
 **A**: Actions are actually bound to events. `[ALT+A]` means you have to be in slow-walking state and pressing attack button.
@@ -714,3 +722,6 @@ This script is a script with a huge history that began in 2021, thanks to it I l
 
 I'm tired of making changes to `README.md`  
 \- from DMax in 2025
+
+New lucky blocks update brings new items, many improvements and fixes. Now script is so worked out and detailed that mentioning all small things would take a lot of time and symbols. So try it yourself, I hope you will appreciate this update. SFD hasn't seen this kinda stuff yet :>  
+\- from marshak in 2025
