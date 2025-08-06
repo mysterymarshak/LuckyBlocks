@@ -26,6 +26,15 @@ Every loot has `weight` attribute, equals to `1` by default.
 The higher value corresponds to higher chance to appear.  
 P.S. [Bloody bath](#bloody-bath) and both of [Remove all weapons](#remove-weapons) has lower weight due to balance issues.  
 
+<p>
+ 
+> [!NOTE]
+> You can press `ALT + SHIFT` to see your buffs and powerupped weapons
+>
+> <img width="370" height="119" src="https://github.com/user-attachments/assets/29441097-32af-422b-b2f7-4bf18dcff272" alt="Example output of [ALT+SHIFT]" />
+
+</p>
+
 ## Player Buffs
 
 Player buffs somehow modify player. Most of them are obtained from lucky block (check source in description) when player breaks it by melee attack. There are buffs that are obtained when certain condition are met.  
@@ -322,8 +331,12 @@ Drops a random fun weapon from templates:
 
 <img width="370" src="https://github.com/user-attachments/assets/b447980e-3b58-4768-a44b-9cf6175c5279" alt="Demo of FunWeapon" />
 
+<p>
+ 
 > [!NOTE]
-> There's `30%` chance that weapon will also get [Lost bullets](#lost-bullets) powerup.  
+> There's `30%` chance that weapon will also get [Lost bullets](#lost-bullets) powerup.
+
+</p>
 
 ### Random weapon with random powerups
 
@@ -341,6 +354,14 @@ Katana + Fire = Flamy Katana
 **Source**: `FlamyKatana` loot  
 
 <img width="370" src="https://github.com/user-attachments/assets/1fad4593-6f9a-4d50-849f-1309d8142c3d" alt="Demo of FlamyKatana" />
+
+<p>
+
+> [!NOTE]
+> While you hold the flamy katana in hands, it "burns down" and losing durability  
+> If katana breaks in your hands, you'll be set on fire  
+
+</p>
 
 ## Weapon Powerups
 
@@ -430,7 +451,7 @@ Bullets will spawn in random place on the map.
 **Source**: from `FunWeapon` loot with `30%` chance or in predifined template  
 **Quantity**: all weapon ammo (for shotgun 0.5 weapon ammo)  
 
-<img width="370" src="https://github.com/user-attachments/assets/c9d43ea3-0d39-4e4c-8384-ed4bce4ba44d" alt="Demo of LostBullets" />
+<img width="370" src="https://github.com/user-attachments/assets/c9d43ea3-0d39-4e4c-8384-ed4bce4ba44d" alt="Demo of LostBullets" />	
 
 <p>
 
@@ -554,6 +575,13 @@ You can steal inventory of chosen player.
 **Grants immunity**: to steal  
 
 <img width="370" src="https://github.com/user-attachments/assets/64f9c473-fd6f-4e88-a5a7-156ad5907b6e" alt="Demo of StealWizard" />
+
+<p>
+
+> [!TIP]
+> To switch player use `ALT`  
+
+</p>
 
 ### Time Revert Wizard
 
