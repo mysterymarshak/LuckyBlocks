@@ -752,6 +752,9 @@ Makes activator a weapon monopolist.
 **Q**: Does this script work with bots?  
 **A**: Maybe. Better avoid them. We assumed you will play with real humans (or maybe even touch the real grass).
 
+**Q**: Why there're exceptions or warnings in the chat?  
+**A**: Shit happens. We also discovered that high ping may cause some issues. Feel free to [report](https://github.com/mysterymarshak/LuckyBlocks/issues) about bad things. In order to in-place solution you can restart the script via `/lb_restart` command.
+
 ## About script
 
 This script is a script with a huge history that began in 2021, thanks to it I learned a lot in c#, even picked up linear algebra and repeated quite a bit of physics. that's hundreds of hours of code. Now I have absolutely no time left to do or change anything, this script should have been released at the end of summer - a little more than six months ago. but in three days I finally managed to finish what I had to postpone the release because of. I can now say that I like the time stopping magic and that it is done quite well. in lucky blocks, in general, no matter how hard I tried, there were always some shortcomings, for example, source generators, which I mastered in the summer, I never completed, unfortunately. many ideas had to be abandoned. but the release can no longer be delayed. I don’t even know when we last played SFD, probably a very long time ago. this script is what will remain in the SFD from our creative association of ["shiza"](https://www.youtube.com/@to_shiza). I want to believe that it will bring as much fun as it did for us in its time. The script can only be seen with your eyes, I do not plan to publish a way to compile it. those who want to try - good luck, I'll be interested to see  
