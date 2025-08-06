@@ -29,7 +29,7 @@ P.S. [Bloody bath](#bloody-bath) and both of [Remove all weapons](#remove-weapon
 <p>
  
 > [!NOTE]
-> You can press `ALT + SHIFT` to see your buffs and powerupped weapons
+> You can press `[ALT + SHIFT]` to see your buffs and powerupped weapons
 >
 > <img width="370" height="119" src="https://github.com/user-attachments/assets/29441097-32af-422b-b2f7-4bf18dcff272" alt="Example output of [ALT+SHIFT]" />
 
@@ -579,7 +579,7 @@ You can steal inventory of chosen player.
 <p>
 
 > [!TIP]
-> To switch player use `ALT`  
+> To switch player use `[ALT]`  
 > To steal use magic again  
 
 </p>
@@ -597,8 +597,8 @@ Reverts last X seconds back.
 <p>
 
 > [!TIP]
-> To switch between intervals use `ARROWS`  
-> To revert the time for chosen interval use `A`  
+> To switch between intervals use `[ARROWS]`  
+> To revert the time for chosen interval use `[A]`  
 
 </p>
 
@@ -731,8 +731,8 @@ Makes activator a weapon monopolist.
 
 ## F.A.Q.
 
-**Q**: I am playing with gamepad, changed key mapping, how to use `[ALT+A]` etc.  
-**A**: Actions are actually bound to events. `[ALT+A]` means you have to be in slow-walking state and pressing attack button.
+**Q**: I am playing with gamepad, changed key mapping, how to use `[ALT + A]` etc.  
+**A**: Actions are actually bound to events. `[ALT + A]` means you have to be in slow-walking state and pressing attack button.
 
 **Q**: Is there any commands in script?  
 **A**: Use `/lb_help`.
