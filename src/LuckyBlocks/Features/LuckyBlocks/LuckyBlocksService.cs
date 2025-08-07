@@ -49,7 +49,12 @@ internal class LuckyBlocksService : ILuckyBlocksService
     public void Initialize()
     {
         Events.ObjectCreatedCallback.Start(OnObjectsCreated);
+
+#if PUBLICRELEASE
         _logger.Information("Lucky blocks started ~ {Chance}% (/lb_help)", _spawnChanceService.Chance * 100);
+#else
+        _logger.Information("Lucky blocks DEV started ~ {Chance}% (/lb_help)", _spawnChanceService.Chance * 100);
+#endif
     }
 
     public void CreateLuckyBlock(IObjectSupplyCrate supplyCrate, Item predefinedItem = Item.None)
