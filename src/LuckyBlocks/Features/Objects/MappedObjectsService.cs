@@ -55,9 +55,11 @@ internal class MappedObjectsService : IMappedObjectsService
     {
         var map = _mappedObjects[oldUniqueId];
 
-        if (map.ActualObject.IsValid())
+        var actualObject = map.ActualObject;
+        if (actualObject.IsValid())
         {
-            throw new InvalidOperationException("you cannot update the mapped object when old map still valid");
+            throw new InvalidOperationException(
+                $"you cannot update the mapped object when old map still valid | {oldUniqueId} {map.ActualObject.Name}; {newObject?.UniqueId} {newObject?.Name}");
         }
 
         if (newObject is null)
