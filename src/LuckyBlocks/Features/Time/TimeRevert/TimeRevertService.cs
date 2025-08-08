@@ -8,6 +8,7 @@ using LuckyBlocks.Features.LuckyBlocks;
 using LuckyBlocks.Features.Magic;
 using LuckyBlocks.Features.Objects;
 using LuckyBlocks.Features.Time.TimeRevert.Objects;
+using LuckyBlocks.Features.Time.TimeStop;
 using LuckyBlocks.Utils;
 using LuckyBlocks.Utils.Timers;
 using LuckyBlocks.Utils.Watchers;
@@ -28,7 +29,9 @@ internal interface ITimeRevertService
 
 internal class TimeRevertService : ITimeRevertService
 {
-    public bool TimeCanBeReverted => _snapshots.Count > 0 && !_snapshotCreator.IsBusy && !_game.IsGameOver;
+    public bool TimeCanBeReverted => _snapshots.Count > 0 && !_snapshotCreator.IsBusy && !_game.IsGameOver &&
+                                     !_timeStopService.IsTimeStopped;
+
     public int SnapshotsCount => _snapshots.Count;
     public IEnumerable<RealitySnapshot> Snapshots => _snapshots;
 
@@ -44,6 +47,7 @@ internal class TimeRevertService : ITimeRevertService
     private readonly IMappedObjectsService _mappedObjectsService;
     private readonly IEntitiesService _entitiesService;
     private readonly ISpawnChanceService _spawnChanceService;
+    private readonly ITimeStopService _timeStopService;
     private readonly ILogger _logger;
     private readonly PeriodicTimer<IGame> _snapshotsTimer;
     private readonly List<RealitySnapshot> _snapshots = new(MaxSavedSnapshots);
@@ -52,7 +56,8 @@ internal class TimeRevertService : ITimeRevertService
     public TimeRevertService(IObjectsWatcher objectsWatcher, IGame game, ITimeProvider timeProvider,
         ISnapshotCreator snapshotCreator, IMagicService magicService, IDialoguesService dialoguesService,
         IMappedObjectsService mappedObjectsService, IEntitiesService entitiesService,
-        ISpawnChanceService spawnChanceService, ILogger logger, ILifetimeScope lifetimeScope)
+        ISpawnChanceService spawnChanceService, ITimeStopService timeStopService, ILogger logger,
+        ILifetimeScope lifetimeScope)
     {
         _objectsWatcher = objectsWatcher;
         _game = game;
@@ -63,6 +68,7 @@ internal class TimeRevertService : ITimeRevertService
         _mappedObjectsService = mappedObjectsService;
         _entitiesService = entitiesService;
         _spawnChanceService = spawnChanceService;
+        _timeStopService = timeStopService;
         _logger = logger;
         var thisScope = lifetimeScope.BeginLifetimeScope();
         _extendedEvents = thisScope.Resolve<IExtendedEvents>();
