@@ -23,7 +23,7 @@ internal class ReloadWeaponsWatcher : IReloadWeaponsWatcher
     [InjectLogger]
     private static ILogger Logger { get; set; }
 
-    private readonly Dictionary<int, List<ReloadAwaitingData>> _reloadsData = new();
+    private readonly Dictionary<Player, List<ReloadAwaitingData>> _reloadsData = new();
     private readonly IExtendedEvents _extendedEvents;
 
     public ReloadWeaponsWatcher(ILifetimeScope lifetimeScope)
@@ -70,11 +70,10 @@ internal class ReloadWeaponsWatcher : IReloadWeaponsWatcher
 
     public void StartReloadTracking(Player player, WeaponItemType weaponItemType)
     {
-        var playerInstance = player.Instance!;
         var weaponsData = player.WeaponsData;
         var savedWeapon = weaponsData.CurrentWeaponDrawn with { } as Firearm;
 
-        if (_reloadsData.TryGetValue(playerInstance.UniqueId, out var awaitingReloads))
+        if (_reloadsData.TryGetValue(player, out var awaitingReloads))
         {
             if (awaitingReloads.Any(x => x.WeaponItemType == weaponItemType))
                 return;
@@ -82,7 +81,7 @@ internal class ReloadWeaponsWatcher : IReloadWeaponsWatcher
         else
         {
             awaitingReloads = [];
-            _reloadsData.Add(playerInstance.UniqueId, awaitingReloads);
+            _reloadsData.Add(player, awaitingReloads);
         }
 
         Logger.Debug("Start watching reloading for player: {Player}, waiting for changing {WeaponItemType}",
