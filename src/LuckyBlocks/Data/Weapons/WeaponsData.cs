@@ -242,6 +242,9 @@ internal sealed class WeaponsData : IEnumerable<Weapon>
         foreach (var weapon in this)
         {
             stringBuilder.Append(weapon);
+            stringBuilder.Append(" (formatted: ");
+            stringBuilder.Append(weapon.GetFormattedName());
+            stringBuilder.Append(')');
             stringBuilder.Append(", ");
         }
 
