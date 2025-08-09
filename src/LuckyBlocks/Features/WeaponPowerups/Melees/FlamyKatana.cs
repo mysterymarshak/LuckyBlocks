@@ -80,7 +80,11 @@ internal class FlamyKatana : IStackablePowerup<Melee>
 
         if (Weapon.IsDropped)
         {
-            AddFlameToObject();
+            OnDrop(null, Weapon);
+        }
+        else
+        {
+            OnDraw(Weapon);
         }
 
         _extendedEvents.HookOnDamage(OnPlayerDamage, EventHookMode.Default);
