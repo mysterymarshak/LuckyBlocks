@@ -18,9 +18,6 @@ internal class TimeStoppedPlayer : TimeStoppedDynamicObjectBase
     private float _activeThrowableTimer;
     private float _strengthBoostTime;
     private float _speedBoostTime;
-    private IEventSubscription? _damageEventSubscription;
-    private IEventSubscription? _meleeActionEventSubscription;
-    private IEventSubscription? _updateEventSubscription;
     private float _delayedDamage;
     private float _meleeHits;
     private bool _isFall;
@@ -45,9 +42,9 @@ internal class TimeStoppedPlayer : TimeStoppedDynamicObjectBase
         _playerModifiersService.AddModifiers(_player,
             new SFDGameScriptInterface.PlayerModifiers { MeleeStunImmunity = 1 });
 
-        _damageEventSubscription = ExtendedEvents.HookOnDamage(_playerInstance, OnDamage, EventHookMode.Default);
-        _meleeActionEventSubscription = ExtendedEvents.HookOnPlayerMeleeAction(OnMeleeAction, EventHookMode.Default);
-        _updateEventSubscription = ExtendedEvents.HookOnUpdate(OnUpdate, EventHookMode.Default);
+        ExtendedEvents.HookOnDamage(_playerInstance, OnDamage, EventHookMode.Default);
+        ExtendedEvents.HookOnPlayerMeleeAction(OnMeleeAction, EventHookMode.Default);
+        ExtendedEvents.HookOnUpdate(OnUpdate, EventHookMode.Default);
     }
 
     protected override void ResumeTimeInternal()
@@ -66,8 +63,6 @@ internal class TimeStoppedPlayer : TimeStoppedDynamicObjectBase
 
     protected override void DisposeInternal()
     {
-        _damageEventSubscription?.Dispose();
-        _meleeActionEventSubscription?.Dispose();
         _prohibitMoveObjects.ForEach(x => x.RemoveDelayed());
     }
 

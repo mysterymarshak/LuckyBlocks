@@ -92,13 +92,13 @@ internal abstract class TimeStoppedDynamicObjectBase : ITimeStoppedEntity
 
     private void Dispose()
     {
+        ExtendedEvents.Clear();
         DisposeInternal();
     }
 }
 
 internal class TimeStoppedDynamicObject : TimeStoppedDynamicObjectBase
 {
-    private IEventSubscription? _damageEventSubscription;
     private float _delayedDamage;
     private RandomPeriodicTimer? _timer;
     private bool _isMissile;
@@ -113,7 +113,7 @@ internal class TimeStoppedDynamicObject : TimeStoppedDynamicObjectBase
         _isMissile = Object.IsMissile;
         Object.SetBodyType(BodyType.Static);
 
-        _damageEventSubscription = ExtendedEvents.HookOnDamage(Object, OnDamage, EventHookMode.Default);
+        ExtendedEvents.HookOnDamage(Object, OnDamage, EventHookMode.Default);
     }
 
     protected override void ResumeTimeInternal()
@@ -125,7 +125,6 @@ internal class TimeStoppedDynamicObject : TimeStoppedDynamicObjectBase
 
     protected override void DisposeInternal()
     {
-        _damageEventSubscription?.Dispose();
         _timer?.Stop();
     }
 
