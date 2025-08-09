@@ -51,6 +51,7 @@ internal class WeaponPowerupsService : IWeaponPowerupsService
         var keyboard = _keyboardService.ResolveForPlayer(player);
         var subscription = keyboard.HookPress([VirtualKey.SPRINT, VirtualKey.WALKING], () => ShowPlayerPowerups(player),
             ShowPowerupsMessageCooldown);
+
         _showPowerupsSubscriptions.Add(player, subscription);
     }
 
@@ -118,6 +119,11 @@ internal class WeaponPowerupsService : IWeaponPowerupsService
             }
         }
 
+        if (!weapon.IsDropped)
+        {
+            ResetShowPowerupsCooldown(weapon.Owner);
+        }
+
         weapon.AddPowerup(powerup);
 
         if (run)
@@ -146,6 +152,11 @@ internal class WeaponPowerupsService : IWeaponPowerupsService
             {
                 firearm.Reload -= EnsureWeaponHasEnoughAmmoForPowerups;
             }
+        }
+
+        if (!weapon.IsDropped)
+        {
+            ResetShowPowerupsCooldown(weapon.Owner);
         }
 
         powerup.Dispose();
@@ -282,6 +293,15 @@ internal class WeaponPowerupsService : IWeaponPowerupsService
         //                 _ => z.Name
         //             }))}]"))}]"
         // };
+    }
+
+    private void ResetShowPowerupsCooldown(IPlayer playerInstance)
+    {
+        var player = _identityService.GetPlayerByInstance(playerInstance);
+        if (!_showPowerupsSubscriptions.TryGetValue(player, out var subscription))
+            return;
+
+        subscription.ResetCooldown();
     }
 
     private bool TryAddPowerupAgain(IWeaponPowerup<Weapon> powerup, Weapon weapon)
