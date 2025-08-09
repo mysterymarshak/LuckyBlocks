@@ -83,7 +83,6 @@ internal class ImmunityService : IImmunityService
     {
         ImmunityFlag.ImmunityToFire => new ImmunityToFire(player, _args),
         ImmunityFlag.ImmunityToFall => new ImmunityToFall(player.Instance!, _args.LifetimeScope.BeginLifetimeScope()),
-        ImmunityFlag.ImmunityToDeath => new ImmunityToDeath(player, _args, _args.LifetimeScope.BeginLifetimeScope()),
         ImmunityFlag.ImmunityToPoison => new ImmunityToPoison(),
         ImmunityFlag.ImmunityToFreeze => new ImmunityToFreeze(),
         ImmunityFlag.ImmunityToWind => new ImmunityToWind(),

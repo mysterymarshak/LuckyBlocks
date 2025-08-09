@@ -34,15 +34,12 @@ internal enum ImmunityFlag
     [Display(Name = "Fall immunity")]
     ImmunityToFall = 64,
 
-    [Display(Name = "Death immunity")]
-    ImmunityToDeath = 128,
-
     [Display(Name = "Damage immunity")]
     FullDamageImmunity = ImmunityToPoison | ImmunityToMagic | ImmunityToFall,
 
     [Display(Name = "Steal immunity")]
-    ImmunityToSteal = 256,
+    ImmunityToSteal = 128,
 
     [Display(Name = "Water immunity")]
-    ImmunityToWater = 512
+    ImmunityToWater = 256
 }

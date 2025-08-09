@@ -29,6 +29,10 @@ public interface IExtendedEvents
         bool ignoreHandled = false);
 
     [GameCallbackType(typeof(Events.PlayerDamageCallback))]
+    IEventSubscription HookOnDamage(IPlayer player, Func<Event<PlayerDamageArgs>, bool> callback,
+        EventHookMode hookMode, bool ignoreHandled = false);
+
+    [GameCallbackType(typeof(Events.PlayerDamageCallback))]
     IEventSubscription HookOnDamage(Action<Event<IPlayer, PlayerDamageArgs>> callback, EventHookMode hookMode,
         bool ignoreHandled = false);
 

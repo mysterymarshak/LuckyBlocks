@@ -7,6 +7,7 @@ using LuckyBlocks.Features.PlayerModifiers;
 using LuckyBlocks.Features.Profiles;
 using LuckyBlocks.Features.Time.TimeRevert;
 using LuckyBlocks.Features.Time.TimeStop;
+using LuckyBlocks.Features.WeaponPowerups;
 using LuckyBlocks.Utils;
 using Serilog;
 using SFDGameScriptInterface;
@@ -24,6 +25,8 @@ internal record BuffConstructorArgs(
     ITimeStopService TimeStopService,
     ITimeRevertService TimeRevertService,
     IProfilesService ProfilesService,
+    IWeaponPowerupsService WeaponPowerupsService,
+    IRespawner Respawner,
     IGame Game,
     ILogger Logger,
     ILifetimeScope LifetimeScope);
